@@ -17,7 +17,7 @@ function PaginaLogin() {
   const handleLogin = async (evento: React.FormEvent) => {
     evento.preventDefault();
 
-    //Limpa erros antigos e ativa o estado de carregamento
+    // Limpa erros antigos e ativa o estado de carregamento
     setError('');
     setLoading(true);
 
@@ -39,7 +39,7 @@ function PaginaLogin() {
       setLoading(false);
     }
   };
-
+ 
   return (
     <div className="bg-gray-100 flex items-center justify-center h-screen">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
