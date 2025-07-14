@@ -1,20 +1,23 @@
 // src/App.tsx
 import { Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
-import PaginaLogin from './components/PaginaLogin'
-import PaginaCadastro from './components/PaginaCadastro'
+import PaginaLogin from './pages/PaginaLogin';
+import PaginaCadastro from './pages/PaginaCadastro';
 
 function App() {
   return (
     <Routes>
-      {/* A rota principal (/) será a de login */}
-      <Route path="/" element={<HomePage />} /> 
+      {/* Cria uma rota "pai" que renderiza o nosso Layout */}
+      <Route path="/" element={<Layout />}>
+        {/* 3. As rotas "filhas" serão renderizadas dentro do <Outlet /> do Layout */}
 
-      {/* A rota /login também levará para a página de login */}
-      <Route path="/login" element={<PaginaLogin />} />
+        {/* A rota de índice (path=""), quando dentro da rota pai, corresponde a "/" */}
+        <Route index element={<HomePage />} />
 
-      {/* A rota /cadastro levará para a página de cadastro */}
-      <Route path="/cadastro" element={<PaginaCadastro />} />
+        <Route path="login" element={<PaginaLogin />} />
+        <Route path="cadastro" element={<PaginaCadastro />} />
+      </Route>
     </Routes>
   );
 }
