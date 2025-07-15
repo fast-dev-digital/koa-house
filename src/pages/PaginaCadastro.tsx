@@ -101,7 +101,7 @@ function PaginaCadastro() {
         </form>
 
         <p className="text-center text-sm text-gray-600 mt-6">
-          Já tem uma conta?
+          Já tem uma conta? <br />
           <Link to="/login" className="font-medium text-blue-600 hover:underline">Faça Login</Link>
         </p>
       </div>

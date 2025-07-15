@@ -11,13 +11,13 @@ function App() {
       {/* Cria uma rota "pai" que renderiza o nosso Layout */}
       <Route path="/" element={<Layout />}>
         {/* 3. As rotas "filhas" serão renderizadas dentro do <Outlet /> do Layout */}
-
+        
         {/* A rota de índice (path=""), quando dentro da rota pai, corresponde a "/" */}
         <Route index element={<HomePage />} />
-
+          
         <Route path="login" element={<PaginaLogin />} />
         <Route path="cadastro" element={<PaginaCadastro />} />
-      </Route>
+      </Route> 
     </Routes>
   );
 }
