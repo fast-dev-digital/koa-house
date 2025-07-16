@@ -5,10 +5,13 @@ import { auth, db } from '../firebase-config';
 import { createUserWithEmailAndPassword } from 'firebase/auth'; 
 import { doc, setDoc } from "firebase/firestore";
 
+
 function PaginaCadastro() {
     // Estados para cada campo do form
     const [nome, setNome] = useState('');
     const [email, setEmail] = useState('');
+    const [CPF, setCPF] = useState('');
+    const [Telefone, setTelefone] = useState('');
     const [senha, setSenha] = useState('');
     const [confirmarSenha, setConfirmarSenha] = useState('');
 
@@ -36,10 +39,12 @@ function PaginaCadastro() {
 
             // Passo extra: Salvar infos adicionais (como Nome) no Firestore
             // Isso cria um documento na coleção usuários com o mesmo ID do usuário autenticado
-            await setDoc(doc(db, "usuarios", user.uid), {
+            await setDoc(doc(db, "Alunos", user.uid), {
                 nome: nome,
                 email: email,
-                dataCriacao: new Date()
+                CPF: CPF,
+                Telefone: Telefone,
+                datadecriacao: new Date()
             });
 
             alert('Usuario cadastrado com sucesso!');
@@ -61,6 +66,7 @@ function PaginaCadastro() {
 
     // 6. O JSX (a parte visual)
   return (
+  
     <div className="bg-gray-100 flex items-center justify-center h-screen">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-8">
@@ -81,6 +87,19 @@ function PaginaCadastro() {
             <input type="email" id="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           
+          {/* Campo CPF */}
+          <div className="mb-4">
+            <label htmlFor="CPF" className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+            <input type="CPF" id="CPF" value={CPF} onChange={e => setCPF(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          
+          {/* Campo Telefone */}
+          <div className="mb-4">
+            <label htmlFor="Telefone" className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+            <input type="Telefone" id="Telefone" value={Telefone} onChange={e => setTelefone(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          
+
           {/* Campo Senha */}
           <div className="mb-4">
             <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
