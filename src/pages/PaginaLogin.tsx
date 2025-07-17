@@ -1,6 +1,6 @@
 // src/components/PaginaLogin.tsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate} from 'react-router-dom';
 
 
 // Ferramentas de autenticação do arquivo de config do Firebase
@@ -16,7 +16,7 @@ function PaginaLogin() {
   // Estados para feedback ao usuário
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
+  const navigate = useNavigate();
   const handleLogin = async (evento: React.FormEvent) => {
     evento.preventDefault();
 
@@ -28,6 +28,7 @@ function PaginaLogin() {
       // Chamada principal para o Firebase
       await signInWithEmailAndPassword(auth, email, senha);
       alert('Login bem sucedido!');
+      navigate('/');
       // Aqui redirecionar user para tela principal
     } catch (err: any) {
       // Se der erro, mesangem amigável
