@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 // Importação do que precisamos do Firebase
 import { auth, db } from '../firebase-config';
 import { createUserWithEmailAndPassword } from 'firebase/auth'; 
@@ -18,6 +18,8 @@ function PaginaCadastro() {
     // Estados de feedback, assim como na tela de Login
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const navigate = useNavigate();
 
     // Função para lidar com o cadastro
     const handleCadastro = async (evento: React.FormEvent) => {
@@ -48,6 +50,7 @@ function PaginaCadastro() {
             });
 
             alert('Usuario cadastrado com sucesso!');
+            navigate('/login');
             // Futuramente, redirecionaremos para a tela de login ou home após o cadastro.
         } catch (err: any) {
             console.error("Error no cadastro:", err);
@@ -67,7 +70,8 @@ function PaginaCadastro() {
     // 6. O JSX (a parte visual)
   return (
   
-    <div className="bg-gray-100 flex items-center justify-center h-screen">
+    <div 
+className="bg-gray-100 flex items-center justify-center h-screen">
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Criar sua Conta</h1>
