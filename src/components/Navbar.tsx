@@ -16,10 +16,14 @@ function Navbar() {
         <button
           className="md:hidden p-2"
           onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Abrir menu"
         >
-          <span className="block w-6 h-0.5 bg-black mb-1"></span>
-          <span className="block w-6 h-0.5 bg-black mb-1"></span>
-          <span className="block w-6 h-0.5 bg-black"></span>
+          {/* Ícone de 3 pontinhos */}
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="5" r="1.5"/>
+            <circle cx="12" cy="12" r="1.5"/>
+            <circle cx="12" cy="19" r="1.5"/>
+          </svg>
         </button>
 
         {/* Links */}
@@ -27,12 +31,13 @@ function Navbar() {
           <Link to="/aulas" className="hover:text-yellow-400 px-4 py-2 md:p-0">Aulas</Link>
           <Link to="/eventos" className="hover:text-yellow-400 px-4 py-2 md:p-0">Eventos</Link>
           <Link to="/contato" className="hover:text-yellow-400 px-4 py-2 md:p-0">Contato</Link>
-          <Link to="/login" className="md:ml-4">
+          
+        </nav>
+        <Link to="/login" className="md:ml-4">
             <button className="bg-yellow-500 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded text-xs md:text-sm w-full md:w-auto">
               ÁREA DO ALUNO
             </button>
           </Link>
-        </nav>
       </div>
     </header>
   );
