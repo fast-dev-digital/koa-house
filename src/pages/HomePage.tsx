@@ -19,7 +19,7 @@ function HomePage() {
                 imageAlt="Pessoas jogando em uma quadra de areia"
                 linkTo="/reservas"
             />
-
+            
             <InfoSection 
                 title="Aprenda e evolua no futevôlei"
                 description="Aulas para iniciantes e avançados, com professores experientes. Venha aprimorar suas habilidades e se divertir!"
