@@ -11,6 +11,17 @@ node_modules
 dist
 dist-ssr
 *.local
+# Ignora JSONs sensíveis
+secrets.json
+config.local.json
+
+# Ignora JSONs temporários
+temp/*.json
+scripts/cache/*.json
+
+# Não ignore arquivos importantes
+!package.json
+!tsconfig.json
 
 # Editor directories and files
 .vscode/*
