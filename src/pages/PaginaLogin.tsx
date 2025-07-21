@@ -62,7 +62,7 @@ function PaginaLogin() {
               type="email"
               id="email"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="seu@email.com"
+              placeholder="Email"
               required
               value={email}
               onChange={(evento) => setEmail(evento.target.value)}
@@ -75,7 +75,7 @@ function PaginaLogin() {
               type="password"
               id="senha"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Sua senha"
+              placeholder="Senha"
               required
               value={senha}
               onChange={(evento) => setSenha(evento.target.value)}
