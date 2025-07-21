@@ -1,15 +1,16 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from "./Navbar";
+import Footer from './Footer';
 
 function Layout() {
     return (
-        <div>
+        <div className="flex flex-col min-h-screen">
             <Navbar />
-            <main>
+            <main className="flex-grow">
                 {/* O conteúdo da página específica (Login, Cadastro, etc.) será injetado aqui */}
                 <Outlet />
             </main>
-            {/* Futuramente, podemos adicionar um Rodapé (Footer) aqui */}
+            <Footer /> {/* Adiciona o rodapé */}
         </div>
     );
 }

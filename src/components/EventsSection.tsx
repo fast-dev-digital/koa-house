@@ -13,9 +13,9 @@ const eventos = [
         link: '/eventos/pagode-do-gordin',
     },
     {
-        tipo: 'TORNEIO',
-        titulo: 'Torneio de Futevôlei Interno',
-        data: 'Sábado e Domingo, 23 e 24 de Agosto',
+        tipo: 'Torneio',
+        titulo: 'Torneio Interno de Futevôlei',
+        data: 'Sábado e Domingo, 23 e 24 de Agosto a partir das 9h',
         imagem: 'torneio-img.png',
         link: '/torneios/interno-agosto',
     },
@@ -43,7 +43,7 @@ function EventsSection() {
                 <span className="text-orange-500 font-semibold text-sm">{evento.tipo}</span>
                 <h3 className="font-bold text-xl my-2 text-zinc-800">{evento.titulo}</h3>
                 <p className="text-zinc-600 text-sm mb-4">{evento.data}</p>
-                <a href={evento.link} className="bg-zinc-800 hover:bg-zinc-900 text-white font-bold py-2 px-4 rounded inline-block">
+                <a href={evento.link} className="bg-green-700 hover:bg-green-900 text-white font-bold py-2 px-4 rounded inline-block">
                   Saiba Mais
                 </a>
               </div>
