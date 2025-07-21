@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -5,6 +7,21 @@ type ModalProps = {
 };
 
 function Modal({ isOpen, onClose, children }: ModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      // Bloqueia scroll do fundo
+      document.body.classList.add("overflow-hidden");
+    } else {
+      // Libera scroll quando o modal fecha
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    // Limpa ao desmontar ou sair da tela
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -13,7 +30,7 @@ function Modal({ isOpen, onClose, children }: ModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl p-4 relative w-[300px] max-h-[80vh] overflow-auto transform scale-85"
+        className="bg-white rounded-2xl shadow-2xl p-4 relative w-[270px] max-h-50 overflow-hidden transform scale-85"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Botão de Fechar */}
