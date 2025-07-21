@@ -1,11 +1,20 @@
+import React, {useState, useEffect} from 'react';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import InfoSection from '../components/InfoSection';
 import EventsSection from '../components/EventsSection';
+import Footer from '../components/Footer';
+import Modal from '../components/Modal';
 
 import imgTeste from '../assets/torneio-img.png';
+import modalTeste from '../assets/almoco-img.jpeg';
 
 function HomePage() {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useEffect(() => {
+        setIsModalOpen(true); // Define o estado como 'aberto'
+    }, []); // O array vazio [] garante que isso só rode uma vez, na montagem do componente
     return (
         <div>
             {/*Importando componentes para a homepage*/}
@@ -40,6 +49,16 @@ function HomePage() {
             />
 
             <EventsSection />
+
+            {/* 6. Adicione o componente Modal aqui */}
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                {/* Este é o conteúdo que aparecerá dentro do pop-up */}
+                <h3 className="text-2xl font-bold text-zinc-800 mb-4 text-center">Almoço Executivo!</h3>
+                <img src={modalTeste} alt="Anúncio de almoço executivo" className="w-full rounded-md mb-4" />
+                <p className="text-zinc-600 text-center">
+                De segunda a sexta, das 11h às 14h. Pratos deliciosos a partir de R$ 25,00. Venha conferir!
+                </p>
+            </Modal>
 
             {/*Aqui depois adicionaremos outras seções como Eventos, Aulas, Grade, etc*/}
         </div>
