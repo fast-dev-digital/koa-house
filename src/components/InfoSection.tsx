@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 // Definimos os "ingredientes" que nosso componente InfoSection vai receber
