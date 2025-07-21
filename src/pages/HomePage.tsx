@@ -5,6 +5,8 @@ import InfoSection from '../components/InfoSection';
 import EventsSection from '../components/EventsSection';
 import Footer from '../components/Footer';
 import Modal from '../components/Modal';
+import WhatsappFloat from '../components/WhatsappFloat';
+import HeroCarousel from '../components/HeroCarousel';
 
 import imgTeste from '../assets/torneio-img.png';
 import modalTeste from '../assets/almoco-img.jpeg';
@@ -19,7 +21,7 @@ function HomePage() {
         <div>
             {/*Importando componentes para a homepage*/}
             <Navbar />
-            <Hero />
+            <HeroCarousel />
             <InfoSection
                 title="Reserve sua quadra de areia"
                 description="Escolha seu horário e aproveite nossas quadras premium para jogar com os amigos. Estrutura moderna, bar e estacionamento seguro!"
@@ -59,7 +61,7 @@ function HomePage() {
                 De segunda a sexta, das 11h às 14h. Pratos deliciosos a partir de R$ 25,00. Venha conferir!
                 </p>
             </Modal>
-
+            <WhatsappFloat />
             {/*Aqui depois adicionaremos outras seções como Eventos, Aulas, Grade, etc*/}
         </div>
     );
