@@ -1,6 +1,7 @@
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import InfoSection from '../components/InfoSection';
+import EventsSection from '../components/EventsSection';
 
 import imgTeste from '../assets/torneio-img.png';
 
@@ -37,6 +38,8 @@ function HomePage() {
                 imageAlt="Equipe de beach tennis posando para foto"
                 linkTo=""
             />
+
+            <EventsSection />
 
             {/*Aqui depois adicionaremos outras seções como Eventos, Aulas, Grade, etc*/}
         </div>
