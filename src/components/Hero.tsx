@@ -3,11 +3,17 @@ import backgroundImageUrl from '../assets/torneio-img.png';
 function Hero() {
     return (
         <section
-            className="h-screen bg-cover bg-center flex items-center text-white"
-            style={{backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,1)), url(${backgroundImageUrl})` }}
+            className="min-h-screen w-full flex items-center justify-center bg-cover bg-center"
+            style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,1)), url(${backgroundImageUrl})` }}
         >
-            <div className="container mx-auto px-4">
-                <div className="max-w-xl">
+            {/* Fora do container centralizado! */}
+            <div
+                style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+                className="fixed inset-0 min-h-screen w-full bg-cover bg-center -z-10"
+            ></div>
+
+            <div className="relative flex items-center justify-center min-h-screen">
+                <div className="w-full max-w-md bg-white rounded-lg shadow-md p-4 sm:p-8 mx-2 sm:mx-auto">
                     <h1 className="text-5xl font-bold mb-4">Viva o melhor do Esporte na Areia</h1>
                     <p className="text-lg mb-8">
                         Treine, jogue e se divirta nas melhores quadras de areia da região, aproveitando
