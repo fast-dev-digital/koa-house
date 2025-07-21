@@ -36,10 +36,10 @@ function Navbar() {
 
         {/* Links */}
         <nav className={`flex-col md:flex-row md:flex items-center space-y-2 md:space-y-0  md:space-x-5 absolute md:static top-16 left-0 w-full md:w-auto bg-white md:bg-transparent  transition-all duration-200 ease-in ${menuOpen ? 'flex' : 'hidden md:flex'}`}>
-          <Link to="/aulas" className="hover:text-yellow-400 px-4 py-2 md:p-0">Sobre Nós</Link>
+          <Link to="/sobrenos" className="hover:text-yellow-400 px-4 py-2 md:p-0">Sobre Nós</Link>
           <Link to="/eventos" className="hover:text-yellow-400 px-4 py-2 md:p-0">Eventos</Link>
-          <Link to="/contato" className="hover:text-yellow-400 px-4 py-2 md:p-0">Professores</Link>
-          <Link to="/contato" className="hover:text-yellow-400 px-4 py-2 md:p-0">Aulas</Link>
+          <Link to="/professores" className="hover:text-yellow-400 px-4 py-2 md:p-0">Professores</Link>
+          <Link to="/aulas" className="hover:text-yellow-400 px-4 py-2 md:p-0">Aulas</Link>
           <Link to="/contato" className="hover:text-yellow-400 px-4 py-2 md:p-0">Contato</Link>
         </nav>
 
