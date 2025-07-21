@@ -27,7 +27,7 @@ function InfoSection({ title, description, buttonText, imageUrl, imageAlt, linkT
             <h2 className="text-3xl font-bold text-zinc-800 mb-4">{title}</h2>
             <p className="text-zinc-600 mb-6">{description}</p>
             <Link to={linkTo}>
-              <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded">
+              <button className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded">
                 {buttonText}
               </button>
             </Link>
