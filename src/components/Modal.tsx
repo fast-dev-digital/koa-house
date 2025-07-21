@@ -9,13 +9,14 @@ function Modal({ isOpen, onClose, children }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 px-4"
+      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl p-4 relative max-w-[90vw] md:max-w-2xl w-full max-h-screen overflow-y-auto transform scale-90"
+        className="bg-white rounded-2xl shadow-2xl p-4 relative w-[300px] max-h-[80vh] overflow-auto transform scale-85"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Botão de Fechar */}
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
@@ -36,10 +37,8 @@ function Modal({ isOpen, onClose, children }: ModalProps) {
           </svg>
         </button>
 
-        {/* O conteúdo inserido no modal */}
-        <div className="w-full">
-          {children}
-        </div>
+        {/* Conteúdo Personalizado */}
+        <div>{children}</div>
       </div>
     </div>
   );
