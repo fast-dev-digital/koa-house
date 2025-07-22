@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import PaginaLogin from './pages/PaginaLogin';
 import PaginaCadastro from './pages/PaginaCadastro';
+import SobreNos from './pages/SobreNos';
 
 function App() {
   return (
@@ -14,7 +15,7 @@ function App() {
         
         {/* A rota de índice (path=""), quando dentro da rota pai, corresponde a "/" */}
         <Route index element={<HomePage />} />
-          
+        <Route path="sobre-nos" element={<SobreNos />} />
         <Route path="login" element={<PaginaLogin />} />
         <Route path="cadastro" element={<PaginaCadastro />} />
       </Route> 
