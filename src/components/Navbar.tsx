@@ -20,7 +20,7 @@ function Navbar() {
           {/* Coluna Central: Navegação (cresce para ocupar o espaço) */}
           <div className="flex-grow">
             <nav className="flex justify-center items-center space-x-5">
-              <Link to="/sobrenos" className="hover:text-yellow-400">Sobre Nós</Link>
+              <Link to="/sobre-nos" className="hover:text-yellow-400">Sobre Nós</Link>
               <Link to="/eventos" className="hover:text-yellow-400">Eventos</Link>
               <Link to="/professores" className="hover:text-yellow-400">Professores</Link>
               <Link to="/aulas" className="hover:text-yellow-400">Aulas</Link>
