@@ -1,9 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import Navbar from '../components/Navbar';
-import Hero from '../components/Hero';
 import InfoSection from '../components/InfoSection';
 import EventsSection from '../components/EventsSection';
-import Footer from '../components/Footer';
+
 import Modal from '../components/Modal';
 import WhatsappFloat from '../components/WhatsappFloat';
 import HeroCarousel from '../components/HeroCarousel';
