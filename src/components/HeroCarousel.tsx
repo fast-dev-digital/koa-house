@@ -4,8 +4,6 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";  // <=== IMPO
 // Importa o CSS do swiper
 import "swiper/swiper-bundle.css";
 
-
-
 function HeroCarousel() {
   return (
     <Swiper
