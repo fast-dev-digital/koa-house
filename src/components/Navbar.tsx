@@ -24,7 +24,6 @@ function Navbar() {
               <Link to="/eventos" className="hover:text-yellow-400">Eventos</Link>
               <Link to="/professores" className="hover:text-yellow-400">Professores</Link>
               <Link to="/aulas" className="hover:text-yellow-400">Aulas</Link>
-              <Link to="/contato" className="hover:text-yellow-400">Contato</Link>
             </nav>
           </div>
           
@@ -35,8 +34,10 @@ function Navbar() {
                 ÁREA DO ALUNO
               </button>
             </Link>
-            <Link to="/admin/dashboard">
+            <Link to="/login">
+              
               <button className="border border-yellow-500 bg-white text-yellow-500 py-1.5 px-4 rounded hover:bg-yellow-100">
+                
                 ACESSO RESTRITO
               </button>
             </Link>
@@ -80,7 +81,7 @@ function Navbar() {
             <Link to="/eventos" className="hover:bg-gray-100 px-4 py-2">Eventos</Link>
             <Link to="/professores" className="hover:bg-gray-100 px-4 py-2">Professores</Link>
             <Link to="/aulas" className="hover:bg-gray-100 px-4 py-2">Aulas</Link>
-            <Link to="/contato" className="hover:bg-gray-100 px-4 py-2 border-b">Contato</Link>
+          
             {/* Adicionamos o botão de admin aqui também para consistência */}
             <div className='p-4'>
                 <Link to="/admin/dashboard">
