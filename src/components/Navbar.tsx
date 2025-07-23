@@ -76,7 +76,7 @@ function Navbar() {
         
         {/* Menu Dropdown Mobile */}
         <nav className={`md:hidden flex-col absolute top-16 left-0 w-full bg-white shadow-lg transition-all duration-300 ease-in-out ${menuOpen ? 'flex' : 'hidden'}`}>
-            <Link to="/sobrenos" className="hover:bg-gray-100 px-4 py-2">Sobre Nós</Link>
+            <Link to="/sobre-nos" className="hover:bg-gray-100 px-4 py-2">Sobre Nós</Link>
             <Link to="/eventos" className="hover:bg-gray-100 px-4 py-2">Eventos</Link>
             <Link to="/professores" className="hover:bg-gray-100 px-4 py-2">Professores</Link>
             <Link to="/aulas" className="hover:bg-gray-100 px-4 py-2">Aulas</Link>
