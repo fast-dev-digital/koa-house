@@ -6,6 +6,7 @@ import PaginaLogin from './pages/PaginaLogin';
 import PaginaCadastro from './pages/PaginaCadastro';
 import SobreNos from './pages/SobreNos';
 import Eventos from './pages/Eventos';
+import Professores from './pages/Professores';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="login" element={<PaginaLogin />} />
         <Route path="cadastro" element={<PaginaCadastro />} />
         <Route path="eventos" element={<Eventos />} />
+        <Route path="professores" element={<Professores />} />
       </Route> 
     </Routes>
   );
