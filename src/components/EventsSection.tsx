@@ -23,7 +23,8 @@ const eventos = [
 ];
 
 // Importa as imagens dinamicamente (tecnica avançada, porém muito útil)
-const images = import.meta.glob('../assets/*.png', { eager: true, as: 'url' });
+const images = import.meta.glob('../assets/*.png', { eager: true, query: '?url', import: 'default' });
+
 
 function EventsSection() {
     return (
@@ -38,7 +39,7 @@ function EventsSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {eventos.map((evento) => (
             <div key={evento.titulo} className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-              <img src={images[`../assets/${evento.imagem}`]} alt={evento.titulo} className="w-full h-48 object-cover" />
+              <img src={images[`../assets/${evento.imagem}`] as string} alt={evento.titulo} className="w-full h-48 object-cover" />
               <div className="p-6">
                 <span className="text-orange-500 font-semibold text-sm">{evento.tipo}</span>
                 <h3 className="font-bold text-xl my-2 text-zinc-800">{evento.titulo}</h3>
