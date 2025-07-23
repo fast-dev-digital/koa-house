@@ -22,7 +22,7 @@ function HeroCarousel() {
             <div
               className="w-full h-full bg-cover bg-center flex flex-col gap-4 md:gap-6 items-center justify-center text-white text-center px-4"
               style={{
-                backgroundImage: `url(${BackgroundImage1})`,
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${BackgroundImage1})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -45,7 +45,7 @@ function HeroCarousel() {
             <div
               className="w-full h-full bg-cover bg-center flex flex-col gap-4 md:gap-6 items-center justify-center text-white text-center px-4"
               style={{
-                backgroundImage: `url(${BackgroundImage2})`,
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${BackgroundImage2})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -68,7 +68,7 @@ function HeroCarousel() {
             <div
               className="w-full h-full bg-cover bg-center flex flex-col gap-4 md:gap-6 items-center justify-center text-white text-center px-4"
               style={{
-                backgroundImage: `url(${BackgroundImage3})`,
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${BackgroundImage3})`,
                   
               }}
             >
