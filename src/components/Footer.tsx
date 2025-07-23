@@ -40,8 +40,8 @@ function Footer() {
             </div>
             <h4 className="font-semibold text-white mb-2 pt-6">Contato</h4>
             <ul>
-              <li className='mb-2 text-xs'>Email:</li>
-              <li className='mb-2 text-xs'>Telefone:</li>
+              <li className='mb-2 text-xs'>Email: arenabrazuka@gmail.com</li>
+              <li className='mb-2 text-xs'>Telefone: (19) 9231-2145</li>
             </ul>
           </div>
 
