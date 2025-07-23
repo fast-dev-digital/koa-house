@@ -1,13 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import WhatsappFloat from '../components/WhatsappFloat';
-import imgTorneio from '../assets/torneio-img.png';
 import GaleriaSwiper from '../components/GaleriaSwiper';
 
 
 function SobreNos() {
     return (
         
-        <div className='pt-20 px-4 md:px-10'>
+        <div className='pt-20 px-4 md:px-10 sobre-nos-background'>
             <div className='bg-green-500 text-white rounded-xl p-4 inline-block mb-5 shadow-md'>
                 <h1 className='text-2xl font-bold'>Sobre a cultura da Arena Brazuka</h1>
             </div>
