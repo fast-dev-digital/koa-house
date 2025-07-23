@@ -48,8 +48,13 @@ function HomePage() {
                 imageAlt="Equipe de beach tennis posando para foto"
                 linkTo=""
             />
-
-            <EventsSection />
+            <div>
+            <h2 className="text-3xl font-bold text-center text-zinc-800 mb-6 mt-10">
+                 Nossos Próximos Eventos
+            </h2>
+                <EventsSection />
+            </div>
+          
 
             {/* 6. Adicione o componente Modal aqui */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
@@ -66,4 +71,4 @@ function HomePage() {
     );
 }
 
-export default HomePage;
+export default HomePage;    

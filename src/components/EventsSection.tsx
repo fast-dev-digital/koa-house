@@ -1,5 +1,5 @@
 // src/components/EventsSection.tsx
-import React from 'react';
+import React, { useState } from 'react';
 
 // No futuro, esses dados virão do seu banco de dados (Firestore).
 // Por enquanto, usamos essa "massa de dados de exemplo" para construir o visual.
@@ -11,6 +11,9 @@ const eventos = [
         data: 'Sábado, 15 de Julho',
         imagem: 'torneio-img.png',
         link: '/eventos/pagode-do-gordin',
+        local: 'Rua das Flores, 123 - Centro, São Paulo',
+        descricao: 'O Pagode do Gordin é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos',
+        horario: '18:00 as 00:00',
     },
     {
         tipo: 'Torneio',
@@ -18,6 +21,9 @@ const eventos = [
         data: 'Sábado e Domingo, 23 e 24 de Agosto a partir das 9h',
         imagem: 'torneio-img.png',
         link: '/torneios/interno-agosto',
+        local: 'Rua das Flores, 123 - Centro, São Paulo',
+        descricao: 'O Torneio Interno de Futevôlei é um evento que acontece todos os sábados no nosso clube. Ele é um evento que acontece todos os sábados no nosso clube.',
+        horario: '09:00 as 17:00',
     },
     // Você pode adicionar mais eventos aqui
 ];
@@ -27,33 +33,53 @@ const images = import.meta.glob('../assets/*.png', { eager: true, query: '?url',
 
 
 function EventsSection() {
+    const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+
+    const toggleExpand = (titulo: string) => {
+        setExpandedEvent(expandedEvent === titulo ? null : titulo);
+    };
+
     return (
         <section className="bg-zinc-50 py-20">
-      <div className="container mx-auto px-4">
-        {/* Título da Seção */}
-        <h2 className="text-3xl font-bold text-center text-zinc-800 mb-12">
-          Nossos Próximos Eventos
-        </h2>
+            <div className="container mx-auto px-4">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {eventos.map((evento) => (
+                        <div key={evento.titulo} className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-90 transition-transform duration-300">
+                            <img src={images[`../assets/${evento.imagem}`] as string} alt={evento.titulo} className="w-full h-48 object-cover" />
+                            <div className="p-6">
+                                <span className="text-orange-500 font-semibold text-sm">{evento.tipo}</span>
+                                <h3 className="font-bold text-xl my-2 text-zinc-800">{evento.titulo}</h3>
+                                <p className="text-zinc-600 text-sm mb-4">{evento.data}</p>
+                                <button onClick={() => toggleExpand(evento.titulo)} className="bg-green-700 hover:bg-green-900 text-white font-bold py-2 px-4 rounded inline-block">
+                                    {expandedEvent === evento.titulo ? 'Ver Menos' : 'Ver Mais'}
+                                </button>
+                                {expandedEvent === evento.titulo && (
+                                    <div className="mt-4 text-zinc-600">
+                                        <ul>
+                                            <li>
+                                                <span className="font-bold">Local: </span>
+                                                <span className="text-zinc-600">{evento.local}</span>
+                                            </li>
+                                            <li>
+                                                <span className="font-bold">Horário: </span>
+                                                <span className="text-zinc-600">{evento.horario}</span>
 
-        {/* Grid de Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {eventos.map((evento) => (
-            <div key={evento.titulo} className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-              <img src={images[`../assets/${evento.imagem}`] as string} alt={evento.titulo} className="w-full h-48 object-cover" />
-              <div className="p-6">
-                <span className="text-orange-500 font-semibold text-sm">{evento.tipo}</span>
-                <h3 className="font-bold text-xl my-2 text-zinc-800">{evento.titulo}</h3>
-                <p className="text-zinc-600 text-sm mb-4">{evento.data}</p>
-                <a href={evento.link} className="bg-green-700 hover:bg-green-900 text-white font-bold py-2 px-4 rounded inline-block">
-                  Saiba Mais
-                </a>
-              </div>
+                                            </li>
+                                            <li>
+                                                <span className='font-bold'>Descrição: </span>
+                                                <span className='text-zinc-600'>{evento.descricao}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+        </section>
+    );
 }
 
 export default EventsSection;
