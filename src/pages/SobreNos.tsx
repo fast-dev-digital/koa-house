@@ -1,13 +1,15 @@
-import React, {useState, useEffect} from 'react';
+
 import WhatsappFloat from '../components/WhatsappFloat';
 import GaleriaSwiper from '../components/GaleriaSwiper';
+
 
 
 function SobreNos() {
     return (
         
-        <div className='pt-20 px-4 md:px-10 sobre-nos-background'>
-            <div className='bg-green-800 text-white rounded-xl p-4 inline-block mb-5 shadow-md'>
+        <div className='pt-20 px-4 md:px-10 relative mt-10'>
+            
+            <div className='bg-green-500 text-white rounded-xl p-4 inline-block mb-5 shadow-md '>
                 <h1 className='text-2xl font-bold'>Sobre a cultura da Arena Brazuka</h1>
             </div>
             <p className='text-sm text-gray-700 text-justify p-4'>
@@ -27,7 +29,7 @@ function SobreNos() {
                 
             </p>
             <hr className='my-4 border-gray-300'/>
-            <div className='bg-green-800 text-white rounded-xl p-4 inline-block mb-5 shadow-md'>
+            <div className='bg-green-500 text-white rounded-xl p-4 inline-block mb-5 shadow-md'>
                 <h2 className='text-2xl font-bold'>Imagens da nossa casa!</h2>
             </div>
             <div className='flex flex-col md:flex-row gap-4'>
