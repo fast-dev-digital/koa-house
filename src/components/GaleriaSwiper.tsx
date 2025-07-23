@@ -17,13 +17,14 @@ export default function GaleriaSwiper() {
   ]
 
   return (
-    <div className="  relative w-full max-w-[1200px] h-[50px] md:h-[400px] overflow-hidden rounded-xl mx-auto mt-[65px]">
+    <div className="relative w-full max-w-[1200px] h-[200px] md:h-[400px] overflow-hidden rounded-xl mx-auto mt-[20px] px-4">
       <Swiper
         modules={[Navigation]}
-        spaceBetween={20}
+        spaceBetween={10}
         slidesPerView={1}
         navigation
         breakpoints={{
+          480: { slidesPerView: 1 },
           640: { slidesPerView: 1 },
           768: { slidesPerView: 2 },
           1024: { slidesPerView: 3 },
@@ -35,7 +36,7 @@ export default function GaleriaSwiper() {
               <img
                 src={src}
                 alt={`Imagem ${index + 1}`}
-                className="w-full h-64 object-cover"
+                className="w-full h-40 md:h-64 object-cover"
               />
             </div>
           </SwiperSlide>
