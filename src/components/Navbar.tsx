@@ -5,7 +5,7 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white bg-opacity-95 text-black h-16 px-2 md:px-4 fixed top-0 left-0 w-full z-10 flex items-center text-sm md:text-base">
+    <header className="bg-white text-black h-16 px-2 md:px-4 fixed top-0 left-0 w-full z-10 flex items-center text-sm md:text-base">
       <div className="container mx-auto flex justify-between items-center h-full relative scale-90">
         
         {/* --- LÓGICA DESKTOP --- */}
