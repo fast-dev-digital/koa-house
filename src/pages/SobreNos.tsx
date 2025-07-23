@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import WhatsappFloat from '../components/WhatsappFloat';
 import imgTorneio from '../assets/torneio-img.png';
+import GaleriaSwiper from '../components/GaleriaSwiper';
 
 function SobreNos() {
     return (
@@ -30,7 +31,7 @@ function SobreNos() {
             </div>
             <div className='flex flex-wrap gap-4'>
                 <div className='bg-white rounded-xl p-4 shadow-md'>
-                    <img src={imgTorneio} alt="Equipe de futevôlei" className='w-full h-48 object-cover rounded-xl mb-5' />
+                    <GaleriaSwiper />
                 </div>
             </div>
             <WhatsappFloat />
