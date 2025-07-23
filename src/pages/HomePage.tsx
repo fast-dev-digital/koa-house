@@ -52,7 +52,7 @@ function HomePage() {
             <h2 className="text-3xl font-bold text-center text-zinc-800 mb-6 mt-10">
                  Nossos Próximos Eventos
             </h2>
-                <EventsSection />
+                <EventsSection mode='home' />
             </div>
           
 
