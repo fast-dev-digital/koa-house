@@ -9,6 +9,7 @@ function PlanosPage() {
 
     const planosFiltrados = planos.filter(plano => plano.tipo === filtro);
     const categorias = ['Futevôlei', 'Beach Tennis']; // Adicionar mais se preciso.
+    const planosLocacao = planos.filter(plano => plano.tipo === 'Locação');
 
     return (
     <div className="py-24 bg-white">
@@ -46,6 +47,21 @@ function PlanosPage() {
             <PricingCard key={plano.titulo} plano={plano} />
           ))}
         </div>
+        
+        {/* --- NOVA SEÇÃO DE LOCAÇÃO --- */}
+        <div className="text-center max-w-2xl mx-auto mt-20 mb-12">
+          <h2 className="text-4xl font-bold text-zinc-800 mb-4">Alugue Nossos Espaços</h2>
+          <p className="text-zinc-600">
+            Traga seus amigos para um jogo casual ou reserve nossa área gourmet para seu evento.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {planosLocacao.map(plano => (
+            <PricingCard key={plano.titulo} plano={plano} />
+          ))}
+        </div>
+        {/* --- FIM DA NOVA SEÇÃO --- */}
       </div>
     </div>
   );
