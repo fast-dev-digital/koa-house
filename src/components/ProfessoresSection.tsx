@@ -22,7 +22,7 @@ const professores: Professor[] = [
     whatsappLink: "https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Chris",
   },
   {
-    name: "Vitor Benatti, Vitinho",
+    name: "Vitinho",
     description: "Foco em iniciantes e desenvolvimento físico.",
     imageUrl: vitinhoImg,
     buttonText: "Faça sua aula experimental com o Vitinho agora!",
