@@ -23,7 +23,10 @@ function PricingCard({ plano }: { plano: Plano }) {
       <h3 className="text-xl font-bold text-zinc-800">{plano.titulo}</h3>
       <p className="text-5xl font-bold text-zinc-900 my-4">
         {plano.preco}
-        <span className="text-lg font-medium text-zinc-500">/por mês</span>
+        {/* Esta span só será renderizada se plano.unidade tiver um valor */}
+        {plano.unidade && (
+          <span className="text-lg font-medium text-zinc-500">{plano.unidade}</span>
+        )}
       </p>
       <button className={`w-full font-bold py-3 px-6 rounded transition-colors duration-300 ${buttonClasses}`}>
         EU QUERO
