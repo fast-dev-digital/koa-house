@@ -27,7 +27,7 @@ function HomePage() {
                 buttonText="RESERVE AGORA"
                 imageUrl={imgTeste}
                 imageAlt="Pessoas jogando em uma quadra de areia"
-                linkTo="/reservas"
+                linkTo=""
             />
             
             <InfoSection 
