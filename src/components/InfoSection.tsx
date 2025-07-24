@@ -1,7 +1,6 @@
-import { Link } from 'react-router-dom';
+// src/components/InfoSection.tsx
 
 // Definimos os "ingredientes" que nosso componente InfoSection vai receber
-
 type InfoSectionProps = {
     title: string;
     description: string;
@@ -30,7 +29,7 @@ function InfoSection({ title, description, buttonText, imageUrl, imageAlt, linkT
               href={linkTo}
               target={linkTo.startsWith("http") ? "_blank" : "_self"}
               rel={linkTo.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded"
+              className="inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-3 md:py-3 md:px-4 rounded text-xs md:text-sm leading-tight text-center md:w-auto"
             >
               {buttonText}
             </a>
