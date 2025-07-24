@@ -77,14 +77,14 @@ function Navbar() {
         
         {/* Menu Dropdown Mobile */}
         <nav className={`md:hidden flex-col absolute top-16 left-0 w-full bg-white shadow-lg transition-all duration-300 ease-in-out ${menuOpen ? 'flex' : 'hidden'}`}>
-            <Link to="/sobre-nos" className="hover:bg-gray-100 px-4 py-2">Sobre Nós</Link>
-            <Link to="/eventos" className="hover:bg-gray-100 px-4 py-2">Eventos</Link>
-            <Link to="/professores" className="hover:bg-gray-100 px-4 py-2">Professores</Link>
-            <Link to="/planos" className="hover:bg-gray-100 px-4 py-2">Planos</Link>
+            <Link to="/sobre-nos" className="hover:bg-gray-100 px-4 py-2" onClick={() => setMenuOpen(false)}>Sobre Nós</Link>
+            <Link to="/eventos" className="hover:bg-gray-100 px-4 py-2" onClick={() => setMenuOpen(false)}>Eventos</Link>
+            <Link to="/professores" className="hover:bg-gray-100 px-4 py-2" onClick={() => setMenuOpen(false)}>Professores</Link>
+            <Link to="/planos" className="hover:bg-gray-100 px-4 py-2" onClick={() => setMenuOpen(false)}>Planos</Link>
           
             {/* Adicionamos o botão de admin aqui também para consistência */}
             <div className='p-4'>
-                <Link to="/admin/dashboard">
+                <Link to="/admin/dashboard" onClick={() => setMenuOpen(false)}>
                     <button className="border border-yellow-500 bg-white text-yellow-500 py-1.5 px-4 rounded hover:bg-yellow-100 w-full">
                         ACESSO RESTRITO
                     </button>
