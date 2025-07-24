@@ -23,7 +23,7 @@ function Navbar() {
               <Link to="/sobre-nos" className="hover:text-yellow-400">Sobre Nós</Link>
               <Link to="/eventos" className="hover:text-yellow-400">Eventos</Link>
               <Link to="/professores" className="hover:text-yellow-400">Professores</Link>
-              <Link to="/aulas" className="hover:text-yellow-400">Aulas</Link>
+              <Link to="/planos" className="hover:text-yellow-400">Planos</Link>
             </nav>
           </div>
           
@@ -80,7 +80,7 @@ function Navbar() {
             <Link to="/sobre-nos" className="hover:bg-gray-100 px-4 py-2">Sobre Nós</Link>
             <Link to="/eventos" className="hover:bg-gray-100 px-4 py-2">Eventos</Link>
             <Link to="/professores" className="hover:bg-gray-100 px-4 py-2">Professores</Link>
-            <Link to="/aulas" className="hover:bg-gray-100 px-4 py-2">Aulas</Link>
+            <Link to="/planos" className="hover:bg-gray-100 px-4 py-2">Planos</Link>
           
             {/* Adicionamos o botão de admin aqui também para consistência */}
             <div className='p-4'>
