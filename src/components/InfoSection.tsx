@@ -25,11 +25,15 @@ function InfoSection({ title, description, buttonText, imageUrl, imageAlt, linkT
           <div className="w-full md:w-1/2 px-4 mb-8 md:mb-0">
             <h2 className="text-3xl font-bold text-zinc-800 mb-4">{title}</h2>
             <p className="text-zinc-600 mb-6">{description}</p>
-            <Link to={linkTo}>
-              <button className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded">
-                {buttonText}
-              </button>
-            </Link>
+            {/* Dentro do InfoSection*/}
+            <a
+              href={linkTo}
+              target={linkTo.startsWith("http") ? "_blank" : "_self"}
+              rel={linkTo.startsWith("http") ? "noopener noreferrer" : undefined}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded"
+            >
+              {buttonText}
+            </a>
           </div>
 
           {/* Coluna da Imagem */}
