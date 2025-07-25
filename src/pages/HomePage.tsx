@@ -29,7 +29,7 @@ function HomePage() {
                 buttonText="RESERVE AGORA"
                 imageUrl={imgTeste}
                 imageAlt="Pessoas jogando em uma quadra de areia"
-                linkTo=""
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20reservar%20uma%20quadra%20"
             />
             
             <InfoSection 
@@ -38,7 +38,7 @@ function HomePage() {
                 buttonText="AGENDE SUA AULA"
                 imageUrl={imgTeste}
                 imageAlt="Equipe de ftv posando para a foto"
-                linkTo=""
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20"
                 reverse={true}  // Usamos o reverse para inverter a ordem da imagem e do texto
             />
 
@@ -48,7 +48,7 @@ function HomePage() {
                 buttonText="QUERO JOGAR"
                 imageUrl={imgTeste}
                 imageAlt="Equipe de beach tennis posando para foto"
-                linkTo=""
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20saber%20sobre%20as%20aulas%20de%20beach%20tennis%20"
             />
 
             {/* Seção de Planos em Destaque */}

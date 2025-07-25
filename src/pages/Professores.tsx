@@ -18,10 +18,10 @@ function Professores() {
                 <InfoSection
                 title="Professor Chris"
                 description="Escolha seu horário e aproveite nossas quadras premium para jogar com os amigos. Estrutura moderna, bar e estacionamento seguro!"
-                buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° CRHIS AGORA!"
+                buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° CHRIS AGORA!"
                 imageUrl={imgChris}
                 imageAlt="Foto do professor Chris"
-                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Klebão"
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Chris"
                 />
     
                 {/*Vitinho*/}
@@ -31,7 +31,7 @@ function Professores() {
                 buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° VITINHO AGORA!"
                 imageUrl={imgVitinho}
                 imageAlt="Foto do professor Victor"
-                linkTo=""
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Vitinho"
                 reverse={true}
                 />
 
@@ -42,7 +42,7 @@ function Professores() {
                 buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° KLEBÃO AGORA!"
                 imageUrl={imgKlebao}
                 imageAlt="Foto do professor Kleber"
-                linkTo=""                
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Klebão"                
                 />
 
                 {/*Marra*/}
@@ -52,7 +52,7 @@ function Professores() {
                 buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° MARRA AGORA!"
                 imageUrl={imgMarra}
                 imageAlt="Foto do professor Marra"
-                linkTo=""
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Marra"
                 reverse={true}
                 />
 
@@ -63,7 +63,7 @@ function Professores() {
                 buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° MELLINHO AGORA!"
                 imageUrl={imgMello}
                 imageAlt="Foto do professor Mello"
-                linkTo=""
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Mellinho"
                 />
             
             <WhatsappFloat />
