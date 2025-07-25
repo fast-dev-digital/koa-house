@@ -2,6 +2,8 @@ import React, {useState, useEffect} from 'react';
 import Navbar from '../components/Navbar';
 import InfoSection from '../components/InfoSection';
 import EventsSection from '../components/EventsSection';
+import PricingCard from '../components/PricingCard';
+import { planos } from '../data/planosData';
 
 import Modal from '../components/Modal';
 import WhatsappFloat from '../components/WhatsappFloat';
@@ -48,15 +50,30 @@ function HomePage() {
                 imageAlt="Equipe de beach tennis posando para foto"
                 linkTo=""
             />
+
+            {/* Seção de Planos em Destaque */}
+            <div className="py-16 bg-gray-50">
+                <div className="container mx-auto px-4">
+                    <h2 className="text-3xl font-bold text-center text-zinc-800 mb-6">
+                    Planos em Destaque
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    {planos.filter(plano => plano.destacado).map(plano => (
+                        <PricingCard key={plano.titulo} plano={plano} mode="home"/>
+                    ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Seção de Eventos */}
             <div>
             <h2 className="text-3xl font-bold text-center text-zinc-800 mb-6 mt-10">
                  Nossos Próximos Eventos
             </h2>
                 <EventsSection mode='home' />
             </div>
-          
 
-            {/* 6. Adicione o componente Modal aqui */}
+            {/* Componente Modal aqui */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 {/* Este é o conteúdo que aparecerá dentro do pop-up */}
                 <h3 className="text-2xl font-bold text-zinc-800 mb-4 text-center">Almoço Executivo!</h3>
