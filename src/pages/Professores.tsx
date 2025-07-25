@@ -1,7 +1,7 @@
-import React, {useState, useEffect} from 'react';
 import InfoSection from "../components/InfoSection";
 import WhatsappFloat from "../components/WhatsappFloat";
 
+// importação de imagens dos professores
 import imgChris from "../assets/ft-chris.jpeg";
 import imgVitinho from "../assets/ft-vitinho.jpeg";
 import imgKlebao from "../assets/ft-klebao.png";

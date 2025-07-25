@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import {useState, useEffect} from 'react';
 import Navbar from '../components/Navbar';
 import InfoSection from '../components/InfoSection';
 import EventsSection from '../components/EventsSection';

@@ -1,6 +1,6 @@
 // src/pages/Planos.tsx
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { planos } from '../data/planosData'; // Importa nossos dados
 import PricingCard from '../components/PricingCard'; // Importa nosso card de planos
 import WhatsappFloat from '../components/WhatsappFloat';
