@@ -84,7 +84,7 @@ function Navbar() {
           
             {/* Adicionamos o botão de admin aqui também para consistência */}
             <div className='p-4'>
-                <Link to="/admin/dashboard" onClick={() => setMenuOpen(false)}>
+                <Link to="/login" onClick={() => setMenuOpen(false)}>
                     <button className="border border-yellow-500 bg-white text-yellow-500 py-1.5 px-4 rounded hover:bg-yellow-100 w-full">
                         ACESSO RESTRITO
                     </button>
