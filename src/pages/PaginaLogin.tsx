@@ -85,10 +85,7 @@ function PaginaLogin() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Não tem uma conta? <br />
-            <Link to="/cadastro" className="font-medium text-green-600 hover:underline">Cadastre-se</Link>
-          </p>
+          
         </div>
       </div>
     </>
