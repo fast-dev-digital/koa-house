@@ -15,7 +15,7 @@ export default function Sidebar() {
   return (
     <aside className="w-56 bg-white min-h-screen flex flex-col justify-between border-r">
       <div className="flex items-center justify-center mt-6 mb-2">
-        <Link to="/admin-dashboard">
+        <Link to="/">
           <img src={Logo} alt="Logo" className="h-12 w-auto" />
         </Link>
       </div>
