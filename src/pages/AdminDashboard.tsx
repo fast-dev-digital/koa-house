@@ -47,7 +47,7 @@ export default function AdminDashboard() {
     });
     // Busca quadras reservadas hoje (exemplo: dataReserva === hoje)
     const hoje = new Date();
-    const dataHoje = hoje.toISOString().slice(0, 10); // "2025-07-29"
+    const dataHoje = hoje.toISOString().slice(0, 10); 
     getDocs(query(collection(db, "reservas"), where("dataReserva", "==", dataHoje))).then((snapshot) => {
       setQuadrasReservadas(snapshot.size);
     });
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
         <h1 className="text-2xl font-bold mb-4 text-center">
           Bem-vindo{nome ? `, ${nome}` : ""}!
         </h1>
-        <h2 className="text-2xl font-bold mb-6 text-center">Dashboard</h2>
+        <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
         <div className="grid grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
             <span className="text-gray-500">Total Alunos</span>

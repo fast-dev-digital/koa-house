@@ -52,7 +52,7 @@ export default function Sidebar() {
             </Link>
           </li>
           <li>
-            <Link to="/admin/cadastrar" className="flex items-center gap-3 px-6 py-3 text-green-700 hover:bg-green-100 cursor-pointer">
+            <Link to="/admin-dashboard/cadastrar" className="flex items-center gap-3 px-6 py-3 text-green-700 hover:bg-green-100 cursor-pointer">
               <FaUserPlus /> Cadastrar Admin
             </Link>
           </li>

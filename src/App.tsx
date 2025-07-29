@@ -10,7 +10,7 @@ import Professores from './pages/Professores';
 import Planos from './pages/Planos';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
-import CadastrarAdmin from './pages/CadastarAdmin';
+import CadastrarAdmin from './pages/CadastrarAdmin';
 
 function App() {
   return (
