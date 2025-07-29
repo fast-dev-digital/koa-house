@@ -1,6 +1,6 @@
-// src/App.tsx
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import AdminLayout from './components/AdminLayout';
 import HomePage from './pages/HomePage';
 import PaginaLogin from './pages/PaginaLogin';
 import PaginaCadastro from './pages/PaginaCadastro';
@@ -8,15 +8,15 @@ import SobreNos from './pages/SobreNos';
 import Eventos from './pages/Eventos';
 import Professores from './pages/Professores';
 import Planos from './pages/Planos';
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminDashboard from './pages/AdminDashboard';
+import CadastrarAdmin from './pages/CadastarAdmin';
 
 function App() {
   return (
     <Routes>
-      {/* Cria uma rota "pai" que renderiza o nosso Layout */}
+      {/* Rotas públicas com Navbar/Footer */}
       <Route path="/" element={<Layout />}>
-        {/* 3. As rotas "filhas" serão renderizadas dentro do <Outlet /> do Layout */}
-        
-        {/* A rota de índice (path=""), quando dentro da rota pai, corresponde a "/" */}
         <Route index element={<HomePage />} />
         <Route path="sobre-nos" element={<SobreNos />} />
         <Route path="login" element={<PaginaLogin />} />
@@ -24,9 +24,23 @@ function App() {
         <Route path="eventos" element={<Eventos />} />
         <Route path="professores" element={<Professores />} />
         <Route path="planos" element={<Planos />} />
-      </Route> 
+      </Route>
+
+      {/* Rotas admin com Sidebar */}
+      <Route
+        path="/admin-dashboard"
+        element={
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="cadastrar" element={<CadastrarAdmin />} />
+        {/* Outras rotas de admin podem ser adicionadas aqui */}
+      </Route>
     </Routes>
   );
 }
 
-export default App
+export default App;
