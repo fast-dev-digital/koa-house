@@ -1,37 +1,27 @@
 // src/components/PaginaLogin.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
-
-// Ferramentas de autenticação do arquivo de config do Firebase
 import { auth } from '../firebase-config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-
 import BackgroundImage from '../assets/background-image.svg';
 
 function PaginaLogin() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-
-  // Estados para feedback ao usuário
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
   const handleLogin = async (evento: React.FormEvent) => {
     evento.preventDefault();
-
-    // Limpa erros antigos e ativa o estado de carregamento
     setError('');
     setLoading(true);
 
     try {
-      // Chamada principal para o Firebase
       await signInWithEmailAndPassword(auth, email, senha);
       alert('Login bem sucedido!');
-      navigate('/');
-      // Aqui redirecionar user para tela principal
+      navigate('/admin-dashboard'); // Redireciona para o dashboard
     } catch (err: any) {
-      // Se der erro, mesangem amigável
       console.error("Erro no login:", err);
       if (err.code === 'auth/invalid-credential') {
         setError('E-mail ou senha inválidos.');
@@ -39,20 +29,17 @@ function PaginaLogin() {
         setError('Ocorreu um erro ao fazer login. Tente novamente');
       }
     } finally {
-      // Independente do resultado, desativa o estado de carregando
       setLoading(false);
     }
   };
 
   return (
     <>
-      {/* Background fixo atrás de tudo */}
       <div
         style={{ backgroundImage: `url(${BackgroundImage})` }}
         className="fixed inset-0 w-full h-full bg-cover bg-center -z-10"
       ></div>
 
-      {/* Conteúdo centralizado */}
       <div className="min-h-screen w-full flex items-center justify-center relative">
         <div className="w-full max-w-md bg-white rounded-lg shadow-md p-4 sm:p-8 mx-2 sm:mx-auto">
           <div className="text-center mb-8">
