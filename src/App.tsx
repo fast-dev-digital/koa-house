@@ -25,13 +25,14 @@ function App() {
         <Route path="professores" element={<Professores />} />
         <Route path="planos" element={<Planos />} />
         <Route path="redefinir-senha" element={<RedefinirSenha />} />
+        <Route path='/esqueci-senha' element={<EsqueciSenha /> } />
         {/* Rotas de redefinir senha - ambas funcionam */}
         
       </Route>
       
       {/* Rota de redefinição FORA do Layout para URLs do Firebase */}
       <Route path="/login/redefinir-senha" element={<RedefinirSenha />} />
-      <Route path='/esqueci-senha' element={<EsqueciSenha /> } />
+    
       {/* Rotas admin com Sidebar */}
       <Route
         path="/admin-dashboard"
