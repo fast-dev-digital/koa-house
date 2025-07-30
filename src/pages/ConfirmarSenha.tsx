@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { verifyPasswordResetCode, confirmPasswordReset} from 'firebase/auth';
-import { auth } from '../../firebase-config';
+import { auth } from '../firebase-config';
 
 export default function RedefinirSenhaPage() {
   const [searchParams] = useSearchParams();
