@@ -10,7 +10,7 @@ import WhatsappFloat from '../components/WhatsappFloat';
 import HeroCarousel from '../components/HeroCarousel';
 
 import imgTeste from '../assets/torneio-img.png';
-import modalTeste from '../assets/almoco-img.jpeg';
+import modalTeste from '../assets/interno-img.png';
 
 function HomePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -76,10 +76,10 @@ function HomePage() {
             {/* Componente Modal aqui */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
                 {/* Este é o conteúdo que aparecerá dentro do pop-up */}
-                <h3 className="text-2xl font-bold text-zinc-800 mb-4 text-center">Almoço Executivo!</h3>
-                <img src={modalTeste} alt="Anúncio de almoço executivo" className="w-full rounded-md mb-4" />
+                <h3 className="text-2xl font-bold text-zinc-800 mb-4 text-center">Nosso Torneio Interno!</h3>
+                <img src={modalTeste} alt="Anúncio de torneio interno" className="w-full rounded-md mb-4" />
                 <p className="text-zinc-600 text-center">
-                De segunda a sexta, das 11h às 14h. Pratos deliciosos a partir de R$ 25,00. Venha conferir!
+                Ei, aluno! Participe do melhor torneio interno da região, que ocorrerá nos dias 30 e 31 de Agosto, com muita resenha, futevôlei e brindes para os campeões!
                 </p>
             </Modal>
             <WhatsappFloat />
