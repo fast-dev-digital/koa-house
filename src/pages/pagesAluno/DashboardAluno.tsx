@@ -1,23 +1,33 @@
 // src/pages/pagesAluno/DashboardAluno.tsx
-
-import { useAuth } from "../../context/AuthContext"
 import { Link } from "react-router-dom"
-import {
-    FaUser,
-    FaCalendarAlt,
-    FaCreditCard,
-    FaWhatsapp,
-    FaBookOpen,
-    FaChartLine
-} from "react-icons/fa";
-
-// ✅ IMPORTS DOS COMPONENTES
+import {FaUser, FaCalendarAlt, FaCreditCard, FaWhatsapp, FaBookOpen, FaChartLine} from "react-icons/fa";
+import { useEffect, useState} from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../firebase-config";
 import ResumoCard from "../../components/componentsAluno/ResumoCard";
 import TurmaCard from "../../components/componentsAluno/TurmaCard";
 import StatusPagamento from "../../components/componentsAluno/StatusPagamento";
 
 export default function DashboardAluno() {
-    const { currentUser } = useAuth();
+    
+    const [nome, setNome] = useState<string>("");
+
+     useEffect(() => {
+        // Busca nome do aluno de forma eficiente
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            // Busca direto o documento do usuário
+            const docRef = doc(db, "Alunos", user.uid);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+              setNome(docSnap.data().nome || "");
+            }
+          }
+        });
+        return () => unsubscribe();
+      }, []);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -26,8 +36,8 @@ export default function DashboardAluno() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Olá, {currentUser?.displayName || 'Aluno'}! 👋
+              <h1 className="text-2xl font-bold mb-4 text-center">
+                Bem-vindo{nome ? `, ${nome}` : ""}!
               </h1>
               <p className="text-gray-600">Bem-vindo à sua área pessoal</p>
             </div>
