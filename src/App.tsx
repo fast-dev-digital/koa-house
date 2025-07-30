@@ -2,7 +2,7 @@
 
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import AdminLayout from './components/AdminLayout';
+import AdminLayout from './components/componentsAdmin/AdminLayout';
 import HomePage from './pages/HomePage';
 import PaginaLogin from './pages/PaginaLogin';
 import SobreNos from './pages/SobreNos';
@@ -10,10 +10,10 @@ import Eventos from './pages/Eventos';
 import Professores from './pages/Professores';
 import Planos from './pages/Planos';
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminDashboard from './pages/AdminDashboard';
-import CadastrarAdmin from './pages/CadastrarAdmin';
-import RedefinirSenha from './pages/ConfirmarSenha';
-import EsqueciSenha from './pages/EsqueciSenha';
+import AdminDashboard from './pages/pagesAdmin/AdminDashboard';
+import CadastrarAdmin from './pages/pagesAdmin/CadastrarAdmin';
+import RedefinirSenha from './pages/pagesAdmin/ConfirmarSenha';
+import EsqueciSenha from './pages/pagesAdmin/EsqueciSenha';
 
 // Imports Aluno
 import DashboardAluno from './pages/pagesAluno/DashboardAluno';
@@ -35,20 +35,6 @@ function App() {
         <Route path="redefinir-senha" element={<RedefinirSenha />} />
         <Route path='/esqueci-senha' element={<EsqueciSenha /> } />
 
-        {/* Rotas do Aluno - Protegidas */}
-        <Route
-          path="/aluno/*"
-          element={
-            <ProtectedRoute>
-              <Routes>
-                <Route index element={<DashboardAluno />} />
-                <Route path="turmas" element={<MinhasTurmas />} />
-                <Route path="pagamentos" element={<MeusPagamentos />} />
-                <Route path="perfil" element={<MeuPerfil />} />
-              </Routes>
-            </ProtectedRoute>
-          }
-        />
         {/* Rotas de redefinir senha - ambas funcionam */}    
       </Route>
 
@@ -57,11 +43,26 @@ function App() {
       {/* Rota de redefinição FORA do Layout para URLs do Firebase */}
       <Route path="/login/redefinir-senha" element={<RedefinirSenha />} />
     
-      {/* Rotas admin com Sidebar */}
+      {/* Rotas do Aluno - SEM Layout (sem navbar/footer) - APENAS USUÁRIOS */}
+      <Route
+        path="/aluno/*"
+        element={
+          <ProtectedRoute requireRole="user">
+            <Routes>
+              <Route index element={<DashboardAluno />} />
+              <Route path="turmas" element={<MinhasTurmas />} />
+              <Route path="pagamentos" element={<MeusPagamentos />} />
+              <Route path="perfil" element={<MeuPerfil />} />
+            </Routes>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rotas admin com Sidebar - APENAS ADMINS */}
       <Route
         path="/admin-dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requireRole="admin">
             <AdminLayout />
           </ProtectedRoute>
         }
