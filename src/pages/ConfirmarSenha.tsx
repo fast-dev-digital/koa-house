@@ -42,36 +42,54 @@ export default function RedefinirSenhaPage() {
   };
 
   return (
-     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white shadow-md rounded-2xl p-6 sm:p-8">
-        <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-2">
-          Redefinir Senha
-        </h2>
-        <p className="text-sm text-center text-gray-600 mb-6">
-          Redefina a senha para:
-          <br />
-          <span className="text-green-600 font-medium break-words">
-            gabrielgasparotto45@gmail.com
-          </span>
-        </p>
-        <form className="flex flex-col gap-4">
-          <input
-            type="password"
-            placeholder="Nova senha"
-            className="border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <input
-            type="password"
-            placeholder="Confirmar nova senha"
-            className="border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <button
-            type="submit"
-            className="bg-green-600 text-white rounded-lg py-2 hover:bg-green-700 transition"
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gray-100">
+      <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-lg">
+        <h1 className="text-2xl font-bold text-center mb-6">Redefinir Senha</h1>
+
+        {!validCode ? (
+          <p className="text-red-600 text-center">{status}</p>
+        ) : (
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              handleResetPassword();
+            }}
+            className="flex flex-col gap-4"
           >
-            Redefinir Senha
-          </button>
-        </form>
+            <p className="text-sm text-gray-600 text-center">
+              Redefina a senha para: <span className="font-semibold">{email}</span>
+            </p>
+
+            <input
+              type="password"
+              placeholder="Nova senha"
+              className="p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+
+            <input
+              type="password"
+              placeholder="Confirmar nova senha"
+              className="p-3 rounded-lg border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              required
+            />
+
+            {status && (
+              <p className="text-sm text-center text-green-500">{status}</p>
+            )}
+
+            <button
+              type="submit"
+              className="bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition"
+            >
+              Redefinir Senha
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
