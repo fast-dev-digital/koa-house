@@ -85,7 +85,10 @@ function PaginaLogin() {
             </button>
           </form>
 
-          
+          <p className="text-center text-sm text-gray-600 mt-6">
+            Esqueceu a senha? <br />
+            <Link to="/redefinir-senha" className="font-medium text-green-600 hover:underline">Redefinir a senha</Link>
+          </p>
         </div>
       </div>
     </>

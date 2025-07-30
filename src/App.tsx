@@ -3,14 +3,14 @@ import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import HomePage from './pages/HomePage';
 import PaginaLogin from './pages/PaginaLogin';
-import PaginaCadastro from './pages/PaginaCadastro';
 import SobreNos from './pages/SobreNos';
 import Eventos from './pages/Eventos';
 import Professores from './pages/Professores';
 import Planos from './pages/Planos';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
-import CadastrarAdmin from './pages/CadastrarAdmin';
+import CadastrarAdmin from './pages/CadastarAdmin';
+
 
 function App() {
   return (
@@ -20,7 +20,6 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="sobre-nos" element={<SobreNos />} />
         <Route path="login" element={<PaginaLogin />} />
-        <Route path="cadastro" element={<PaginaCadastro />} />
         <Route path="eventos" element={<Eventos />} />
         <Route path="professores" element={<Professores />} />
         <Route path="planos" element={<Planos />} />
