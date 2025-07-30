@@ -1,88 +1,78 @@
-// src/pages/RedefinirSenha.tsx
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
+import { verifyPasswordResetCode, confirmPasswordReset} from 'firebase/auth';
 import { auth } from '../firebase-config';
 
-const RedefinirSenha = () => {
+export default function RedefinirSenhaPage() {
   const [searchParams] = useSearchParams();
-  const oobCode = searchParams.get('oobCode');
-  const navigate = useNavigate();
-  const [validCode, setValidCode] = useState(false);
-  const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [status, setStatus] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [validCode, setValidCode] = useState(false);
+  const navigate = useNavigate();
+
+  const oobCode = searchParams.get('oobCode') || '';
 
   useEffect(() => {
-    if (oobCode) {
-        verifyPasswordResetCode(auth, oobCode)
-        .then(email => {
-          setEmail(email);
-          setValidCode(true);
-        })
-        .catch(() => {
-          setStatus('Link inválido ou expirado.');
-        });
-    }
+    if (!oobCode) return;
+    verifyPasswordResetCode(auth, oobCode)
+      .then(email => {
+        setEmail(email);
+        setValidCode(true);
+      })
+      .catch(() => {
+        setStatus('Link inválido ou expirado.');
+      });
   }, [oobCode]);
 
   const handleResetPassword = async () => {
-    if (newPassword !== confirmPassword) {
+    if (password !== confirmPassword) {
       setStatus('As senhas não coincidem.');
       return;
     }
 
     try {
-      await confirmPasswordReset(auth, oobCode!, newPassword);
-      setStatus('Senha redefinida com sucesso!');
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+      await confirmPasswordReset(auth, oobCode, password);
+      setStatus('Senha redefinida com sucesso! Redirecionando...');
+      setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
-      console.error(error);
-      setStatus('Erro ao redefinir senha.');
+      setStatus('Erro ao redefinir a senha. Tente novamente.');
     }
   };
 
-  if (!oobCode) {
-    return <p>Link inválido.</p>;
-  }
-
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 shadow-lg rounded-lg border">
-      <h1 className="text-2xl font-bold mb-4">Redefinir senha</h1>
-      {validCode ? (
-        <>
-          <p className="mb-2 text-gray-500">E-mail: {email}</p>
+     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-md bg-white shadow-md rounded-2xl p-6 sm:p-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-2">
+          Redefinir Senha
+        </h2>
+        <p className="text-sm text-center text-gray-600 mb-6">
+          Redefina a senha para:
+          <br />
+          <span className="text-green-600 font-medium break-words">
+            gabrielgasparotto45@gmail.com
+          </span>
+        </p>
+        <form className="flex flex-col gap-4">
           <input
             type="password"
             placeholder="Nova senha"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full border p-2 rounded mb-2"
+            className="border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-green-500"
           />
           <input
             type="password"
             placeholder="Confirmar nova senha"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full border p-2 rounded mb-4"
+            className="border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-green-500"
           />
           <button
-            onClick={handleResetPassword}
-            className="w-full bg-green-600 text-white p-2 rounded hover:bg-blue-700"
+            type="submit"
+            className="bg-green-600 text-white rounded-lg py-2 hover:bg-green-700 transition"
           >
             Redefinir Senha
           </button>
-        </>
-      ) : (
-        <p className="text-red-500">{status}</p>
-      )}
-
-      {status && <p className="mt-4 text-sm text-center">{status}</p>}
+        </form>
+      </div>
     </div>
   );
-};
-
-export default RedefinirSenha;
+}
