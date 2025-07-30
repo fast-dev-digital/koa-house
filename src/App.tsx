@@ -10,7 +10,8 @@ import Planos from './pages/Planos';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import CadastrarAdmin from './pages/CadastrarAdmin';
-
+import RedefinirSenha from './pages/ConfirmarSenha';
+import EsqueciSenha from './pages/EsqueciSenha';
 
 function App() {
   return (
@@ -23,8 +24,14 @@ function App() {
         <Route path="eventos" element={<Eventos />} />
         <Route path="professores" element={<Professores />} />
         <Route path="planos" element={<Planos />} />
+        <Route path="redefinir-senha" element={<RedefinirSenha />} />
+        {/* Rotas de redefinir senha - ambas funcionam */}
+        
       </Route>
-
+      
+      {/* Rota de redefinição FORA do Layout para URLs do Firebase */}
+      <Route path="/login/redefinir-senha" element={<RedefinirSenha />} />
+      <Route path='/esqueci-senha' element={<EsqueciSenha /> } />
       {/* Rotas admin com Sidebar */}
       <Route
         path="/admin-dashboard"
@@ -36,7 +43,6 @@ function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="cadastrar" element={<CadastrarAdmin />} />
-        {/* Outras rotas de admin podem ser adicionadas aqui */}
       </Route>
     </Routes>
   );
