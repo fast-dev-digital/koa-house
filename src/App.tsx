@@ -12,8 +12,8 @@ import Planos from './pages/Planos';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/pagesAdmin/AdminDashboard';
 import CadastrarAdmin from './pages/pagesAdmin/CadastrarAdmin';
-import RedefinirSenha from './pages/pagesAdmin/ConfirmarSenha';
-import EsqueciSenha from './pages/pagesAdmin/EsqueciSenha';
+import RedefinirSenha from './pages/ConfirmarSenha';
+import EsqueciSenha from './pages/EsqueciSenha';
 
 // Imports Aluno
 import DashboardAluno from './pages/pagesAluno/DashboardAluno';
