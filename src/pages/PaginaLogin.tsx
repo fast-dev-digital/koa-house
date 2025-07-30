@@ -1,8 +1,8 @@
-// src/components/PaginaLogin.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { auth } from '../firebase-config';
+import { auth, db } from '../firebase-config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import BackgroundImage from '../assets/background-image.svg';
 
 function PaginaLogin() {
@@ -18,9 +18,33 @@ function PaginaLogin() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, senha);
-      alert('Login bem sucedido!');
-      navigate('/admin-dashboard'); // Redireciona para o dashboard
+      // Faz o login normal
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const user = userCredential.user;
+      
+      // Agora precisa descobrir se é admin ou aluno
+      // Primeiro verifica se é admin
+      const adminDoc = await getDoc(doc(db, "admins", user.uid));
+      
+      if (adminDoc.exists() && adminDoc.data().role === "admin") {
+        // É admin, vai para dashboard admin
+        alert('Login de admin bem sucedido!');
+        navigate('/admin-dashboard');
+      } else {
+        // Verifica se é aluno
+        const alunoDoc = await getDoc(doc(db, "Alunos", user.uid));
+        
+        if (alunoDoc.exists()) {
+          // É aluno, vai para dashboard do aluno
+          alert('Login de aluno bem sucedido!');
+          setTimeout(() => navigate('/aluno'), 500);
+        } else {
+          // Não é nem admin nem aluno - problema!
+          setError('Usuário não encontrado no sistema.');
+          await auth.signOut(); // Desloga
+        }
+      }
+      
     } catch (err: any) {
       console.error("Erro no login:", err);
       if (err.code === 'auth/invalid-credential') {
