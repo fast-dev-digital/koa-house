@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase-config';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate} from 'react-router-dom';
 
 const EsqueciSenha = () => {
   const [email, setEmail] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [erro, setErro] = useState('');
-
+  const navigate = useNavigate();  
   const handleEnviarEmail = async () => {
     setMensagem('');
     setErro('');
@@ -15,6 +15,9 @@ const EsqueciSenha = () => {
     try {
       await sendPasswordResetEmail(auth, email);
       setMensagem('Enviamos um link para seu e-mail!');
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/user-not-found') {
