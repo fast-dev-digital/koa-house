@@ -89,7 +89,7 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
 
     try {
       if (mode === 'create') {
-        console.log('🚀 Criando aluno apenas no Firestore:', email);
+        ('🚀 Criando aluno apenas no Firestore:', email);
         
         // SOLUÇÃO DEFINITIVA: Apenas salvar no Firestore
         // O usuário será criado no Auth quando fizer login pela primeira vez
@@ -106,10 +106,11 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
           status,
           turmas,
           horarios,
-          dataMatricula: new Date().toISOString(),
-          authCreated: false // Indica que ainda precisa criar conta no Auth
+          dataMatricula: new Date().toISOString().split('T')[0],
+          authCreated: false, // Indica que ainda precisa criar conta no Auth
+          role: 'user' // ✅ Adicionar esta linha
         });
-        console.log('✅ Dados salvos no Firestore');
+        ('✅ Dados salvos no Firestore');
 
         setSuccessMessage(`✅ Aluno cadastrado! 
 
@@ -118,7 +119,7 @@ Instruções para o aluno:
 2. Clicar em "Esqueci minha senha"
 3. Digitar o email: ${email}
 4. Seguir instruções do email recebido`);
-        console.log('✅ Aluno cadastrado com sucesso!');
+        ('✅ Aluno cadastrado com sucesso!');
         
         // Atualizar lista de alunos imediatamente
         onSuccess();
@@ -144,7 +145,7 @@ Instruções para o aluno:
           // Não atualizamos email e dataMatricula na edição
         });
 
-        console.log('✅ Aluno atualizado com sucesso!');
+        ('✅ Aluno atualizado com sucesso!');
         setSuccessMessage('Aluno atualizado com sucesso!');
         
         // Atualizar lista de alunos imediatamente

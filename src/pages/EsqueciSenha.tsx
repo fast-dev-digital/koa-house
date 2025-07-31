@@ -19,7 +19,7 @@ const EsqueciSenha = () => {
     }
 
     try {
-      console.log('🔍 Verificando se email existe no sistema:', email);
+      ('🔍 Verificando se email existe no sistema:', email);
       
       // Verificar se o email existe como admin
       const adminQuery = query(collection(db, "admins"), where("email", "==", email));
@@ -31,12 +31,12 @@ const EsqueciSenha = () => {
       
       // Se não existe nem como admin nem como aluno
       if (adminSnapshot.empty && alunoSnapshot.empty) {
-        console.log('❌ Email não encontrado no sistema');
+        ('❌ Email não encontrado no sistema');
         setErro('Email não encontrado no sistema. Verifique se está correto ou contate o administrador.');
         return;
       }
       
-      console.log('✅ Email encontrado no sistema, enviando redefinição...');
+      ('✅ Email encontrado no sistema, enviando redefinição...');
       
       // Especifica a URL exata para onde o link deve redirecionar
       const actionCodeSettings = {

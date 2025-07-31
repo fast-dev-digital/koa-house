@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { auth, db } from '../firebase-config';
+import { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, query, collection, where, getDocs, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase-config';
+import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { useNavigate, Link } from 'react-router-dom';
 import BackgroundImage from '../assets/background-image.svg';
 
 function PaginaLogin() {
@@ -14,77 +14,97 @@ function PaginaLogin() {
 
   const handleLogin = async (evento: React.FormEvent) => {
     evento.preventDefault();
-    setError('');
     setLoading(true);
+    setError('');
 
     try {
-      // Faz o login normal
+      ('🔐 Tentando fazer login com:', email);
+      
+      // Tentar fazer login normalmente
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      const user = userCredential.user;
+      ('✅ Login realizado com sucesso!');
       
-      // Agora precisa descobrir se é admin ou aluno
-      // Primeiro verifica se é admin
-      const adminDoc = await getDoc(doc(db, "admins", user.uid));
+      // Verificar se é admin
+      const adminQuery = query(collection(db, "admins"), where("email", "==", email));
+      const adminSnapshot = await getDocs(adminQuery);
       
-      if (adminDoc.exists() && adminDoc.data().role === "admin") {
-        // É admin, vai para dashboard admin
-        alert('Login de admin bem sucedido!');
+      if (!adminSnapshot.empty) {
+        ('👑 Admin detectado, redirecionando para admin-dashboard...');
         navigate('/admin-dashboard');
       } else {
-        // Verifica se é aluno
-        const alunoDoc = await getDoc(doc(db, "Alunos", user.uid));
+        // Verificar se é aluno
+        const alunoQuery = query(collection(db, "Alunos"), where("email", "==", email));
+        const alunoSnapshot = await getDocs(alunoQuery);
         
-        if (alunoDoc.exists()) {
-          // É aluno, vai para dashboard do aluno
-          alert('Login de aluno bem sucedido!');
-          setTimeout(() => navigate('/aluno'), 500);
+        if (!alunoSnapshot.empty) {
+          ('👤 Aluno detectado, redirecionando para /aluno...');
+          navigate('/aluno/*');
         } else {
-          // Não é nem admin nem aluno - problema!
+          ('❌ Usuário não encontrado nas coleções');
           setError('Usuário não encontrado no sistema.');
-          await auth.signOut(); // Desloga
         }
       }
       
     } catch (err: any) {
-      console.error("Erro no login:", err);
-      if (err.code === 'auth/invalid-credential') {
-        setError('Email ou senha incorretos.');
-      } else if (err.code === 'auth/user-not-found') {
-        // Verificar se é um aluno cadastrado pelo admin que ainda não tem conta no Auth
-        console.log('🔍 Usuário não encontrado no Auth, verificando se é aluno cadastrado...');
+      ('❌ Erro no login:', err.code);
+      
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
+        ('🔍 Verificando se é primeiro login do aluno...');
         
         try {
-          // Buscar aluno no Firestore com authCreated = false
-          const q = query(
-            collection(db, "Alunos"), 
-            where("email", "==", email),
-            where("authCreated", "==", false)
-          );
-          const querySnapshot = await getDocs(q);
-
+          // Buscar aluno na coleção Alunos
+          const alunoQuery = query(collection(db, "Alunos"), where("email", "==", email));
+          const querySnapshot = await getDocs(alunoQuery);
+          
+          ('📄 Resultado da busca:', querySnapshot.empty ? 'Não encontrado' : 'Encontrado');
+          
           if (!querySnapshot.empty) {
-            // Aluno existe no Firestore mas não no Auth - criar conta automaticamente
-            console.log('✅ Aluno encontrado no Firestore, criando conta no Auth...');
-            
-            const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-            const user = userCredential.user;
-            
-            // Atualizar registro no Firestore
             const alunoDoc = querySnapshot.docs[0];
-            await updateDoc(doc(db, "Alunos", alunoDoc.id), {
-              authCreated: true,
-              authUID: user.uid
-            });
+            const alunoData = alunoDoc.data();
             
-            console.log('✅ Conta criada e vinculada com sucesso!');
-            alert('Primeira conta criada com sucesso!');
-            setTimeout(() => navigate('/aluno'), 500);
+            ('👤 Aluno encontrado:', alunoData);
+            ('🔑 authCreated:', alunoData.authCreated);
+            
+            // Se é primeiro acesso (authCreated = false ou undefined)
+            if (alunoData.authCreated === false || alunoData.authCreated === undefined) {
+              ('🆕 Tentando criar conta no Firebase Auth...');
+              
+              try {
+                // Tentar criar usuário no Firebase Auth
+                await createUserWithEmailAndPassword(auth, email, senha);
+                ('✅ Conta criada no Auth com sucesso!');
+              } catch (authError: any) {
+                if (authError.code === 'auth/email-already-in-use') {
+                  ('ℹ️ Usuário já existe no Auth, apenas fazendo login...');
+                  // Se já existe, apenas fazer login
+                  await signInWithEmailAndPassword(auth, email, senha);
+                  ('✅ Login realizado com sucesso!');
+                } else {
+                  throw authError; // Re-throw outros erros
+                }
+              }
+              
+              // Marcar como conta criada no Firestore
+              await updateDoc(doc(db, "Alunos", alunoDoc.id), {
+                authCreated: true
+              });
+              
+              ('✅ authCreated atualizado para true');
+              ('🎯 Pronto para redirecionar...');
+              ('🔄 Executando navigate para /aluno...');
+              navigate('/aluno');
+              ('✅ Navigate para /aluno executado!');
+              return; // Adicionar return para garantir que pare aqui
+            } else {
+              setError('Senha incorreta. Use "Esqueci minha senha" se necessário.');
+            }
           } else {
+            ('❌ Email não encontrado no sistema');
             setError('Conta não encontrada. Se você é um novo aluno, entre em contato com o administrador.');
           }
         } catch (createError: any) {
           console.error('❌ Erro ao criar conta:', createError);
-          setError('Erro ao criar conta. Tente usar "Esqueci minha senha".');
+          setError('Erro ao processar login. Tente usar "Esqueci minha senha".');
         }
       } else if (err.code === 'auth/wrong-password') {
         setError('Senha incorreta.');
@@ -139,21 +159,32 @@ function PaginaLogin() {
               />
             </div>
 
-            {error && <div className="text-red-500 text-sm text-center mb-4">{error}</div>}
+            {error && (
+              <div className="mb-4 text-red-600 text-sm">
+                {error}
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200"
               disabled={loading}
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
-            Esqueceu a senha? <br />
-            <Link to="/esqueci-senha" className="font-medium text-green-600 hover:underline">Redefinir a senha</Link>
-          </p>
+          <div className="mt-4 text-center">
+            <Link to="/esqueci-senha" className="text-green-600 hover:teg-green-800 text-sm">
+              Esqueci minha senha
+            </Link>
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link to="/" className="text-gray-600 hover:text-gray-800 text-sm">
+              ← Voltar ao início
+            </Link>
+          </div>
         </div>
       </div>
     </>

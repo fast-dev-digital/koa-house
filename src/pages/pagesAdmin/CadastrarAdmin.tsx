@@ -36,7 +36,7 @@ export default function CadastrarAdmin() {
       // 📧 ENVIAR EMAIL DE VERIFICAÇÃO
       await sendEmailVerification(user);
       
-      setSuccess('Admin cadastrado com sucesso! Verifique o email para confirmar a conta.');
+      setSuccess('Admin cadastrado com sucesso!');
       setNome('');
       setEmail('');
       setSenha('');

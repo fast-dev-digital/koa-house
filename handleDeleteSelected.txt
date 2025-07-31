@@ -8,7 +8,7 @@
 
     setLoading(true);
     try {
-      console.log(`🗑️ Iniciando exclusão de ${selectedAlunos.length} alunos`);
+      (`🗑️ Iniciando exclusão de ${selectedAlunos.length} alunos`);
 
       // Deletar todos os alunos selecionados do Firestore
       const deletePromises = selectedAlunos.map(aluno => 
@@ -16,7 +16,7 @@
       );
       
       await Promise.all(deletePromises);
-      console.log('✅ Todos os alunos foram removidos do Firestore');
+      ('✅ Todos os alunos foram removidos do Firestore');
 
       // Atualizar a lista local removendo os alunos excluídos
       const deletedIds = selectedAlunos.map(aluno => aluno.id);

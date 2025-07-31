@@ -167,17 +167,17 @@ const alunosFiltrados = useMemo(() => {
 
     setDeleteLoading(true);
     try {
-      console.log('🗑️ Iniciando exclusão do aluno:', alunoToDelete.email);
+      ('🗑️ Iniciando exclusão do aluno:', alunoToDelete.email);
 
       // 1. Deletar do Firestore
       await deleteDoc(doc(db, "Alunos", alunoToDelete.id));
-      console.log('✅ Aluno removido do Firestore');
+      ('✅ Aluno removido do Firestore');
 
       // 2. Tentar deletar do Firebase Auth (se existir)
       // Nota: Só é possível deletar o próprio usuário logado no Firebase Auth
       // Para deletar outros usuários, seria necessário usar Admin SDK no backend
       // Por agora, vamos apenas remover do Firestore
-      console.log('ℹ️ Usuário removido do Firestore. Auth mantido para segurança.');
+      ('ℹ️ Usuário removido do Firestore. Auth mantido para segurança.');
 
       // 3. Atualizar a lista local
       setAlunos(alunos.filter(aluno => aluno.id !== alunoToDelete.id));
@@ -207,7 +207,7 @@ const alunosFiltrados = useMemo(() => {
 
     setLoading(true);
     try {
-      console.log(`🗑️ Iniciando exclusão de ${selectedAlunos.length} alunos`);
+      (`🗑️ Iniciando exclusão de ${selectedAlunos.length} alunos`);
 
       // Deletar todos os alunos selecionados do Firestore
       const deletePromises = selectedAlunos.map(aluno => 
@@ -215,7 +215,7 @@ const alunosFiltrados = useMemo(() => {
       );
       
       await Promise.all(deletePromises);
-      console.log('✅ Todos os alunos foram removidos do Firestore');
+      ('Todos os alunos foram removidos do Firestore');
 
       // Atualizar a lista local removendo os alunos excluídos
       const deletedIds = selectedAlunos.map(aluno => aluno.id);
@@ -225,7 +225,7 @@ const alunosFiltrados = useMemo(() => {
       showToastMessage(`${selectedAlunos.length} aluno(s) excluído(s) com sucesso!`, 'success');
 
     } catch (error) {
-      console.error('❌ Erro ao excluir alunos:', error);
+      console.error(' Erro ao excluir alunos:', error);
       showToastMessage('Erro ao excluir alguns alunos!', 'error');
     } finally {
       setLoading(false);
@@ -244,7 +244,7 @@ const alunosFiltrados = useMemo(() => {
   };
 
   const handleView = (aluno: Aluno) => {
-    console.log('Visualizar aluno:', aluno);
+    ('Visualizar aluno:', aluno);
     // TODO: Implementar modal de visualização
   };
 
@@ -263,7 +263,7 @@ const alunosFiltrados = useMemo(() => {
 
   // Função de sucesso do modal
   const handleModalSuccess = () => {
-    console.log('🔄 Modal success - atualizando lista de alunos...');
+    ('🔄 Modal success - atualizando lista de alunos...');
     setIsModalOpen(false);
     setSelectedAluno(null);
     fetchAlunos(); // Recarrega a lista de alunos
@@ -272,7 +272,7 @@ const alunosFiltrados = useMemo(() => {
     const action = modalMode === 'create' ? 'cadastrado' : 'atualizado';
     showToastMessage(`Aluno ${action} com sucesso!`, 'success');
     
-    console.log('✅ Lista de alunos atualizada com sucesso');
+    ('✅ Lista de alunos atualizada com sucesso');
   };
 
   return (
@@ -282,7 +282,7 @@ const alunosFiltrados = useMemo(() => {
         <h1 className="text-xl font-bold">Gestão de Alunos</h1>
         <div className="flex gap-2">
           <button
-            onClick={() => console.log('Exportar CSV')}
+            onClick={() => ('Exportar CSV')}
             className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm"
             disabled={alunos.length === 0}
           >
