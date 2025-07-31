@@ -1,0 +1,34 @@
+  // Função para deletar múltiplos alunos
+  const handleDeleteSelected = async (selectedAlunos: Aluno[]) => {
+    if (selectedAlunos.length === 0) return;
+
+    // Confirmar a ação
+    const confirmMessage = `Tem certeza que deseja excluir ${selectedAlunos.length} aluno(s) selecionado(s)? Esta ação não pode ser desfeita.`;
+    if (!window.confirm(confirmMessage)) return;
+
+    setLoading(true);
+    try {
+      console.log(`🗑️ Iniciando exclusão de ${selectedAlunos.length} alunos`);
+
+      // Deletar todos os alunos selecionados do Firestore
+      const deletePromises = selectedAlunos.map(aluno => 
+        deleteDoc(doc(db, "Alunos", aluno.id))
+      );
+      
+      await Promise.all(deletePromises);
+      console.log('✅ Todos os alunos foram removidos do Firestore');
+
+      // Atualizar a lista local removendo os alunos excluídos
+      const deletedIds = selectedAlunos.map(aluno => aluno.id);
+      setAlunos(alunos.filter(aluno => !deletedIds.includes(aluno.id)));
+
+      // Mostrar toast de sucesso
+      showToastMessage(`${selectedAlunos.length} aluno(s) excluído(s) com sucesso!`, 'success');
+
+    } catch (error) {
+      console.error('❌ Erro ao excluir alunos:', error);
+      showToastMessage('Erro ao excluir alguns alunos!', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };

@@ -1,4 +1,4 @@
-import { FaUser, FaChalkboardTeacher, FaUsers, FaMoneyBill, FaCalendarAlt, FaSignOutAlt, FaHome, FaUserPlus } from "react-icons/fa";
+import { FaUser, FaChalkboardTeacher, FaUsers, FaMoneyBill, FaSignOutAlt, FaHome, FaUserPlus } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase-config";
@@ -13,14 +13,14 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-56 bg-white min-h-screen flex flex-col justify-between border-r">
-      <div className="flex items-center justify-center mt-6 mb-2">
+    <aside className="w-56 bg-white h-screen flex flex-col justify-between border-r shadow-lg">
+      <div className="flex items-center justify-center pt-6 pb-4">
         <Link to="/">
           <img src={Logo} alt="Logo" className="h-12 w-auto" />
         </Link>
       </div>
-      <nav className="mt-4">
-        <ul className="space-y-2">
+      <nav className="flex-1 mt-2">
+        <ul className="space-y-1">
           <li>
             <Link to="/admin-dashboard" className="flex items-center gap-3 px-6 py-3 text-gray-700 hover:bg-gray-100 cursor-pointer">
               <FaHome /> Dashboard
@@ -53,7 +53,7 @@ export default function Sidebar() {
           </li>
         </ul>
       </nav>
-      <div className="mb-8">
+      <div className="pb-6">
         <ul>
           <li
             className="flex items-center gap-3 px-6 py-3 text-gray-700 hover:bg-gray-100 cursor-pointer"

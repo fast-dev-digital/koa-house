@@ -12,6 +12,7 @@ import Planos from './pages/Planos';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/pagesAdmin/AdminDashboard';
 import CadastrarAdmin from './pages/pagesAdmin/CadastrarAdmin';
+import GestaoAlunos from './pages/pagesAdmin/GestaoAlunosNovo';
 import RedefinirSenha from './pages/ConfirmarSenha';
 import EsqueciSenha from './pages/EsqueciSenha';
 
@@ -69,6 +70,18 @@ function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="cadastrar" element={<CadastrarAdmin />} />
+      </Route>
+
+      {/* Rota para gestão de alunos */}
+      <Route
+        path="/gestao-alunos"
+        element={
+          <ProtectedRoute requireRole="admin">
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<GestaoAlunos />} />
       </Route>
     </Routes>
   );

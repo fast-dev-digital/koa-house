@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 // Importação do que precisamos do Firebase
 import { auth, db } from '../firebase-config';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from "firebase/firestore";
 import BackgroundImage from '../assets/background-image.svg';
 
@@ -50,7 +50,10 @@ function PaginaCadastro() {
         datadecriacao: new Date()
       });
 
-      alert('Usuario cadastrado com sucesso!');
+      // 📧 ENVIAR EMAIL DE VERIFICAÇÃO
+      await sendEmailVerification(user);
+
+      alert('Usuario cadastrado com sucesso! Verifique seu email para confirmar a conta.');
       navigate('/login');
       // Futuramente, redirecionaremos para a tela de login ou home após o cadastro.
     } catch (err: any) {

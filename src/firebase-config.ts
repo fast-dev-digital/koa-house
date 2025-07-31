@@ -14,8 +14,15 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Debug: Verificar se as configurações estão sendo carregadas
+console.log('🔥 Firebase Config Debug:');
+console.log('apiKey:', firebaseConfig.apiKey ? '✅ Definida' : '❌ Undefined');
+console.log('authDomain:', firebaseConfig.authDomain ? '✅ Definida' : '❌ Undefined');
+console.log('projectId:', firebaseConfig.projectId ? '✅ Definida' : '❌ Undefined');
+
 // Inicializa o aplicativo Firebase com as configurações
 const app = initializeApp(firebaseConfig);
+console.log('✅ Firebase inicializado com sucesso!');
 
 // Exporta os serviços que vamos usar no resto do projeto (Autenticação e Banco de Dados)
 export const auth = getAuth(app);

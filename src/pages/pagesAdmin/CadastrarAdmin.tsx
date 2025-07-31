@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from '../../firebase-config';
 
@@ -32,7 +32,11 @@ export default function CadastrarAdmin() {
         role: "admin",
         criadoEm: new Date()
       });
-      setSuccess('Admin cadastrado com sucesso!');
+      
+      // 📧 ENVIAR EMAIL DE VERIFICAÇÃO
+      await sendEmailVerification(user);
+      
+      setSuccess('Admin cadastrado com sucesso! Verifique o email para confirmar a conta.');
       setNome('');
       setEmail('');
       setSenha('');

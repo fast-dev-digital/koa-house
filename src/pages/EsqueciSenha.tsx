@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../firebase-config';
+import { auth, db } from '../firebase-config';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Link, useNavigate} from 'react-router-dom';
 
 const EsqueciSenha = () => {
@@ -12,7 +13,31 @@ const EsqueciSenha = () => {
     setMensagem('');
     setErro('');
 
+    if (!email.trim()) {
+      setErro('Por favor, digite um email válido.');
+      return;
+    }
+
     try {
+      console.log('🔍 Verificando se email existe no sistema:', email);
+      
+      // Verificar se o email existe como admin
+      const adminQuery = query(collection(db, "admins"), where("email", "==", email));
+      const adminSnapshot = await getDocs(adminQuery);
+      
+      // Verificar se o email existe como aluno
+      const alunoQuery = query(collection(db, "Alunos"), where("email", "==", email));
+      const alunoSnapshot = await getDocs(alunoQuery);
+      
+      // Se não existe nem como admin nem como aluno
+      if (adminSnapshot.empty && alunoSnapshot.empty) {
+        console.log('❌ Email não encontrado no sistema');
+        setErro('Email não encontrado no sistema. Verifique se está correto ou contate o administrador.');
+        return;
+      }
+      
+      console.log('✅ Email encontrado no sistema, enviando redefinição...');
+      
       // Especifica a URL exata para onde o link deve redirecionar
       const actionCodeSettings = {
         url: `${window.location.origin}/redefinir-senha`,
@@ -25,9 +50,13 @@ const EsqueciSenha = () => {
         navigate('/login');
       }, 3000);
     } catch (error: any) {
-      console.error(error);
+      console.error('❌ Erro ao enviar email:', error);
       if (error.code === 'auth/user-not-found') {
-        setErro('E-mail não encontrado.');
+        setErro('Email não encontrado no Firebase Auth. Se você é aluno, faça login primeiro para criar sua conta.');
+      } else if (error.code === 'auth/invalid-email') {
+        setErro('Email inválido. Verifique o formato.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setErro('Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.');
       } else {
         setErro('Erro ao enviar e-mail. Tente novamente.');
       }

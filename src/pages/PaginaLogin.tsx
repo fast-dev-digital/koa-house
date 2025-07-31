@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase-config';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc, query, collection, where, getDocs, updateDoc } from 'firebase/firestore';
 import BackgroundImage from '../assets/background-image.svg';
 
 function PaginaLogin() {
@@ -48,9 +48,50 @@ function PaginaLogin() {
     } catch (err: any) {
       console.error("Erro no login:", err);
       if (err.code === 'auth/invalid-credential') {
-        setError('E-mail ou senha inválidos.');
+        setError('Email ou senha incorretos.');
+      } else if (err.code === 'auth/user-not-found') {
+        // Verificar se é um aluno cadastrado pelo admin que ainda não tem conta no Auth
+        console.log('🔍 Usuário não encontrado no Auth, verificando se é aluno cadastrado...');
+        
+        try {
+          // Buscar aluno no Firestore com authCreated = false
+          const q = query(
+            collection(db, "Alunos"), 
+            where("email", "==", email),
+            where("authCreated", "==", false)
+          );
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            // Aluno existe no Firestore mas não no Auth - criar conta automaticamente
+            console.log('✅ Aluno encontrado no Firestore, criando conta no Auth...');
+            
+            const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+            const user = userCredential.user;
+            
+            // Atualizar registro no Firestore
+            const alunoDoc = querySnapshot.docs[0];
+            await updateDoc(doc(db, "Alunos", alunoDoc.id), {
+              authCreated: true,
+              authUID: user.uid
+            });
+            
+            console.log('✅ Conta criada e vinculada com sucesso!');
+            alert('Primeira conta criada com sucesso!');
+            setTimeout(() => navigate('/aluno'), 500);
+          } else {
+            setError('Conta não encontrada. Se você é um novo aluno, entre em contato com o administrador.');
+          }
+        } catch (createError: any) {
+          console.error('❌ Erro ao criar conta:', createError);
+          setError('Erro ao criar conta. Tente usar "Esqueci minha senha".');
+        }
+      } else if (err.code === 'auth/wrong-password') {
+        setError('Senha incorreta.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Email inválido.');
       } else {
-        setError('Ocorreu um erro ao fazer login. Tente novamente');
+        setError('Erro no login. Verifique suas credenciais.');
       }
     } finally {
       setLoading(false);
@@ -112,7 +153,6 @@ function PaginaLogin() {
           <p className="text-center text-sm text-gray-600 mt-6">
             Esqueceu a senha? <br />
             <Link to="/esqueci-senha" className="font-medium text-green-600 hover:underline">Redefinir a senha</Link>
-
           </p>
         </div>
       </div>
