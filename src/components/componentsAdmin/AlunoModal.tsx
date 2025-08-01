@@ -89,7 +89,7 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
 
     try {
       if (mode === 'create') {
-        ('🚀 Criando aluno apenas no Firestore:', email);
+        
         
         // SOLUÇÃO DEFINITIVA: Apenas salvar no Firestore
         // O usuário será criado no Auth quando fizer login pela primeira vez

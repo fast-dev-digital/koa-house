@@ -18,7 +18,7 @@ function PaginaLogin() {
     setError('');
 
     try {
-      ('🔐 Tentando fazer login com:', email);
+      (email);
       
       // Tentar fazer login normalmente
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
@@ -46,7 +46,7 @@ function PaginaLogin() {
       }
       
     } catch (err: any) {
-      ('❌ Erro no login:', err.code);
+      (err.code);
       
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
         ('🔍 Verificando se é primeiro login do aluno...');
@@ -56,14 +56,14 @@ function PaginaLogin() {
           const alunoQuery = query(collection(db, "Alunos"), where("email", "==", email));
           const querySnapshot = await getDocs(alunoQuery);
           
-          ('📄 Resultado da busca:', querySnapshot.empty ? 'Não encontrado' : 'Encontrado');
+          (querySnapshot.empty ? 'Não encontrado' : 'Encontrado');
           
           if (!querySnapshot.empty) {
             const alunoDoc = querySnapshot.docs[0];
             const alunoData = alunoDoc.data();
             
-            ('👤 Aluno encontrado:', alunoData);
-            ('🔑 authCreated:', alunoData.authCreated);
+            (alunoData);
+            (alunoData.authCreated);
             
             // Se é primeiro acesso (authCreated = false ou undefined)
             if (alunoData.authCreated === false || alunoData.authCreated === undefined) {
