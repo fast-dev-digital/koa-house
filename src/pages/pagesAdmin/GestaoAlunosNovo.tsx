@@ -7,6 +7,8 @@ import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters"
 import AlunoModal from "../../components/componentsAdmin/AlunoModal";
 import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";
 import Toast from "../../components/componentsAdmin/Toast";
+import { exportarAlunosCSV } from "../../utils/exportarCsv";
+
 interface Aluno {
   id: string;
   nome: string;
@@ -72,7 +74,8 @@ const alunosColumns = [
 export default function GestaoAlunos() {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  // Estado para baixar cvs
+  const [csvLoading, setCsvLoading] = useState(false);
   // Estados para busca e filtros
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -273,7 +276,20 @@ const alunosFiltrados = useMemo(() => {
     
     ('✅ Lista de alunos atualizada com sucesso');
   };
+  const handleExportarCSV = async () => {
+    try {
+      setCsvLoading(true);
+      showToastMessage('Iniciando exportação CSV... ', 'success');
+      
+      await exportarAlunosCSV();
 
+    }
+    catch(erro) {
+      showToastMessage('Erro ao exportar arquivo', 'error');
+    } finally {
+      setCsvLoading(false);
+    }
+  }
   return (
     <div className="p-4">
       {/* Cabeçalho */}
@@ -281,15 +297,15 @@ const alunosFiltrados = useMemo(() => {
         <h1 className="text-xl font-bold">Gestão de Alunos</h1>
         <div className="flex gap-2">
           <button
-            onClick={() => ('Exportar CSV')}
+            onClick={handleExportarCSV}
             className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm"
-            disabled={alunos.length === 0}
+            disabled={alunos.length === 0 || csvLoading}
           >
-            <FaDownload className="text-xs" /> Exportar CSV
+            <FaDownload className={`text-xs${csvLoading ? 'animate-spin' : ''}`} /> Exportar CSV
           </button>
           <button
             onClick={handleCreateAluno}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm"
           >
             <FaPlus className="text-xs" /> Novo Aluno
           </button>
