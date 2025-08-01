@@ -415,7 +415,6 @@ const alunosFiltrados = useMemo(() => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onDeleteSelected={handleDeleteSelected}
-        onView={handleView}
         selectable={true}
       />
 

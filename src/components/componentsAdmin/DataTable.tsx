@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { FaEdit, FaTrash} from 'react-icons/fa';
 
 // Interface para definir como cada coluna vai funcionar
 interface Column {
@@ -15,7 +15,6 @@ interface DataTableProps {
   columns: Column[];              // Configuração das colunas
   onEdit?: (item: any) => void;   // Função chamada quando clica em editar
   onDelete?: (item: any) => void; // Função chamada quando clica em deletar
-  onView?: (item: any) => void;   // Função chamada quando clica em visualizar
   onDeleteSelected?: (items: any[]) => void; // Função para deletar selecionados
   loading?: boolean;              // Se está carregando dados
   selectable?: boolean;           // Se permite seleção múltipla
@@ -26,7 +25,6 @@ export default function DataTable({
   columns,
   onEdit,
   onDelete,
-  onView,
   onDeleteSelected,
   loading = false,
   selectable = false
@@ -172,15 +170,6 @@ export default function DataTable({
                   {/* Coluna de ações */}
                   <td className="px-3 py-2 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-1">
-                      {onView && (
-                        <button
-                          onClick={() => onView(item)}
-                          className="text-blue-600 hover:text-blue-900 p-1"
-                          title="Visualizar"
-                        >
-                          <FaEye className="text-xs" />
-                        </button>
-                      )}
                       {onEdit && (
                         <button
                           onClick={() => onEdit(item)}
