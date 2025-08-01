@@ -15,10 +15,6 @@ const firebaseConfig = {
 };
 
 // Debug: Verificar se as configurações estão sendo carregadas
-('🔥 Firebase Config Debug:');
-('apiKey:', firebaseConfig.apiKey ? '✅ Definida' : '❌ Undefined');
-('authDomain:', firebaseConfig.authDomain ? '✅ Definida' : '❌ Undefined');
-('projectId:', firebaseConfig.projectId ? '✅ Definida' : '❌ Undefined');
 
 // Inicializa o aplicativo Firebase com as configurações
 const app = initializeApp(firebaseConfig);

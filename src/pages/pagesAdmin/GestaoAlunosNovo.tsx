@@ -167,11 +167,10 @@ const alunosFiltrados = useMemo(() => {
 
     setDeleteLoading(true);
     try {
-      ('🗑️ Iniciando exclusão do aluno:', alunoToDelete.email);
-
+      
       // 1. Deletar do Firestore
       await deleteDoc(doc(db, "Alunos", alunoToDelete.id));
-      ('✅ Aluno removido do Firestore');
+     
 
       // 2. Tentar deletar do Firebase Auth (se existir)
       // Nota: Só é possível deletar o próprio usuário logado no Firebase Auth
@@ -244,7 +243,7 @@ const alunosFiltrados = useMemo(() => {
   };
 
   const handleView = (aluno: Aluno) => {
-    ('Visualizar aluno:', aluno);
+    console.log(aluno);
     // TODO: Implementar modal de visualização
   };
 
