@@ -74,25 +74,40 @@ const alunosColumns = [
 export default function GestaoAlunos() {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
-  // Estado para baixar cvs
   const [csvLoading, setCsvLoading] = useState(false);
+  
   // Estados para busca e filtros
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [turmasFilter, setTurmasFilter] = useState('');
   const [horariosFilter, setHorariosFilter] = useState('');
 
+  // Estados do Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
+
+  // Estados do Modal de Confirmação de Delete
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [alunoToDelete, setAlunoToDelete] = useState<Aluno | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Estados do Toast
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [showToast, setShowToast] = useState(false);
+
   // ⚡ REATIVO - recalcula automaticamente quando algo muda
-const alunosFiltrados = useMemo(() => {
-  return alunos.filter(aluno => {
-    const filtroNome = aluno.nome.toLowerCase().includes(searchText.toLowerCase());
-    const filtroStatus = !statusFilter || aluno.status === statusFilter;
-    const filtroTurmas = !turmasFilter || aluno.turmas === turmasFilter;
-    const filtroHorarios = !horariosFilter || aluno.horarios === horariosFilter;
-    
-    return filtroNome && filtroStatus && filtroTurmas && filtroHorarios;
-  });
-}, [alunos, searchText, statusFilter, turmasFilter, horariosFilter]);
+  const alunosFiltrados = useMemo(() => {
+    return alunos.filter(aluno => {
+      const filtroNome = aluno.nome.toLowerCase().includes(searchText.toLowerCase());
+      const filtroStatus = !statusFilter || aluno.status === statusFilter;
+      const filtroTurmas = !turmasFilter || aluno.turmas === turmasFilter;
+      const filtroHorarios = !horariosFilter || aluno.horarios === horariosFilter;
+      
+      return filtroNome && filtroStatus && filtroTurmas && filtroHorarios;
+    });
+  }, [alunos, searchText, statusFilter, turmasFilter, horariosFilter]);
 
   // Buscar alunos do Firestore
   const fetchAlunos = async () => {
@@ -121,6 +136,7 @@ const alunosFiltrados = useMemo(() => {
       setAlunos(alunosData);
     } catch (error) {
       console.error("Erro ao buscar alunos:", error);
+      showToastMessage('Erro ao carregar alunos', 'error');
     } finally {
       setLoading(false);
     }
@@ -129,21 +145,6 @@ const alunosFiltrados = useMemo(() => {
   useEffect(() => {
     fetchAlunos();
   }, []);
-
-  // Estados do Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
-
-  // Estados do Modal de Confirmação de Delete
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [alunoToDelete, setAlunoToDelete] = useState<Aluno | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Estados do Toast
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success' | 'error'>('success');
-  const [showToast, setShowToast] = useState(false);
 
   // Função helper para mostrar toast
   const showToastMessage = (message: string, type: 'success' | 'error') => {
@@ -170,25 +171,16 @@ const alunosFiltrados = useMemo(() => {
 
     setDeleteLoading(true);
     try {
-      
-      // 1. Deletar do Firestore
       await deleteDoc(doc(db, "Alunos", alunoToDelete.id));
-     
-
-      // 2. Tentar deletar do Firebase Auth (se existir)
-      // Nota: Só é possível deletar o próprio usuário logado no Firebase Auth
-      // Para deletar outros usuários, seria necessário usar Admin SDK no backend
-      // Por agora, vamos apenas remover do Firestore
-      ('ℹ️ Usuário removido do Firestore. Auth mantido para segurança.');
-
-      // 3. Atualizar a lista local
+      
+      // Atualizar a lista local
       setAlunos(alunos.filter(aluno => aluno.id !== alunoToDelete.id));
       
-      // 4. Fechar modal
+      // Fechar modal
       setIsDeleteModalOpen(false);
       setAlunoToDelete(null);
 
-      // 5. Mostrar toast de sucesso
+      // Mostrar toast de sucesso
       showToastMessage(`Aluno "${alunoToDelete.nome}" foi excluído com sucesso!`, 'success');
 
     } catch (error: any) {
@@ -203,31 +195,25 @@ const alunosFiltrados = useMemo(() => {
   const handleDeleteSelected = async (selectedAlunos: Aluno[]) => {
     if (selectedAlunos.length === 0) return;
 
-    // Confirmar a ação
     const confirmMessage = `Tem certeza que deseja excluir ${selectedAlunos.length} aluno(s) selecionado(s)? Esta ação não pode ser desfeita.`;
     if (!window.confirm(confirmMessage)) return;
 
     setLoading(true);
     try {
-      (`🗑️ Iniciando exclusão de ${selectedAlunos.length} alunos`);
-
-      // Deletar todos os alunos selecionados do Firestore
       const deletePromises = selectedAlunos.map(aluno => 
         deleteDoc(doc(db, "Alunos", aluno.id))
       );
       
       await Promise.all(deletePromises);
-      ('Todos os alunos foram removidos do Firestore');
 
       // Atualizar a lista local removendo os alunos excluídos
       const deletedIds = selectedAlunos.map(aluno => aluno.id);
       setAlunos(alunos.filter(aluno => !deletedIds.includes(aluno.id)));
 
-      // Mostrar toast de sucesso
       showToastMessage(`${selectedAlunos.length} aluno(s) excluído(s) com sucesso!`, 'success');
 
     } catch (error) {
-      console.error(' Erro ao excluir alunos:', error);
+      console.error('Erro ao excluir alunos:', error);
       showToastMessage('Erro ao excluir alguns alunos!', 'error');
     } finally {
       setLoading(false);
@@ -245,11 +231,6 @@ const alunosFiltrados = useMemo(() => {
     setShowToast(false);
   };
 
-  const handleView = (aluno: Aluno) => {
-    console.log(aluno);
-    // TODO: Implementar modal de visualização
-  };
-
   // Função para abrir modal de criação
   const handleCreateAluno = () => {
     setSelectedAluno(null);
@@ -265,130 +246,161 @@ const alunosFiltrados = useMemo(() => {
 
   // Função de sucesso do modal
   const handleModalSuccess = () => {
-    ('🔄 Modal success - atualizando lista de alunos...');
     setIsModalOpen(false);
     setSelectedAluno(null);
-    fetchAlunos(); // Recarrega a lista de alunos
+    fetchAlunos();
     
-    // Mostrar toast de sucesso
     const action = modalMode === 'create' ? 'cadastrado' : 'atualizado';
     showToastMessage(`Aluno ${action} com sucesso!`, 'success');
-    
-    ('✅ Lista de alunos atualizada com sucesso');
   };
+
   const handleExportarCSV = async () => {
     try {
       setCsvLoading(true);
-      showToastMessage('Iniciando exportação CSV... ', 'success');
+      showToastMessage('Iniciando exportação CSV...', 'success');
       
       await exportarAlunosCSV();
 
-    }
-    catch(erro) {
+    } catch(erro) {
       showToastMessage('Erro ao exportar arquivo', 'error');
     } finally {
       setCsvLoading(false);
     }
-  }
+  };
+
   return (
-    <div className="p-4">
+    <div className="p-6">
       {/* Cabeçalho */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Gestão de Alunos</h1>
-        <div className="flex gap-2">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-3">
+          <FaUser className="text-2xl text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Gestão de Alunos</h1>
+        </div>
+        <div className="flex space-x-3">
           <button
             onClick={handleExportarCSV}
-            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm"
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             disabled={alunos.length === 0 || csvLoading}
           >
-            <FaDownload className={`text-xs${csvLoading ? 'animate-spin' : ''}`} /> Exportar CSV
+            <FaDownload className={csvLoading ? 'animate-spin' : ''} />
+            <span>Exportar</span>
           </button>
           <button
             onClick={handleCreateAluno}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm"
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            <FaPlus className="text-xs" /> Novo Aluno
+            <FaPlus />
+            <span>Novo Aluno</span>
           </button>
         </div>
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-        <div className="bg-white rounded-lg shadow p-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-xs font-medium text-gray-600">Total de Alunos</p>
-              <p className="text-lg font-bold text-gray-900">{alunosFiltrados.length}</p>
-            </div>
-            <div className="ml-3">
-              <div className="bg-blue-100 rounded-full p-2">
-                <FaUser className="text-blue-600 text-sm" />
-              </div>
+            <FaUser className="text-2xl text-blue-600 mr-3" />
+            <div>
+              <p className="text-sm text-gray-600">Total de Alunos</p>
+              <p className="text-2xl font-bold text-gray-900">{alunosFiltrados.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3">
+        <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-xs font-medium text-gray-600">Alunos Ativos</p>
-              <p className="text-lg font-bold text-green-600">
+            <FaUser className="text-2xl text-green-600 mr-3" />
+            <div>
+              <p className="text-sm text-gray-600">Alunos Ativos</p>
+              <p className="text-2xl font-bold text-gray-900">
                 {alunosFiltrados.filter(a => a.status === 'ativo').length}
               </p>
             </div>
-            <div className="ml-3">
-              <div className="bg-green-100 rounded-full p-2">
-                <FaUser className="text-green-600 text-sm" />
-              </div>
-            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3">
+        <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-xs font-medium text-gray-600">Alunos Inativos</p>
-              <p className="text-lg font-bold text-gray-600">
+            <FaUser className="text-2xl text-gray-600 mr-3" />
+            <div>
+              <p className="text-sm text-gray-600">Alunos Inativos</p>
+              <p className="text-2xl font-bold text-gray-900">
                 {alunosFiltrados.filter(a => a.status === 'inativo').length}
               </p>
             </div>
-            <div className="ml-3">
-              <div className="bg-gray-100 rounded-full p-2">
-                <FaUser className="text-gray-600 text-sm" />
-              </div>
-            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3">
+        <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-xs font-medium text-gray-600">Alunos Suspensos</p>
-              <p className="text-lg font-bold text-red-600">
+            <FaUser className="text-2xl text-red-600 mr-3" />
+            <div>
+              <p className="text-sm text-gray-600">Alunos Suspensos</p>
+              <p className="text-2xl font-bold text-gray-900">
                 {alunosFiltrados.filter(a => a.status === 'suspenso').length}
               </p>
-            </div>
-            <div className="ml-3">
-              <div className="bg-red-100 rounded-full p-2">
-                <FaUser className="text-red-600 text-sm" />
-              </div>
             </div>
           </div>
         </div>
       </div>
       
       {/* Busca e Filtros */}
-      <SearchAndFilters
+      <SearchAndFilters 
         searchValue={searchText}
-        statusFilter={statusFilter}
-        turmasFilter={turmasFilter}
-        horariosFilter={horariosFilter}
         onSearchChange={setSearchText}
-        onStatusChange={setStatusFilter}
-        onTurmasChange={setTurmasFilter}
-        onHorariosChange={setHorariosFilter}
+        searchPlaceholder="Digite o nome do aluno..."
+        searchLabel="Buscar Alunos"
+        filters={[
+          {
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            placeholder: "Todos os Status",
+            options: [
+              { value: "ativo", label: "Ativo" },
+              { value: "inativo", label: "Inativo" },
+              { value: "suspenso", label: "Suspenso" }
+            ]
+          },
+          {
+            label: "Turmas", 
+            value: turmasFilter,
+            onChange: setTurmasFilter,
+            placeholder: "Todas as Turmas",
+            options: [
+              { value: "Seg-Qua", label: "Segunda e Quarta" },
+              { value: "Ter-Qui", label: "Terça e Quinta" }
+            ]
+          },
+          {
+            label: "Horários",
+            value: horariosFilter,
+            onChange: setHorariosFilter,
+            placeholder: "Todos os Horários",
+            options: [
+              { value: "18:00", label: "18:00" },
+              { value: "19:00", label: "19:00" },
+              { value: "20:00", label: "20:00" },
+              { value: "21:00", label: "21:00" }
+            ]
+          }
+        ]}
       />
-      
+
+      {/* DataTable */}
+      <DataTable
+        data={alunosFiltrados}
+        columns={alunosColumns}
+        loading={loading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onDeleteSelected={handleDeleteSelected}
+        selectable={true}
+        title="Lista de Alunos"
+        emptyMessage="Nenhum aluno encontrado. Cadastre o primeiro aluno!"
+        itemsPerPage={15}
+      />
+
       {/* Modal de Aluno - CREATE e UPDATE */}
       <AlunoModal 
         isOpen={isModalOpen}
@@ -403,19 +415,11 @@ const alunosFiltrados = useMemo(() => {
         isOpen={isDeleteModalOpen}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        aluno={alunoToDelete}
         loading={deleteLoading}
-      />
-      
-      {/* DataTable */}
-      <DataTable
-        data={alunosFiltrados}
-        columns={alunosColumns}
-        loading={loading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onDeleteSelected={handleDeleteSelected}
-        selectable={true}
+        item={alunoToDelete}
+        itemType="aluno"
+        title="Excluir Aluno"
+        message="Tem certeza que deseja excluir este aluno? Esta ação não pode ser desfeita."
       />
 
       {/* Toast de Notificação */}
