@@ -11,14 +11,6 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, userData, loading } = useAuth();
 
   // LOGS DETALHADOS PARA DEBUG
-  ('🛡️ ProtectedRoute - ESTADO COMPLETO:');
-  ('- user:', user);
-  ('- userData:', userData);
-  ('- loading:', loading);
-  ('- requiredRole:', requiredRole);
-  ('- user exists:', !!user);
-  ('- userData exists:', !!userData);
-  ('- userData.role:', userData?.role);
 
   if (loading) {
     ('⏳ ProtectedRoute - AINDA CARREGANDO');

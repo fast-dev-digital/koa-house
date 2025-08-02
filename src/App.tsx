@@ -22,6 +22,7 @@ import DashboardAluno from './pages/pagesAluno/DashboardAluno';
 import MinhasTurmas from './pages/pagesAluno/MinhasTurmas';
 import MeusPagamentos from './pages/pagesAluno/MeusPagamentos';
 import MeuPerfil from './pages/pagesAluno/MeuPerfil';
+import GestaoTurmas from './pages/pagesAdmin/GestaoTurmas';
 
 function App() {
   return (
@@ -87,7 +88,16 @@ function App() {
             }
           >
             <Route index element={<AdminDashboard />} />
-            <Route path="cadastrar" element={<CadastrarAdmin />} />
+          </Route>
+          <Route
+            path="/cadastrar-admin"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<CadastrarAdmin />} />
           </Route>
           <Route
             path="/gestao-alunos"
@@ -98,6 +108,18 @@ function App() {
             }
           >
             <Route index element={<GestaoAlunos />} />
+            
+          </Route>
+           <Route
+            path="/gestao-turmas"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<GestaoTurmas />} />
+            
           </Route>
         </Routes>
       </Router>
