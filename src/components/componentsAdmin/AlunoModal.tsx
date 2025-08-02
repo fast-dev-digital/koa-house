@@ -112,14 +112,8 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
         });
         ('✅ Dados salvos no Firestore');
 
-        setSuccessMessage(`✅ Aluno cadastrado! 
+        setSuccessMessage(`Aluno cadastrado!`); 
 
-Instruções para o aluno:
-1. Acessar: ${window.location.origin}/login
-2. Clicar em "Esqueci minha senha"
-3. Digitar o email: ${email}
-4. Seguir instruções do email recebido`);
-        ('✅ Aluno cadastrado com sucesso!');
         
         // Atualizar lista de alunos imediatamente
         onSuccess();
@@ -144,8 +138,6 @@ Instruções para o aluno:
           horarios
           // Não atualizamos email e dataMatricula na edição
         });
-
-        ('✅ Aluno atualizado com sucesso!');
         setSuccessMessage('Aluno atualizado com sucesso!');
         
         // Atualizar lista de alunos imediatamente
