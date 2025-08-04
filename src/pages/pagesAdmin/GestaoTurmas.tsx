@@ -8,23 +8,58 @@ import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmMo
 import Toast from "../../components/componentsAdmin/Toast";
 import TurmasModal from "../../components/componentsAdmin/TurmasModal";
 import type { Turma } from "../../types/turmas";
-import ViewAlunosModal from "../../components/componentsAdmin/ViewAlunosModal";
+import ManageAlunosModal from "../../components/componentsAdmin/ManageAlunosModal";
+import { exportarTurmasCSV } from "../../utils/exportarCsv";
 
+//  COLUNAS Turmas
 const colunasTurmas = [
+  {
+    key: "nome",
+    label: "Nome da Turma",
+    sortable: true,
+    render: (value: string) => (
+      <div className="font-medium text-gray-900">{value || "Sem nome"}</div>
+    ),
+  },
   {
     key: "professorNome",
     label: "Professor",
     sortable: true,
+    render: (value: string) => value || "Não definido",
   },
   {
     key: "modalidade",
     label: "Modalidade",
     sortable: true,
+    render: (value: string) => (
+      <span
+        className={`px-2 py-1 text-xs rounded-full font-medium ${
+          value === "Futevôlei"
+            ? "bg-blue-100 text-blue-800"
+            : "bg-green-100 text-green-800"
+        }`}
+      >
+        {value}
+      </span>
+    ),
   },
   {
     key: "genero",
     label: "Gênero",
     sortable: true,
+    render: (value: string) => (
+      <span
+        className={`px-2 py-1 text-xs rounded-full font-medium ${
+          value === "Masculino"
+            ? "bg-blue-100 text-blue-800"
+            : value === "Feminino"
+            ? "bg-pink-100 text-pink-800"
+            : "bg-purple-100 text-purple-800"
+        }`}
+      >
+        {value}
+      </span>
+    ),
   },
   {
     key: "nivel",
@@ -34,59 +69,78 @@ const colunasTurmas = [
   {
     key: "dias",
     label: "Dias",
+    render: (value: string) => value || "A definir",
   },
   {
     key: "horario",
     label: "Horário",
     sortable: true,
+    render: (value: string) => value || "A definir",
   },
   {
     key: "alunosInscritos",
     label: "Alunos",
-    render: (value: number, row: Turma) => {
-      return (
-        <span className="text-sm">
+    render: (value: number, row: Turma) => (
+      <div className="text-center">
+        <span className="text-sm font-medium">
           {value || 0}/{row.capacidade || 0}
         </span>
-      );
-    },
+        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+          <div
+            className="bg-blue-600 h-1.5 rounded-full"
+            style={{
+              width: `${((value || 0) / (row.capacidade || 1)) * 100}%`,
+            }}
+          ></div>
+        </div>
+      </div>
+    ),
   },
 ];
 
 export default function GestaoTurmas() {
+  // ESTADOS PRINCIPAIS
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // ESTADOS DOS MODAIS
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedTurma, setSelectedTurma] = useState<Turma | null>(null);
-  // Estados de Filtros de busca
+  const [turmaToView, setTurmaToView] = useState<Turma | null>(null);
+  const [turmaToDelete, setTurmaToDelete] = useState<Turma | null>(null);
+
+  // ESTADOS DE CONTROLE
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [showToast, setShowToast] = useState(false);
+
+  // ESTADOS DOS FILTROS
   const [searchText, setSearchText] = useState("");
   const [modalidadeFilter, setModalidadeFilter] = useState("");
   const [professorFilter, setProfessorFilter] = useState("");
   const [generoFilter, setGeneroFilter] = useState("");
-  // Estado do modal para delete
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  // Estado Delete turmas
-  const [turmaToDelete, setTurmaToDelete] = useState<Turma | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  // Estado Toast Message
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [showToast, setShowToast] = useState(false);
-  // Estados para visualizar alunos nas turmas
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [turmaToView, setTurmaToView] = useState<Turma | null>(null);
 
-  // Função helper para mostrar toast
+  // ✅ ADICIONAR ESTE ESTADO APÓS OS OUTROS ESTADOS DE CONTROLE (linha ~100)
+
+  const [csvLoading, setCsvLoading] = useState(false); //  ESTADO FALTANTE ADICIONADO
+
+  // FUNÇÃO HELPER PARA TOAST
   const showToastMessage = (message: string, type: "success" | "error") => {
     setToastMessage(message);
     setToastType(type);
     setShowToast(true);
   };
 
+  //  CARREGAR TURMAS COM DEBUG
   const fetchTurmas = async () => {
     try {
       setLoading(true);
+      console.log("🔄 Carregando turmas...");
+
       const querySnapshot = await getDocs(collection(db, "turmas"));
       const turmasData: Turma[] = [];
 
@@ -94,7 +148,7 @@ export default function GestaoTurmas() {
         const data = doc.data();
         if (data && typeof data === "object") {
           turmasData.push({
-            id: doc.id, // ✅ ID sempre presente do Firebase
+            id: doc.id,
             nome: data.nome || "",
             modalidade: data.modalidade || "Futevôlei",
             genero: data.genero || "Masculino",
@@ -105,26 +159,34 @@ export default function GestaoTurmas() {
             professorNome: data.professorNome || "",
             capacidade: data.capacidade || 0,
             alunosInscritos: data.alunosInscritos || 0,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date(),
           } as Turma);
         }
       });
 
       setTurmas(turmasData);
+      console.log("✅ Turmas carregadas:", turmasData.length);
     } catch (erro) {
-      console.log("Erro ao listar turmas", erro);
+      console.error("❌ Erro ao listar turmas:", erro);
       showToastMessage("Erro ao carregar turmas", "error");
     } finally {
       setLoading(false);
     }
   };
 
+  // FILTRAR TURMAS
   const turmasFiltradas = useMemo(() => {
     return turmas.filter((turma) => {
       const matchSearch =
         (turma.nome || "").toLowerCase().includes(searchText.toLowerCase()) ||
         (turma.professorNome || "")
           .toLowerCase()
+          .includes(searchText.toLowerCase()) ||
+        (turma.modalidade || "")
+          .toLowerCase()
           .includes(searchText.toLowerCase());
+
       const matchModalidade =
         !modalidadeFilter || turma.modalidade === modalidadeFilter;
       const matchGenero = !generoFilter || turma.genero === generoFilter;
@@ -135,22 +197,54 @@ export default function GestaoTurmas() {
     });
   }, [turmas, searchText, modalidadeFilter, generoFilter, professorFilter]);
 
+  // CARREGAR DADOS NA INICIALIZAÇÃO
   useEffect(() => {
     fetchTurmas();
   }, []);
 
+  // ✅ FUNÇÃO CREATE CORRIGIDA
   const handleCreateTurma = () => {
+    console.log("🎯 Criar nova turma");
     setSelectedTurma(null);
     setModalMode("create");
     setIsModalOpen(true);
-    console.log("era pra abrir o modal");
   };
 
+  // ✅ FUNÇÃO EDIT CORRIGIDA
+  const handleEdit = (turma: Turma) => {
+    console.log("✏️ Editar turma:", turma);
+    setSelectedTurma(turma);
+    setModalMode("edit");
+    setIsModalOpen(true);
+  };
+
+  // ✅ FUNÇÃO VIEW CORRIGIDA
+  const handleManageAlunos = (turma: Turma) => {
+    console.log("👥 Gerenciar alunos da turma:", turma);
+    setTurmaToView(turma);
+    setIsViewModalOpen(true);
+  };
+
+  // ✅ FUNÇÃO DELETE CORRIGIDA COM DEBUG
+  const handleDelete = (turma: Turma) => {
+    console.log("🗑️ handleDelete CHAMADO!");
+    console.log("🗑️ Turma recebida:", turma);
+    console.log("🗑️ turma.id:", turma.id);
+    console.log("🗑️ turma.nome:", turma.nome);
+
+    setTurmaToDelete(turma);
+    setIsDeleteModalOpen(true);
+
+    console.log("🗑️ Modal deve abrir agora");
+  };
+
+  // ✅ FUNÇÃO FECHAR MODAL
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedTurma(null);
   };
 
+  // ✅ FUNÇÃO SUCCESS MODAL
   const handleModalSuccess = () => {
     setIsModalOpen(false);
     setSelectedTurma(null);
@@ -160,24 +254,27 @@ export default function GestaoTurmas() {
     showToastMessage(`Turma ${action} com sucesso!`, "success");
   };
 
-  const handleEdit = (turma: Turma) => {
-    setSelectedTurma(turma);
-    setModalMode("edit");
-    setIsModalOpen(true);
+  // ✅ FUNÇÃO CANCELAR DELETE
+  const handleCancelDelete = () => {
+    console.log("🗑️ Cancelando delete");
+    setIsDeleteModalOpen(false);
+    setTurmaToDelete(null);
   };
 
-  const handleDelete = (turma: Turma) => {
-    setTurmaToDelete(turma);
-    setIsDeleteModalOpen(true);
-  };
-
-  // FUNÇÃO CORRIGIDA
+  // ✅ FUNÇÃO CONFIRMAR DELETE CORRIGIDA
   const handleConfirmDelete = async () => {
-    if (!turmaToDelete?.id) return; // ✅ VERIFICAR SE ID EXISTE
+    console.log("🗑️ handleConfirmDelete iniciado");
+    console.log("🗑️ turmaToDelete:", turmaToDelete);
+
+    if (!turmaToDelete?.id) {
+      console.error("❌ Nenhuma turma selecionada para deletar");
+      return;
+    }
 
     setDeleteLoading(true);
     try {
       await deleteDoc(doc(db, "turmas", turmaToDelete.id));
+      console.log("✅ Turma deletada com sucesso");
 
       // Atualizar lista local
       setTurmas(turmas.filter((turma) => turma.id !== turmaToDelete.id));
@@ -186,19 +283,20 @@ export default function GestaoTurmas() {
       setIsDeleteModalOpen(false);
       setTurmaToDelete(null);
 
-      showToastMessage(
-        `Turma "${turmaToDelete.modalidade} - ${turmaToDelete.professorNome}" excluída com sucesso!`,
-        "success"
-      );
+      // Mensagem de sucesso
+      const nomeTurma =
+        turmaToDelete.nome ||
+        `${turmaToDelete.modalidade} - ${turmaToDelete.professorNome}`;
+      showToastMessage(`Turma "${nomeTurma}" excluída com sucesso!`, "success");
     } catch (error) {
-      console.error("Erro ao excluir turma:", error);
+      console.error("❌ Erro ao excluir turma:", error);
       showToastMessage("Erro ao excluir turma", "error");
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  //  FUNÇÃO CORRIGIDA
+  // ✅ FUNÇÃO DELETE MÚLTIPLO CORRIGIDA
   const handleDeleteSelected = async (selectedTurmas: Turma[]) => {
     if (selectedTurmas.length === 0) return;
 
@@ -207,7 +305,6 @@ export default function GestaoTurmas() {
 
     setLoading(true);
     try {
-      //  FILTRAR APENAS TURMAS COM ID VÁLIDO
       const turmasComId = selectedTurmas.filter((turma) => turma.id);
 
       if (turmasComId.length === 0) {
@@ -216,13 +313,13 @@ export default function GestaoTurmas() {
         return;
       }
 
-      const deletePromises = turmasComId.map(
-        (turma) => deleteDoc(doc(db, "turmas", turma.id!)) //  ! garante que ID existe
+      const deletePromises = turmasComId.map((turma) =>
+        deleteDoc(doc(db, "turmas", turma.id!))
       );
 
       await Promise.all(deletePromises);
 
-      // Atualizar lista local - usar apenas IDs válidos
+      // Atualizar lista local
       const deletedIds = turmasComId.map((turma) => turma.id);
       setTurmas(turmas.filter((turma) => !deletedIds.includes(turma.id)));
 
@@ -237,21 +334,37 @@ export default function GestaoTurmas() {
       setLoading(false);
     }
   };
-  const handleView = (turma: Turma) => {
-    console.log("Vendo Alunos");
-    setTurmaToView(turma);
-    setIsViewModalOpen(true);
+
+  // ✅ FUNÇÃO EXPORTAR CSV
+  const handleExportCSV = async () => {
+    try {
+      setCsvLoading(true);
+      showToastMessage("Preparando exportação...", "success");
+
+      console.log("📊 Iniciando exportação de turmas...");
+      console.log("📊 Total de turmas:", turmas.length);
+      console.log("📊 Turmas filtradas:", turmasFiltradas.length);
+
+      await exportarTurmasCSV();
+
+      showToastMessage(`Turma(s) exportada(s) com sucesso!`, "success");
+    } catch (error: any) {
+      console.error("❌ Erro na exportação:", error);
+      showToastMessage("Erro ao exportar turmas", "error");
+    } finally {
+      setCsvLoading(false);
+    }
   };
-  const handleExportCSV = () => {
-    console.log("Exportar turmas - funcionalidade será implementada");
-    showToastMessage(
-      "Funcionalidade de exportação será implementada em breve",
-      "success"
-    );
-  };
+
+  // ✅ DEBUG DOS ESTADOS
+  useEffect(() => {
+    console.log("🎯 Estado isDeleteModalOpen:", isDeleteModalOpen);
+    console.log("🎯 Estado turmaToDelete:", turmaToDelete);
+  }, [isDeleteModalOpen, turmaToDelete]);
 
   return (
     <div className="p-6">
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">
           <FaUsers className="text-2xl text-green-600" />
@@ -260,14 +373,14 @@ export default function GestaoTurmas() {
         <div className="flex space-x-3">
           <button
             onClick={handleExportCSV}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <FaDownload />
             <span>Exportar</span>
           </button>
           <button
             onClick={handleCreateTurma}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <FaPlus />
             <span>Nova Turma</span>
@@ -275,6 +388,7 @@ export default function GestaoTurmas() {
         </div>
       </div>
 
+      {/* ESTATÍSTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
@@ -331,10 +445,11 @@ export default function GestaoTurmas() {
         </div>
       </div>
 
+      {/* FILTROS E BUSCA */}
       <SearchAndFilters
         searchValue={searchText}
         onSearchChange={setSearchText}
-        searchPlaceholder="Buscar por professor ou modalidade..."
+        searchPlaceholder="Buscar por nome, professor ou modalidade..."
         searchLabel="Buscar Turmas"
         filters={[
           {
@@ -373,6 +488,7 @@ export default function GestaoTurmas() {
         ]}
       />
 
+      {/* MODAL DE TURMAS */}
       <TurmasModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -381,12 +497,13 @@ export default function GestaoTurmas() {
         turmaData={selectedTurma}
       />
 
+      {/* TABELA */}
       <DataTable
         data={turmasFiltradas}
         columns={colunasTurmas}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onView={handleView}
+        onView={handleManageAlunos}
         onDeleteSelected={handleDeleteSelected}
         loading={loading}
         title="Lista de Turmas"
@@ -394,18 +511,22 @@ export default function GestaoTurmas() {
         itemsPerPage={15}
         selectable={true}
       />
-      <ViewAlunosModal
+
+      {/* MODAL DE VISUALIZAÇÃO DE ALUNOS */}
+      <ManageAlunosModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
+        onSuccess={() => {
+          fetchTurmas(); // Recarregar turmas para atualizar contadores
+          showToastMessage("Alunos gerenciados com sucesso!", "success");
+        }}
         turma={turmaToView}
       />
 
+      {/* MODAL DE DELETE */}
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setTurmaToDelete(null);
-        }}
+        onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         loading={deleteLoading}
         item={turmaToDelete}
@@ -414,6 +535,7 @@ export default function GestaoTurmas() {
         message="Tem certeza que deseja excluir esta turma? Todos os alunos matriculados serão desvinculados."
       />
 
+      {/* TOAST */}
       <Toast
         message={toastMessage}
         type={toastType}
