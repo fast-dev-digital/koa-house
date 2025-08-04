@@ -9,7 +9,7 @@ interface Aluno {
   nome: string;
   email: string;
   telefone: string;
-  genero: string; // ✅ NOVO CAMPO
+  genero: string; //
   plano: string;
   status: string;
   turmas: string;
@@ -36,7 +36,7 @@ export default function AlunoModal({
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [genero, setGenero] = useState(""); // ✅ NOVO ESTADO
+  const [genero, setGenero] = useState(""); //
   const [plano, setPlano] = useState("");
   const [status, setStatus] = useState("ativo");
   const [turmas, setTurmas] = useState("Seg-Qua");
@@ -52,7 +52,7 @@ export default function AlunoModal({
       setNome(alunoData.nome);
       setEmail(alunoData.email);
       setTelefone(alunoData.telefone);
-      setGenero(alunoData.genero || ""); // ✅ INCLUIR GÊNERO
+      setGenero(alunoData.genero || "Masculino");
       setPlano(alunoData.plano);
       setStatus(alunoData.status);
       setTurmas(alunoData.turmas);
@@ -67,7 +67,7 @@ export default function AlunoModal({
     setNome("");
     setEmail("");
     setTelefone("");
-    setGenero(""); // ✅ LIMPAR GÊNERO
+    setGenero("");
     setPlano("");
     setStatus("ativo");
     setTurmas("Seg-Qua");
@@ -81,7 +81,7 @@ export default function AlunoModal({
     onClose();
   };
 
-  // ✅ FUNÇÃO SUBMIT ATUALIZADA
+  // FUNÇÃO SUBMIT ATUALIZADA
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -107,13 +107,11 @@ export default function AlunoModal({
           .toString(36)
           .substring(2, 15)}`;
 
-        // ✅ SALVAR COM GÊNERO
         await setDoc(doc(db, "Alunos", alunoId), {
-          // ✅ CORRIGIDO: "alunos" minúsculo
           nome,
           email,
           telefone,
-          genero, // ✅ INCLUIR GÊNERO
+          genero,
           plano,
           status,
           turmas,
@@ -134,12 +132,11 @@ export default function AlunoModal({
           throw new Error("ID do aluno não encontrado");
         }
 
-        // ✅ ATUALIZAR COM GÊNERO
+        //
         await updateDoc(doc(db, "Alunos", alunoData.id), {
-          // ✅ CORRIGIDO: "alunos" minúsculo
           nome,
           telefone,
-          genero, // ✅ INCLUIR GÊNERO
+          genero,
           plano,
           status,
           turmas,
@@ -245,12 +242,18 @@ export default function AlunoModal({
               value={genero}
               onChange={(e) => setGenero(e.target.value)}
               className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+              disabled={mode === "edit"}
               required
             >
               <option value="">Selecione o gênero</option>
               <option value="Masculino">Masculino</option>
               <option value="Feminino">Feminino</option>
             </select>
+            {mode === "edit" && (
+              <p className="text-xs text-gray-500 mt-1">
+                Gênero não pode ser alterado após cadastro
+              </p>
+            )}
           </div>
 
           {/* Planos */}
