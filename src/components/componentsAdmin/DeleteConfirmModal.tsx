@@ -1,99 +1,106 @@
-import { FaTimes, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
-
-interface Aluno {
-  id: string;
-  nome: string;
-  email: string;
-  telefone: string;
-  plano: string;
-  status: 'ativo' | 'inativo' | 'suspenso';
-  turmas: 'Seg-Qua' | 'Ter-Qui';
-  horarios: '18:00' | '19:00' | '20:00' | '21:00';
-  dataMatricula: string;
-}
+import { FaExclamationTriangle, FaTimes } from "react-icons/fa";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  aluno: Aluno | null;
-  loading: boolean;
+  loading?: boolean;
+  item?: any; // Item genérico
+  itemType?: string; // "aluno", "turma", "professor"
+  title?: string; // Título customizável
+  message?: string; // Mensagem customizável
+  confirmText?: string; // Texto do botão confirmar
+  cancelText?: string; // Texto do botão cancelar
 }
 
-export default function DeleteConfirmModal({ isOpen, onClose, onConfirm, aluno, loading }: DeleteConfirmModalProps) {
-  if (!isOpen || !aluno) return null;
+export default function DeleteConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  loading = false,
+  item,
+  itemType = "item",
+  title,
+  message,
+  confirmText = "Excluir",
+  cancelText = "Cancelar",
+}: DeleteConfirmModalProps) {
+  if (!isOpen) return null;
+
+  // Gera título automático se não fornecido
+  const modalTitle = title || `Excluir ${itemType}`;
+
+  // Gera mensagem automática se não fornecida
+  const modalMessage =
+    message ||
+    `Tem certeza que deseja excluir este ${itemType}? Esta ação não pode ser desfeita.`;
+
+  // Tenta extrair nome do item para exibir
+  const itemName =
+    item?.nome || item?.professorNome || item?.email || `${itemType}`;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-        {/* Cabeçalho */}
-        <div className="flex justify-between items-center p-4 border-b border-red-200 bg-red-50">
-          <div className="flex items-center gap-2">
-            <FaExclamationTriangle className="text-red-600" />
-            <h2 className="text-lg font-bold text-red-800">Confirmar Exclusão</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 relative z-[10000] border-2 border-gray-300">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <FaExclamationTriangle className="text-red-500 text-xl" />
+            <h3 className="text-lg font-semibold text-gray-900">
+              {modalTitle}
+            </h3>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
             disabled={loading}
           >
             <FaTimes />
           </button>
         </div>
 
-        {/* Conteúdo */}
+        {/* Body */}
         <div className="p-4">
-          <div className="text-center mb-4">
-            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-3">
-              <FaTrash className="text-red-600 text-xl" />
-            </div>
-            <p className="text-gray-700 text-sm mb-2">
-              Tem certeza que deseja excluir o aluno?
-            </p>
-          </div>
+          <p className="text-gray-600 mb-4">{modalMessage}</p>
 
-          {/* Informações do aluno */}
-          <div className="bg-gray-50 rounded-lg p-3 mb-4">
-            <div className="space-y-1">
-              <p className="text-sm"><span className="font-semibold">Nome:</span> {aluno.nome}</p>
-              <p className="text-sm"><span className="font-semibold">Email:</span> {aluno.email}</p>
-              <p className="text-sm"><span className="font-semibold">Plano:</span> {aluno.plano}</p>
-              <p className="text-sm"><span className="font-semibold">Status:</span> {aluno.status}</p>
-            </div>
-          </div>
-
-          {/* Aviso */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-            <p className="text-yellow-800 text-xs text-center">
-              ⚠️ Esta ação não pode ser desfeita. O aluno será removido permanentemente do sistema.
-            </p>
-          </div>
-
-          {/* Botões */}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={onConfirm}
-              disabled={loading}
-              className="flex-1 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-1"
-            >
-              {loading ? (
-                'Excluindo...'
-              ) : (
-                <>
-                  <FaTrash className="text-xs" />
-                  Excluir
-                </>
+          {item && (
+            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+              <p className="text-sm font-medium text-gray-900">{itemName}</p>
+              {item.email && (
+                <p className="text-sm text-gray-600">{item.email}</p>
               )}
-            </button>
-          </div>
+              {item.modalidade && (
+                <p className="text-sm text-gray-600">
+                  {item.modalidade} - {item.genero}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end space-x-3 p-4 bg-gray-50 rounded-b-lg">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Excluindo...</span>
+              </>
+            ) : (
+              <span>{confirmText}</span>
+            )}
+          </button>
         </div>
       </div>
     </div>

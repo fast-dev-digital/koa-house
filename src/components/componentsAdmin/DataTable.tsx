@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import { FaEdit, FaTrash, FaUsers } from "react-icons/fa";
 
-// Interface para definir como cada coluna vai funcionar
 interface Column {
   key: string;
   label: string;
@@ -9,7 +8,6 @@ interface Column {
   render?: (value: any, row: any) => React.ReactNode;
 }
 
-// Interface para as props que o componente vai receber
 interface DataTableProps {
   data: any[];
   columns: Column[];
@@ -19,9 +17,9 @@ interface DataTableProps {
   onDeleteSelected?: (items: any[]) => void;
   loading?: boolean;
   selectable?: boolean;
-  title?: string; // ✅ ADICIONAR
-  emptyMessage?: string; // ✅ ADICIONAR
-  itemsPerPage?: number; // ✅ ADICIONAR
+  title?: string;
+  emptyMessage?: string;
+  itemsPerPage?: number;
 }
 
 export default function DataTable({
@@ -33,23 +31,25 @@ export default function DataTable({
   onDeleteSelected,
   loading = false,
   selectable = false,
-  title, // ✅ ADICIONAR
-  emptyMessage = "Nenhum item encontrado", // ✅ ADICIONAR
-  itemsPerPage = 20, // ✅ ADICIONAR
+  title,
+  emptyMessage = "Nenhum item encontrado",
+  itemsPerPage = 20,
 }: DataTableProps) {
-  // Estados internos do componente
+  // ✅ DEBUG DAS PROPS
+  console.log("🎯 DataTable props:", {
+    onEdit: !!onEdit,
+    onDelete: !!onDelete,
+    onView: !!onView,
+  });
+
   const [currentPage] = useState(1);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
-  // Calcular dados da página atual
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPageData = data.slice(startIndex, endIndex);
-
-  // Calcular total de páginas
   const totalPages = Math.ceil(data.length / itemsPerPage);
 
-  // Funções de seleção
   const isSelected = (item: any) =>
     selectedItems.some((selected) => selected.id === item.id);
 
@@ -80,14 +80,12 @@ export default function DataTable({
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      {/* ✅ TÍTULO DA TABELA */}
       {title && (
         <div className="px-4 py-3 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">{title}</h3>
         </div>
       )}
 
-      {/* Barra de ações para itens selecionados */}
       {selectable && selectedItems.length > 0 && (
         <div className="bg-blue-50 px-4 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -105,12 +103,10 @@ export default function DataTable({
         </div>
       )}
 
-      {/* Cabeçalho da tabela */}
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead className="bg-gray-50">
             <tr>
-              {/* Checkbox para selecionar todos */}
               {selectable && (
                 <th className="px-3 py-2 text-left">
                   <input
@@ -125,7 +121,6 @@ export default function DataTable({
                 </th>
               )}
 
-              {/* Renderizar cada coluna */}
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -135,7 +130,7 @@ export default function DataTable({
                 </th>
               ))}
 
-              {/* Coluna de ações */}
+              {/* ✅ VERIFICAR SE MOSTRA COLUNA AÇÕES */}
               {(onEdit || onDelete || onView) && (
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Ações
@@ -151,7 +146,7 @@ export default function DataTable({
                   colSpan={
                     columns.length +
                     (selectable ? 1 : 0) +
-                    (onEdit || onDelete ? 1 : 0)
+                    (onEdit || onDelete || onView ? 1 : 0)
                   }
                   className="px-3 py-8 text-center text-gray-500 text-sm"
                 >
@@ -167,7 +162,7 @@ export default function DataTable({
                   colSpan={
                     columns.length +
                     (selectable ? 1 : 0) +
-                    (onEdit || onDelete ? 1 : 0)
+                    (onEdit || onDelete || onView ? 1 : 0)
                   }
                   className="px-3 py-8 text-center text-gray-500 text-sm"
                 >
@@ -182,7 +177,6 @@ export default function DataTable({
                     isSelected(item) ? "bg-blue-50" : ""
                   }`}
                 >
-                  {/* Checkbox individual */}
                   {selectable && (
                     <td className="px-3 py-2 whitespace-nowrap">
                       <input
@@ -194,7 +188,6 @@ export default function DataTable({
                     </td>
                   )}
 
-                  {/* Renderizar cada coluna */}
                   {columns.map((column) => (
                     <td
                       key={column.key}
@@ -208,32 +201,55 @@ export default function DataTable({
                     </td>
                   ))}
 
-                  {/* Coluna de ações */}
+                  {/* ✅ BOTÕES DE AÇÃO COM DEBUG COMPLETO */}
                   {(onEdit || onDelete || onView) && (
                     <td className="px-3 py-2 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-1">
                         {onView && (
                           <button
-                            onClick={() => onView(item)}
-                            className="text-blue-600 hover:text-blue-900 p-1 rounded transition-colors"
-                            title="Visualizar Alunos"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log("👁️ Botão Visualizar clicado!");
+                              console.log("👁️ Item:", item);
+                              console.log("👁️ onView function:", onView);
+                              onView(item);
+                            }}
+                            className="text-blue-600 hover:text-blue-900 p-1 rounded transition-colors hover:bg-blue-50"
+                            title="Gerenciar Alunos"
                           >
-                            <FaEye className="text-xs" />
+                            <FaUsers className="text-xs" />
                           </button>
                         )}
+
                         {onEdit && (
                           <button
-                            onClick={() => onEdit(item)}
-                            className="text-yellow-600 hover:text-yellow-900 p-1 rounded transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log("✏️ Botão Editar clicado!");
+                              console.log("✏️ Item:", item);
+                              console.log("✏️ onEdit function:", onEdit);
+                              onEdit(item);
+                            }}
+                            className="text-yellow-600 hover:text-yellow-900 p-1 rounded transition-colors hover:bg-yellow-50"
                             title="Editar"
                           >
                             <FaEdit className="text-xs" />
                           </button>
                         )}
+
                         {onDelete && (
                           <button
-                            onClick={() => onDelete(item)}
-                            className="text-red-600 hover:text-red-900 p-1 rounded transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log("🗑️ Botão Deletar clicado!");
+                              console.log("🗑️ Item:", item);
+                              console.log("🗑️ Item ID:", item.id);
+                              console.log("🗑️ Item nome:", item.nome);
+                              console.log("🗑️ onDelete function:", onDelete);
+                              console.log("🗑️ Chamando onDelete...");
+                              onDelete(item);
+                            }}
+                            className="text-red-600 hover:text-red-900 p-1 rounded transition-colors hover:bg-red-50"
                             title="Deletar"
                           >
                             <FaTrash className="text-xs" />
@@ -249,13 +265,11 @@ export default function DataTable({
         </table>
       </div>
 
-      {/* Rodapé com paginação */}
       <div className="bg-white px-3 py-2 border-t border-gray-200 flex items-center justify-between">
         <div className="text-xs text-gray-700">
           Mostrando {startIndex + 1} a {Math.min(endIndex, data.length)} de{" "}
           {data.length} resultados
         </div>
-
         <div className="text-xs text-gray-700">
           Página {currentPage} de {totalPages}
         </div>

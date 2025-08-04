@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo} from "react";
+import { useState, useEffect, useMemo } from "react";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaUser } from "react-icons/fa";
@@ -14,77 +14,82 @@ interface Aluno {
   nome: string;
   email: string;
   telefone: string;
+  genero: string;
   plano: string;
-  status: 'ativo' | 'inativo' | 'suspenso';
-  turmas: 'Seg-Qua' | 'Ter-Qui';
-  horarios: '18:00' | '19:00' | '20:00' | '21:00';
+  status: "ativo" | "inativo" | "suspenso";
+  turmas: "Seg-Qua" | "Ter-Qui";
+  horarios: "18:00" | "19:00" | "20:00" | "21:00";
   dataMatricula: string;
 }
 
 // Configuração das colunas da tabela
 const alunosColumns = [
   {
-    key: 'nome',
-    label: 'Nome',
-    sortable: true
+    key: "nome",
+    label: "Nome",
+    sortable: true,
   },
   {
-    key: 'email', 
-    label: 'Email',
-    sortable: true
+    key: "email",
+    label: "Email",
+    sortable: true,
   },
   {
-    key: 'telefone',
-    label: 'Telefone'
+    key: "telefone",
+    label: "Telefone",
   },
   {
-    key: 'plano',
-    label: 'Plano',
-    sortable: true
+    key: "plano",
+    label: "Plano",
+    sortable: true,
   },
   {
-    key: 'turmas',
-    label: 'Turmas',
-    sortable: true
+    key: "turmas",
+    label: "Turmas",
+    sortable: true,
   },
   {
-    key: 'horarios', 
-    label: 'Horários',
-    sortable: true
+    key: "horarios",
+    label: "Horários",
+    sortable: true,
   },
   {
-    key: 'status',
-    label: 'Status',
+    key: "status",
+    label: "Status",
     sortable: true,
     render: (value: string) => {
       const colors = {
-        ativo: 'bg-green-100 text-green-700',
-        inativo: 'bg-gray-100 text-gray-700', 
-        suspenso: 'bg-red-100 text-red-700'
+        ativo: "bg-green-100 text-green-700",
+        inativo: "bg-gray-100 text-gray-700",
+        suspenso: "bg-red-100 text-red-700",
       };
       return (
-        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[value as keyof typeof colors] || colors.inativo}`}>
-          {value || 'inativo'}
+        <span
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            colors[value as keyof typeof colors] || colors.inativo
+          }`}
+        >
+          {value || "inativo"}
         </span>
       );
-    }
-  }
+    },
+  },
 ];
 
 export default function GestaoAlunos() {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [csvLoading, setCsvLoading] = useState(false);
-  
+
   // Estados para busca e filtros
-  const [searchText, setSearchText] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [turmasFilter, setTurmasFilter] = useState('');
-  const [horariosFilter, setHorariosFilter] = useState('');
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [turmasFilter, setTurmasFilter] = useState("");
+  const [horariosFilter, setHorariosFilter] = useState("");
 
   // Estados do Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
 
   // Estados do Modal de Confirmação de Delete
@@ -93,18 +98,21 @@ export default function GestaoAlunos() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Estados do Toast
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const [showToast, setShowToast] = useState(false);
 
   // ⚡ REATIVO - recalcula automaticamente quando algo muda
   const alunosFiltrados = useMemo(() => {
-    return alunos.filter(aluno => {
-      const filtroNome = aluno.nome.toLowerCase().includes(searchText.toLowerCase());
+    return alunos.filter((aluno) => {
+      const filtroNome = aluno.nome
+        .toLowerCase()
+        .includes(searchText.toLowerCase());
       const filtroStatus = !statusFilter || aluno.status === statusFilter;
       const filtroTurmas = !turmasFilter || aluno.turmas === turmasFilter;
-      const filtroHorarios = !horariosFilter || aluno.horarios === horariosFilter;
-      
+      const filtroHorarios =
+        !horariosFilter || aluno.horarios === horariosFilter;
+
       return filtroNome && filtroStatus && filtroTurmas && filtroHorarios;
     });
   }, [alunos, searchText, statusFilter, turmasFilter, horariosFilter]);
@@ -115,28 +123,28 @@ export default function GestaoAlunos() {
       setLoading(true);
       const querySnapshot = await getDocs(collection(db, "Alunos"));
       const alunosData: Aluno[] = [];
-      
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data && typeof data === 'object') {
+        if (data && typeof data === "object") {
           alunosData.push({
             id: doc.id,
-            nome: data.nome || '',
-            email: data.email || '',
-            telefone: data.telefone || '',
-            plano: data.plano || '',
-            status: data.status || 'inativo',
-            turmas: data.turmas || 'Seg-Qua',
-            horarios: data.horarios || '19:00',
-            dataMatricula: data.dataMatricula || ''
+            nome: data.nome || "",
+            email: data.email || "",
+            telefone: data.telefone || "",
+            plano: data.plano || "",
+            status: data.status || "inativo",
+            turmas: data.turmas || "Seg-Qua",
+            horarios: data.horarios || "19:00",
+            dataMatricula: data.dataMatricula || "",
           } as Aluno);
         }
       });
-      
+
       setAlunos(alunosData);
     } catch (error) {
       console.error("Erro ao buscar alunos:", error);
-      showToastMessage('Erro ao carregar alunos', 'error');
+      showToastMessage("Erro ao carregar alunos", "error");
     } finally {
       setLoading(false);
     }
@@ -147,7 +155,7 @@ export default function GestaoAlunos() {
   }, []);
 
   // Função helper para mostrar toast
-  const showToastMessage = (message: string, type: 'success' | 'error') => {
+  const showToastMessage = (message: string, type: "success" | "error") => {
     setToastMessage(message);
     setToastType(type);
     setShowToast(true);
@@ -156,7 +164,7 @@ export default function GestaoAlunos() {
   // Funções de callback para o DataTable
   const handleEdit = (aluno: Aluno) => {
     setSelectedAluno(aluno);
-    setModalMode('edit');
+    setModalMode("edit");
     setIsModalOpen(true);
   };
 
@@ -172,20 +180,22 @@ export default function GestaoAlunos() {
     setDeleteLoading(true);
     try {
       await deleteDoc(doc(db, "Alunos", alunoToDelete.id));
-      
+
       // Atualizar a lista local
-      setAlunos(alunos.filter(aluno => aluno.id !== alunoToDelete.id));
-      
+      setAlunos(alunos.filter((aluno) => aluno.id !== alunoToDelete.id));
+
       // Fechar modal
       setIsDeleteModalOpen(false);
       setAlunoToDelete(null);
 
       // Mostrar toast de sucesso
-      showToastMessage(`Aluno "${alunoToDelete.nome}" foi excluído com sucesso!`, 'success');
-
+      showToastMessage(
+        `Aluno "${alunoToDelete.nome}" foi excluído com sucesso!`,
+        "success"
+      );
     } catch (error: any) {
-      console.error('❌ Erro ao excluir aluno:', error);
-      showToastMessage(`Erro ao excluir aluno: ${error.message}`, 'error');
+      console.error("❌ Erro ao excluir aluno:", error);
+      showToastMessage(`Erro ao excluir aluno: ${error.message}`, "error");
     } finally {
       setDeleteLoading(false);
     }
@@ -200,21 +210,23 @@ export default function GestaoAlunos() {
 
     setLoading(true);
     try {
-      const deletePromises = selectedAlunos.map(aluno => 
+      const deletePromises = selectedAlunos.map((aluno) =>
         deleteDoc(doc(db, "Alunos", aluno.id))
       );
-      
+
       await Promise.all(deletePromises);
 
       // Atualizar a lista local removendo os alunos excluídos
-      const deletedIds = selectedAlunos.map(aluno => aluno.id);
-      setAlunos(alunos.filter(aluno => !deletedIds.includes(aluno.id)));
+      const deletedIds = selectedAlunos.map((aluno) => aluno.id);
+      setAlunos(alunos.filter((aluno) => !deletedIds.includes(aluno.id)));
 
-      showToastMessage(`${selectedAlunos.length} aluno(s) excluído(s) com sucesso!`, 'success');
-
+      showToastMessage(
+        `${selectedAlunos.length} aluno(s) excluído(s) com sucesso!`,
+        "success"
+      );
     } catch (error) {
-      console.error('Erro ao excluir alunos:', error);
-      showToastMessage('Erro ao excluir alguns alunos!', 'error');
+      console.error("Erro ao excluir alunos:", error);
+      showToastMessage("Erro ao excluir alguns alunos!", "error");
     } finally {
       setLoading(false);
     }
@@ -234,7 +246,7 @@ export default function GestaoAlunos() {
   // Função para abrir modal de criação
   const handleCreateAluno = () => {
     setSelectedAluno(null);
-    setModalMode('create');
+    setModalMode("create");
     setIsModalOpen(true);
   };
 
@@ -249,20 +261,19 @@ export default function GestaoAlunos() {
     setIsModalOpen(false);
     setSelectedAluno(null);
     fetchAlunos();
-    
-    const action = modalMode === 'create' ? 'cadastrado' : 'atualizado';
-    showToastMessage(`Aluno ${action} com sucesso!`, 'success');
+
+    const action = modalMode === "create" ? "cadastrado" : "atualizado";
+    showToastMessage(`Aluno ${action} com sucesso!`, "success");
   };
 
   const handleExportarCSV = async () => {
     try {
       setCsvLoading(true);
-      showToastMessage('Iniciando exportação CSV...', 'success');
-      
-      await exportarAlunosCSV();
+      showToastMessage("Iniciando exportação CSV...", "success");
 
-    } catch(erro) {
-      showToastMessage('Erro ao exportar arquivo', 'error');
+      await exportarAlunosCSV();
+    } catch (erro) {
+      showToastMessage("Erro ao exportar arquivo", "error");
     } finally {
       setCsvLoading(false);
     }
@@ -282,7 +293,7 @@ export default function GestaoAlunos() {
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             disabled={alunos.length === 0 || csvLoading}
           >
-            <FaDownload className={csvLoading ? 'animate-spin' : ''} />
+            <FaDownload className={csvLoading ? "animate-spin" : ""} />
             <span>Exportar</span>
           </button>
           <button
@@ -302,7 +313,9 @@ export default function GestaoAlunos() {
             <FaUser className="text-2xl text-blue-600 mr-3" />
             <div>
               <p className="text-sm text-gray-600">Total de Alunos</p>
-              <p className="text-2xl font-bold text-gray-900">{alunosFiltrados.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {alunosFiltrados.length}
+              </p>
             </div>
           </div>
         </div>
@@ -313,7 +326,7 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Ativos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter(a => a.status === 'ativo').length}
+                {alunosFiltrados.filter((a) => a.status === "ativo").length}
               </p>
             </div>
           </div>
@@ -325,7 +338,7 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Inativos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter(a => a.status === 'inativo').length}
+                {alunosFiltrados.filter((a) => a.status === "inativo").length}
               </p>
             </div>
           </div>
@@ -337,15 +350,15 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Suspensos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter(a => a.status === 'suspenso').length}
+                {alunosFiltrados.filter((a) => a.status === "suspenso").length}
               </p>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Busca e Filtros */}
-      <SearchAndFilters 
+      <SearchAndFilters
         searchValue={searchText}
         onSearchChange={setSearchText}
         searchPlaceholder="Digite o nome do aluno..."
@@ -359,18 +372,18 @@ export default function GestaoAlunos() {
             options: [
               { value: "ativo", label: "Ativo" },
               { value: "inativo", label: "Inativo" },
-              { value: "suspenso", label: "Suspenso" }
-            ]
+              { value: "suspenso", label: "Suspenso" },
+            ],
           },
           {
-            label: "Turmas", 
+            label: "Turmas",
             value: turmasFilter,
             onChange: setTurmasFilter,
             placeholder: "Todas as Turmas",
             options: [
               { value: "Seg-Qua", label: "Segunda e Quarta" },
-              { value: "Ter-Qui", label: "Terça e Quinta" }
-            ]
+              { value: "Ter-Qui", label: "Terça e Quinta" },
+            ],
           },
           {
             label: "Horários",
@@ -381,9 +394,9 @@ export default function GestaoAlunos() {
               { value: "18:00", label: "18:00" },
               { value: "19:00", label: "19:00" },
               { value: "20:00", label: "20:00" },
-              { value: "21:00", label: "21:00" }
-            ]
-          }
+              { value: "21:00", label: "21:00" },
+            ],
+          },
         ]}
       />
 
@@ -402,7 +415,7 @@ export default function GestaoAlunos() {
       />
 
       {/* Modal de Aluno - CREATE e UPDATE */}
-      <AlunoModal 
+      <AlunoModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSuccess={handleModalSuccess}
@@ -411,7 +424,7 @@ export default function GestaoAlunos() {
       />
 
       {/* Modal de Confirmação de Delete */}
-      <DeleteConfirmModal 
+      <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}

@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
-import { FaTimes, FaSave } from 'react-icons/fa';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase-config';
+import { useState, useEffect } from "react";
+import { FaTimes, FaSave } from "react-icons/fa";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase-config";
 
-// Definindo interface do Aluno
+// ✅ INTERFACE ATUALIZADA COM GÊNERO
 interface Aluno {
   id: string;
   nome: string;
   email: string;
   telefone: string;
+  genero: string; // ✅ NOVO CAMPO
   plano: string;
   status: string;
   turmas: string;
@@ -20,31 +21,38 @@ interface AlunoModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  mode: 'create' | 'edit';
-  alunoData?: Aluno | null; // Dados do aluno para edição
+  mode: "create" | "edit";
+  alunoData?: Aluno | null;
 }
 
-export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData }: AlunoModalProps) {
-  // Estados dos campos do formulário
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [plano, setPlano] = useState('');
-  const [status, setStatus] = useState('ativo');
-  const [turmas, setTurmas] = useState('Seg-Qua' );
-  const [horarios, setHorarios] = useState('19:00');
-  
-  // Estados de controle
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+export default function AlunoModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  mode,
+  alunoData,
+}: AlunoModalProps) {
+  // ✅ ESTADOS DOS CAMPOS (COM GÊNERO)
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [genero, setGenero] = useState(""); // ✅ NOVO ESTADO
+  const [plano, setPlano] = useState("");
+  const [status, setStatus] = useState("ativo");
+  const [turmas, setTurmas] = useState("Seg-Qua");
+  const [horarios, setHorarios] = useState("19:00");
 
-  // useEffect para preencher dados quando em modo de edição
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // ✅ useEffect ATUALIZADO
   useEffect(() => {
-    if (mode === 'edit' && alunoData) {
+    if (mode === "edit" && alunoData) {
       setNome(alunoData.nome);
       setEmail(alunoData.email);
       setTelefone(alunoData.telefone);
+      setGenero(alunoData.genero || ""); // ✅ INCLUIR GÊNERO
       setPlano(alunoData.plano);
       setStatus(alunoData.status);
       setTurmas(alunoData.turmas);
@@ -54,122 +62,108 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
     }
   }, [mode, alunoData, isOpen]);
 
-  // Função para limpar o formulário
+  // ✅ FUNÇÃO LIMPAR ATUALIZADA
   const limparFormulario = () => {
-    setNome('');
-    setEmail('');
-    setTelefone('');
-    setPlano('');
-    setStatus('ativo');
-    setTurmas('Seg-Qua');
-    setHorarios('19:00');
-    setError('');
-    setSuccessMessage('');
+    setNome("");
+    setEmail("");
+    setTelefone("");
+    setGenero(""); // ✅ LIMPAR GÊNERO
+    setPlano("");
+    setStatus("ativo");
+    setTurmas("Seg-Qua");
+    setHorarios("19:00");
+    setError("");
+    setSuccessMessage("");
   };
 
-  // Função para fechar modal
   const handleClose = () => {
     limparFormulario();
     onClose();
   };
 
-  // Função para salvar aluno (Create ou Update)
+  // ✅ FUNÇÃO SUBMIT ATUALIZADA
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccessMessage('');
+    setError("");
+    setSuccessMessage("");
 
-    // Validação: plano deve ser selecionado
+    // ✅ VALIDAÇÕES ATUALIZADAS
     if (!plano) {
-      setError('Selecione um plano');
+      setError("Selecione um plano");
+      return;
+    }
+
+    if (!genero) {
+      // ✅ VALIDAR GÊNERO
+      setError("Selecione o gênero");
       return;
     }
 
     setLoading(true);
 
     try {
-      if (mode === 'create') {
-        
-        
-        // SOLUÇÃO DEFINITIVA: Apenas salvar no Firestore
-        // O usuário será criado no Auth quando fizer login pela primeira vez
-        
-        // Criar ID único para o aluno
-        const alunoId = `aluno_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-        
-        // Salvar dados no Firestore
+      if (mode === "create") {
+        const alunoId = `aluno_${Date.now()}_${Math.random()
+          .toString(36)
+          .substring(2, 15)}`;
+
+        // ✅ SALVAR COM GÊNERO
         await setDoc(doc(db, "Alunos", alunoId), {
+          // ✅ CORRIGIDO: "alunos" minúsculo
           nome,
           email,
           telefone,
+          genero, // ✅ INCLUIR GÊNERO
           plano,
           status,
           turmas,
           horarios,
-          dataMatricula: new Date().toISOString().split('T')[0],
-          authCreated: false, // Indica que ainda precisa criar conta no Auth
-          role: 'user' // ✅ Adicionar esta linha
+          dataMatricula: new Date().toISOString().split("T")[0],
+          authCreated: false,
+          role: "user",
         });
-        ('✅ Dados salvos no Firestore');
 
-        setSuccessMessage(`Aluno cadastrado!`); 
-
-        
-        // Atualizar lista de alunos imediatamente
+        setSuccessMessage(`Aluno cadastrado com sucesso!`);
         onSuccess();
-        
-        // Mostrar mensagem de sucesso e fechar após um breve delay
+
         setTimeout(() => {
           handleClose();
         }, 1000);
-        
       } else {
-        // Modo de edição - APENAS atualizar dados no Firestore (não mexer no Auth)
         if (!alunoData?.id) {
-          throw new Error('ID do aluno não encontrado');
+          throw new Error("ID do aluno não encontrado");
         }
 
+        // ✅ ATUALIZAR COM GÊNERO
         await updateDoc(doc(db, "Alunos", alunoData.id), {
+          // ✅ CORRIGIDO: "alunos" minúsculo
           nome,
-          telefone, // Email NÃO é atualizado
+          telefone,
+          genero, // ✅ INCLUIR GÊNERO
           plano,
           status,
           turmas,
-          horarios
-          // Não atualizamos email e dataMatricula na edição
+          horarios,
         });
-        setSuccessMessage('Aluno atualizado com sucesso!');
-        
-        // Atualizar lista de alunos imediatamente
+
+        setSuccessMessage("Aluno atualizado com sucesso!");
         onSuccess();
-        
-        // Fechar modal após breve delay
+
         setTimeout(() => {
           handleClose();
         }, 1000);
       }
-
-      // Remover o timeout geral que estava causando problemas
-      
     } catch (error: any) {
-      console.error('❌ ERRO COMPLETO:', error);
-      console.error('Código do erro:', error.code);
-      console.error('Mensagem do erro:', error.message);
-      console.error('Stack do erro:', error.stack);
-      
-      // Mensagens de erro mais específicas
-      if (error.code === 'auth/email-already-in-use') {
-        setError('Este email já está cadastrado no sistema');
-      } else if (error.code === 'auth/invalid-email') {
-        setError('Email inválido');
-      } else if (error.code === 'auth/weak-password') {
-        setError('Senha muito fraca');
-      } else if (error.code === 'auth/user-not-found') {
-        setError('Usuário não encontrado para envio de email');
-      } else if (error.code === 'auth/too-many-requests') {
-        setError('Muitas tentativas. Tente novamente mais tarde');
+      console.error("❌ ERRO COMPLETO:", error);
+
+      if (error.code === "auth/email-already-in-use") {
+        setError("Este email já está cadastrado no sistema");
+      } else if (error.code === "auth/invalid-email") {
+        setError("Email inválido");
+      } else if (error.code === "auth/weak-password") {
+        setError("Senha muito fraca");
       } else {
-        setError(`Erro: ${error.message || 'Erro desconhecido'}`);
+        setError(`Erro: ${error.message || "Erro desconhecido"}`);
       }
     } finally {
       setLoading(false);
@@ -181,10 +175,9 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
-        {/* Cabeçalho */}
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-bold">
-            {mode === 'create' ? 'Cadastrar Novo Aluno' : 'Editar Aluno'}
+            {mode === "create" ? "Cadastrar Novo Aluno" : "Editar Aluno"}
           </h2>
           <button
             onClick={handleClose}
@@ -194,12 +187,11 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
           </button>
         </div>
 
-        {/* Formulário */}
         <form onSubmit={handleSubmit} className="p-4 space-y-3">
           {/* Nome */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Nome Completo
+              Nome Completo *
             </label>
             <input
               type="text"
@@ -213,17 +205,17 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
           {/* Email */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Email
+              Email *
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-              disabled={mode === 'edit'} // Não permite editar email
+              disabled={mode === "edit"}
               required
             />
-            {mode === 'edit' && (
+            {mode === "edit" && (
               <p className="text-xs text-gray-500 mt-1">
                 Email não pode ser alterado após cadastro
               </p>
@@ -233,7 +225,7 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
           {/* Telefone */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Telefone
+              Telefone *
             </label>
             <input
               type="tel"
@@ -244,10 +236,27 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
             />
           </div>
 
+          {/* ✅ NOVO CAMPO GÊNERO */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Gênero *
+            </label>
+            <select
+              value={genero}
+              onChange={(e) => setGenero(e.target.value)}
+              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+              required
+            >
+              <option value="">Selecione o gênero</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+            </select>
+          </div>
+
           {/* Planos */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Plano
+              Plano *
             </label>
             <select
               value={plano}
@@ -269,7 +278,7 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
             </label>
             <select
               value={status}
-              onChange={(e) => setStatus(e.target.value as 'ativo' | 'inativo' | 'suspenso')}
+              onChange={(e) => setStatus(e.target.value)}
               className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
             >
               <option value="ativo">Ativo</option>
@@ -319,7 +328,9 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
 
           {/* Erro */}
           {error && (
-            <div className="text-red-600 text-xs">{error}</div>
+            <div className="text-red-600 text-xs bg-red-50 p-2 rounded-lg border border-red-200">
+              {error}
+            </div>
           )}
 
           {/* Botões */}
@@ -337,11 +348,15 @@ export default function AlunoModal({ isOpen, onClose, onSuccess, mode, alunoData
               className="flex-1 px-3 py-2 text-xs bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 flex items-center justify-center gap-1"
             >
               {loading ? (
-                mode === 'create' ? 'Cadastrando...' : 'Salvando...'
+                mode === "create" ? (
+                  "Cadastrando..."
+                ) : (
+                  "Salvando..."
+                )
               ) : (
                 <>
                   <FaSave className="text-xs" />
-                  {mode === 'create' ? 'Cadastrar' : 'Salvar'}
+                  {mode === "create" ? "Cadastrar" : "Salvar"}
                 </>
               )}
             </button>
