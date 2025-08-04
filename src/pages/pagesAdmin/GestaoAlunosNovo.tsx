@@ -126,18 +126,22 @@ export default function GestaoAlunos() {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log("🔥 DOCUMENTO RAW:", doc.id, data); // ← ADICIONE
+
         if (data && typeof data === "object") {
           alunosData.push({
             id: doc.id,
             nome: data.nome || "",
             email: data.email || "",
             telefone: data.telefone || "",
+            genero: data.genero || "Masculino",
             plano: data.plano || "",
             status: data.status || "inativo",
             turmas: data.turmas || "Seg-Qua",
             horarios: data.horarios || "19:00",
             dataMatricula: data.dataMatricula || "",
           } as Aluno);
+          console.log("🔥 ALUNO PROCESSADO:", alunosData); // ← ADICIONE
         }
       });
 
@@ -163,6 +167,8 @@ export default function GestaoAlunos() {
 
   // Funções de callback para o DataTable
   const handleEdit = (aluno: Aluno) => {
+    console.log("🎯 ALUNO SELECIONADO PARA EDIÇÃO:", aluno); // ← ADICIONE
+    console.log("🎯 GÊNERO DO ALUNO:", aluno.genero); // ← ADICIONE
     setSelectedAluno(aluno);
     setModalMode("edit");
     setIsModalOpen(true);
