@@ -3,7 +3,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "../../firebase-config";
 
-
 export default function AdminDashboard() {
   const [nome, setNome] = useState<string>("");
   const [totalAlunos, setTotalAlunos] = useState<number>(0);
