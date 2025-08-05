@@ -1,28 +1,29 @@
 // src/App.tsx
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import Layout from './components/Layout';
-import AdminLayout from './components/componentsAdmin/AdminLayout';
-import HomePage from './pages/HomePage';
-import PaginaLogin from './pages/PaginaLogin';
-import SobreNos from './pages/SobreNos';
-import Eventos from './pages/Eventos';
-import Professores from './pages/Professores';
-import Planos from './pages/Planos';
-import ProtectedRoute from './components/ProtectedRoute';
-import AdminDashboard from './pages/pagesAdmin/AdminDashboard';
-import CadastrarAdmin from './pages/pagesAdmin/CadastrarAdmin';
-import GestaoAlunos from './pages/pagesAdmin/GestaoAlunosNovo';
-import RedefinirSenha from './pages/ConfirmarSenha';
-import EsqueciSenha from './pages/EsqueciSenha';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import Layout from "./components/Layout";
+import AdminLayout from "./components/componentsAdmin/AdminLayout";
+import HomePage from "./pages/HomePage";
+import PaginaLogin from "./pages/PaginaLogin";
+import SobreNos from "./pages/SobreNos";
+import Eventos from "./pages/Eventos";
+import Professores from "./pages/Professores";
+import Planos from "./pages/Planos";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/pagesAdmin/AdminDashboard";
+import CadastrarAdmin from "./pages/pagesAdmin/CadastrarAdmin";
+import GestaoAlunos from "./pages/pagesAdmin/GestaoAlunosNovo";
+import RedefinirSenha from "./pages/ConfirmarSenha";
+import EsqueciSenha from "./pages/EsqueciSenha";
+import PrimeiroAcesso from "./pages/pagesAdmin/PrimeiroAcesso";
 
 // Imports Aluno
-import DashboardAluno from './pages/pagesAluno/DashboardAluno';
-import MinhasTurmas from './pages/pagesAluno/MinhasTurmas';
-import MeusPagamentos from './pages/pagesAluno/MeusPagamentos';
-import MeuPerfil from './pages/pagesAluno/MeuPerfil';
-import GestaoTurmas from './pages/pagesAdmin/GestaoTurmas';
+import DashboardAluno from "./pages/pagesAluno/DashboardAluno";
+import MinhasTurmas from "./pages/pagesAluno/MinhasTurmas";
+import MeusPagamentos from "./pages/pagesAluno/MeusPagamentos";
+import MeuPerfil from "./pages/pagesAluno/MeuPerfil";
+import GestaoTurmas from "./pages/pagesAdmin/GestaoTurmas";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
             <Route path="planos" element={<Planos />} />
             <Route path="redefinir-senha" element={<RedefinirSenha />} />
             <Route path="esqueci-senha" element={<EsqueciSenha />} />
+            <Route path="/primeiro-acesso" element={<PrimeiroAcesso />} />
           </Route>
 
           {/* Rota de redefinição FORA do Layout */}
@@ -108,9 +110,8 @@ function App() {
             }
           >
             <Route index element={<GestaoAlunos />} />
-            
           </Route>
-           <Route
+          <Route
             path="/gestao-turmas"
             element={
               <ProtectedRoute requiredRole="admin">
@@ -119,8 +120,8 @@ function App() {
             }
           >
             <Route index element={<GestaoTurmas />} />
-            
           </Route>
+          <Route path="/primeiro-acesso" element={<PrimeiroAcesso />} />
         </Routes>
       </Router>
     </AuthProvider>
