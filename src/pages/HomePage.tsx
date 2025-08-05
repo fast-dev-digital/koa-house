@@ -34,26 +34,69 @@ function HomePage() {
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
-            opacity: 1
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.2,
+                delayChildren: 0.1
+            }
         }
     };
 
     const itemVariants = {
-        hidden: { y: 50, opacity: 0 },
+        hidden: { y: 30, opacity: 0 },
         visible: {
             y: 0,
-            opacity: 1
+            opacity: 1,
+            transition: {
+                duration: 0.6
+            }
         }
     };
 
-    const containerTransition = {
-        staggerChildren: 0.3,
-        delayChildren: 0.2
+    // Variants otimizados para features
+    const featuresContainerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.2
+            }
+        }
     };
 
-    const itemTransition = {
-        duration: 0.8,
-        ease: "easeOut" as const
+    const featureItemVariants = {
+        hidden: { y: 40, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                duration: 0.5
+            }
+        }
+    };
+
+    // Variants otimizados para planos
+    const plansContainerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.3
+            }
+        }
+    };
+
+    const planItemVariants = {
+        hidden: { scale: 0.8, opacity: 0 },
+        visible: {
+            scale: 1,
+            opacity: 1,
+            transition: {
+                duration: 0.4
+            }
+        }
     };
 
 
@@ -131,12 +174,10 @@ function HomePage() {
                     variants={containerVariants}
                     initial="hidden"
                     animate={heroInView ? "visible" : "hidden"}
-                    transition={containerTransition}
                 >
                     <motion.h1 
                         className="text-6xl md:text-8xl font-black text-white mb-6 leading-tight"
                         variants={itemVariants}
-                        transition={itemTransition}
                     >
                         ARENA
                         <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
@@ -147,7 +188,6 @@ function HomePage() {
                     <motion.p 
                         className="text-xl md:text-2xl text-emerald-100 mb-8 max-w-3xl mx-auto leading-relaxed"
                         variants={itemVariants}
-                        transition={itemTransition}
                     >
                         Viva a experiência única do futevôlei e beach tennis nas melhores quadras de areia da região
                     </motion.p>
@@ -155,7 +195,6 @@ function HomePage() {
                     <motion.div 
                         className="flex flex-col sm:flex-row gap-4 justify-center items-center"
                         variants={itemVariants}
-                        transition={itemTransition}
                     >
                         <motion.a
                             href="https://wa.me/5519981924006?text=Olá%20quero%20reservar%20uma%20quadra%20"
@@ -200,10 +239,9 @@ function HomePage() {
                     backgroundRepeat: 'no-repeat',
                     backgroundAttachment: 'fixed'
                 }}
-                variants={containerVariants}
-                initial="hidden"
-                animate={featuresInView ? "visible" : "hidden"}
-                transition={containerTransition}
+                initial={{ opacity: 0 }}
+                animate={featuresInView ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.6 }}
             >
                 {/* Mobile Background */}
                 <div 
@@ -220,13 +258,19 @@ function HomePage() {
                  <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
                         className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
-                        variants={itemVariants}
-                        transition={itemTransition}
+                        initial={{ y: 30, opacity: 0 }}
+                        animate={featuresInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         Por que escolher a Arena Brazuka?
                     </motion.h2>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <motion.div 
+                        className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
+                        variants={featuresContainerVariants}
+                        initial="hidden"
+                        animate={featuresInView ? "visible" : "hidden"}
+                    >
                         {[
                             {
                                 title: "Quadras Premium",
@@ -250,9 +294,8 @@ function HomePage() {
                             <motion.div
                                 key={index}
                                 className="relative group"
-                                variants={itemVariants}
-                                transition={itemTransition}
-                                whileHover={{ y: -10 }}
+                                variants={featureItemVariants}
+                                whileHover={{ y: -10, transition: { duration: 0.2 } }}
                             >
                                 <div className="bg-white rounded-3xl p-8 shadow-xl border border-emerald-100 h-full transform transition-all duration-300 group-hover:shadow-2xl">
                                     <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto`}>
@@ -263,7 +306,7 @@ function HomePage() {
                                 </div>
                             </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
                 </div>
             </motion.section>
 
@@ -278,10 +321,9 @@ function HomePage() {
                     backgroundRepeat: 'no-repeat',
                     backgroundAttachment: 'fixed'
                 }}
-                variants={containerVariants}
-                initial="hidden"
-                animate={plansInView ? "visible" : "hidden"}
-                transition={containerTransition}
+                initial={{ opacity: 0 }}
+                animate={plansInView ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.6 }}
             >
                 {/* Mobile Background */}
                 <div 
@@ -298,23 +340,28 @@ function HomePage() {
                  <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
                         className="text-5xl font-black text-center text-white mb-16"
-                        variants={itemVariants}
-                        transition={itemTransition}
+                        initial={{ y: 30, opacity: 0 }}
+                        animate={plansInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         Planos em Destaque
                     </motion.h2>
                     
                     <motion.div 
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
-                        variants={containerVariants}
-                        transition={containerTransition}
+                        variants={plansContainerVariants}
+                        initial="hidden"
+                        animate={plansInView ? "visible" : "hidden"}
                     >
                         {planos.filter(plano => plano.destacado).map((plano, index) => (
                             <motion.div
                                 key={plano.titulo}
-                                variants={itemVariants}
-                                transition={itemTransition}
-                                whileHover={{ scale: 1.05, rotateY: 5 }}
+                                variants={planItemVariants}
+                                whileHover={{ 
+                                    scale: 1.03, 
+                                    rotateY: 3,
+                                    transition: { duration: 0.2 }
+                                }}
                                 className="transform-gpu"
                             >
                                 <PricingCard plano={plano} mode="home" />
@@ -335,10 +382,9 @@ function HomePage() {
                     backgroundRepeat: 'no-repeat',
                     backgroundAttachment: 'fixed'
                 }}
-                variants={containerVariants}
-                initial="hidden"
-                animate={eventsInView ? "visible" : "hidden"}
-                transition={containerTransition}
+                initial={{ opacity: 0 }}
+                animate={eventsInView ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.6 }}
             >
                 {/* Mobile Background */}
                 <div 
@@ -355,13 +401,18 @@ function HomePage() {
                  <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
                         className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
-                        variants={itemVariants}
-                        transition={itemTransition}
+                        initial={{ y: 30, opacity: 0 }}
+                        animate={eventsInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         Próximos Eventos
                     </motion.h2>
                     
-                    <motion.div variants={itemVariants} transition={itemTransition}>
+                    <motion.div 
+                        initial={{ y: 40, opacity: 0 }}
+                        animate={eventsInView ? { y: 0, opacity: 1 } : { y: 40, opacity: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                    >
                         <EventsSection mode='home' />
                     </motion.div>
                 </div>
