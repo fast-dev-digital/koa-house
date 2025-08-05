@@ -66,10 +66,11 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
   } as const;
 
   return (
-    <section className="py-0">
-      <div className="container mx-auto px-4">
+    <section className="py-16 relative overflow-hidden">
+      
+      <div className="container mx-auto px-4 relative z-10">
         <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-12"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -79,96 +80,191 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
               key={evento.titulo}
               variants={cardVariants}
               whileHover={{ 
-                scale: 1.02,
-                transition: { duration: 0.3 }
+                scale: 1.03,
+                y: -8,
+                transition: { duration: 0.4, ease: "easeOut" }
               }}
-              className="group relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-white/20 hover:shadow-3xl transition-all duration-500"
+              className="group relative backdrop-blur-xl bg-white/80 rounded-3xl shadow-2xl overflow-hidden border border-white/30 hover:shadow-yellow-500/20 hover:shadow-3xl transition-all duration-700 hover:border-yellow-300/50"
             >
-              {/* Gradient overlay on image */}
-              <div className="relative overflow-hidden">
+              {/* Enhanced image section */}
+              <div className="relative overflow-hidden h-80">
                 <img
                   src={images[`../assets/${evento.imagem}`] as string}
                   alt={evento.titulo}
-                  className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-700"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute top-4 left-4">
-                  <span className="inline-block px-3 py-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs font-bold rounded-full shadow-lg">
+                {/* Multi-layered gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-transparent to-purple-500/10 group-hover:from-yellow-400/30 transition-all duration-700" />
+                
+                {/* Enhanced type badge */}
+                <div className="absolute top-6 left-6">
+                  <motion.span 
+                    whileHover={{ scale: 1.1 }}
+                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white text-sm font-bold rounded-full shadow-xl backdrop-blur-sm border border-yellow-300/30"
+                  >
+                    <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
                     {evento.tipo}
-                  </span>
+                  </motion.span>
+                </div>
+                
+                {/* Floating date badge */}
+                <div className="absolute top-6 right-6">
+                  <div className="backdrop-blur-md bg-white/20 rounded-2xl px-4 py-2 border border-white/30">
+                    <p className="text-white text-sm font-semibold">{evento.data.split(',')[0]}</p>
+                    <p className="text-white/80 text-xs">{evento.data.split(',')[1]}</p>
+                  </div>
+                </div>
+                
+                {/* Bottom title overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <h3 className="font-black text-2xl lg:text-3xl text-white mb-2 drop-shadow-lg">
+                    {evento.titulo}
+                  </h3>
+                  <div className="flex items-center text-white/90 text-sm">
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    Arena Brazuka
+                  </div>
                 </div>
               </div>
               
-              <div className="p-6 relative">
-                <h3 className="font-black text-xl mb-3 text-gray-800 group-hover:text-emerald-700 transition-colors duration-300">
-                  {evento.titulo}
-                </h3>
-                <p className="text-gray-600 text-sm mb-6 leading-relaxed">{evento.data}</p>
-
-                {mode === 'home' ? (
-                  <motion.a
-                    href="/eventos"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="inline-flex items-center justify-center w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform"
-                  >
-                    Ver todos os eventos
-                    <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              {/* Enhanced content section */}
+              <div className="p-8 relative backdrop-blur-sm">
+                {/* Quick info pills */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-full border border-white/30">
+                    <svg className="w-3 h-3 mr-1 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
-                  </motion.a>
-                ) : (
-                  <>
-                    <motion.button
-                      onClick={() => toggleExpand(evento.titulo)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mb-4"
+                    <span className="text-xs font-medium text-gray-700">{evento.horario}</span>
+                  </div>
+                  <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-full border border-white/30">
+                    <svg className="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs font-medium text-gray-700">Arena Brazuka</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-gray-600 text-sm mb-8 leading-relaxed line-clamp-3">
+                  {evento.descricao}
+                </p>
+
+                {/* Action buttons */}
+                <div className="space-y-4">
+                  {mode === 'home' ? (
+                    <motion.a
+                      href="/eventos"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="group/btn relative inline-flex items-center justify-center w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-yellow-500/25 transition-all duration-500 overflow-hidden"
                     >
-                      {expandedEvent === evento.titulo ? 'Ver Menos' : 'Ver Mais'}
-                    </motion.button>
-                    {expandedEvent === evento.titulo && (
-                      <motion.div 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="bg-gradient-to-br from-gray-50 to-emerald-50 rounded-xl p-4 border border-emerald-100"
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
+                      <span className="relative z-10 flex items-center">
+                        Ver todos os eventos
+                        <svg className="ml-3 w-5 h-5 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </span>
+                    </motion.a>
+                  ) : (
+                    <>
+                      <motion.button
+                        onClick={() => toggleExpand(evento.titulo)}
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="group/btn relative w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-yellow-500/25 transition-all duration-500 overflow-hidden"
                       >
-                        <div className="space-y-3 text-gray-700">
-                          <div className="flex items-start gap-2">
-                            <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <div>
-                              <span className="font-semibold text-emerald-800">Local:</span>
-                              <p className="text-sm">{evento.local}</p>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
+                        <span className="relative z-10 flex items-center justify-center">
+                          {expandedEvent === evento.titulo ? (
+                            <>
+                              Ver Menos
+                              <svg className="ml-2 w-4 h-4 transition-transform duration-300 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </>
+                          ) : (
+                            <>
+                              Ver Mais Detalhes
+                              <svg className="ml-2 w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </>
+                          )}
+                        </span>
+                      </motion.button>
+                      
+                      {expandedEvent === evento.titulo && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0, y: -20 }}
+                          animate={{ opacity: 1, height: 'auto', y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -20 }}
+                          transition={{ duration: 0.5, ease: "easeOut" }}
+                          className="backdrop-blur-xl bg-gradient-to-br from-white/60 via-white/40 to-yellow-50/60 rounded-2xl p-6 border border-white/40 shadow-xl"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                              <div className="flex items-start gap-3 p-4 bg-white/50 rounded-xl border border-white/30">
+                                <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <span className="font-bold text-gray-800 block">Local</span>
+                                  <p className="text-sm text-gray-600 mt-1">{evento.local}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-start gap-3 p-4 bg-white/50 rounded-xl border border-white/30">
+                                <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
+                                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <span className="font-bold text-gray-800 block">Horário</span>
+                                  <p className="text-sm text-gray-600 mt-1">{evento.horario}</p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-start gap-3 p-4 bg-white/50 rounded-xl border border-white/30 md:col-span-1">
+                              <div className="p-2 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <span className="font-bold text-gray-800 block">Sobre o Evento</span>
+                                <p className="text-sm text-gray-600 mt-1 leading-relaxed">{evento.descricao}</p>
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-start gap-2">
-                            <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div>
-                              <span className="font-semibold text-emerald-800">Horário:</span>
-                              <p className="text-sm">{evento.horario}</p>
-                            </div>
+                          
+                          {/* Call to action */}
+                          <div className="mt-6 pt-6 border-t border-white/30">
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+                            >
+                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                              </svg>
+                              Entrar em Contato
+                            </motion.button>
                           </div>
-                          <div className="flex items-start gap-2">
-                            <svg className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div>
-                              <span className="font-semibold text-emerald-800">Descrição:</span>
-                              <p className="text-sm">{evento.descricao}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </>
-                )}
+                        </motion.div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}
