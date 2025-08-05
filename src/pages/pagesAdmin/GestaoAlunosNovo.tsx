@@ -126,12 +126,14 @@ export default function GestaoAlunos() {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+
         if (data && typeof data === "object") {
           alunosData.push({
             id: doc.id,
             nome: data.nome || "",
             email: data.email || "",
             telefone: data.telefone || "",
+            genero: data.genero || "Masculino",
             plano: data.plano || "",
             status: data.status || "inativo",
             turmas: data.turmas || "Seg-Qua",

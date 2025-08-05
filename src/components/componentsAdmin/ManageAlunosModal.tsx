@@ -6,7 +6,7 @@ import {
   where,
   doc,
   updateDoc,
-  arrayUnion,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase-config";
 import {
@@ -26,7 +26,10 @@ interface Aluno {
   nome: string;
   email: string;
   telefone?: string;
-  turmaId?: string;
+  // ✅ SISTEMA ATUAL - Array de turmaIds (múltiplas turmas)
+  turmasIds?: string[]; // Array de turmaIds para relacionamento
+  // ⚠️ LEGADO - turmaId mantido apenas para dados antigos
+  turmaId?: string; // DEPRECATED: usar turmasIds[]
   genero?: string;
   status?: string;
   plano?: string;
@@ -47,6 +50,49 @@ export default function ManageAlunosModal({
   onSuccess,
   turma,
 }: ManageAlunosModalProps) {
+  // ✅ FUNÇÕES AUXILIARES PARA MÚLTIPLAS TURMAS
+  const migrarTurmaIdParaArray = (alunoData: any) => {
+    // Migração automática: turmaId → turmasIds[]
+    if (alunoData.turmaId && !alunoData.turmasIds) {
+      return {
+        ...alunoData,
+        turmasIds: [alunoData.turmaId],
+      };
+    }
+    return alunoData;
+  };
+
+  const alunoEstaNaTurma = (aluno: Aluno, turmaId: string) => {
+    // Verificar se aluno está em uma turma específica
+    const turmasArray =
+      aluno.turmasIds || (aluno.turmaId ? [aluno.turmaId] : []);
+    return turmasArray.includes(turmaId);
+  };
+
+  const alunoTemModalidade = async (aluno: Aluno, modalidade: string) => {
+    // Verificar se aluno já está em turma da mesma modalidade
+    if (!aluno.turmasIds?.length && !aluno.turmaId) return false;
+
+    const turmasArray =
+      aluno.turmasIds || (aluno.turmaId ? [aluno.turmaId] : []);
+
+    // Buscar modalidades das turmas do aluno
+    const turmasQuery = query(
+      collection(db, "turmas"),
+      where("__name__", "in", turmasArray)
+    );
+
+    try {
+      const turmasSnapshot = await getDocs(turmasQuery);
+      return turmasSnapshot.docs.some(
+        (doc) => doc.data().modalidade === modalidade
+      );
+    } catch (error) {
+      console.error("Erro ao verificar modalidades:", error);
+      return false;
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<"matriculados" | "disponiveis">(
     "matriculados"
   );
@@ -80,10 +126,17 @@ export default function ManageAlunosModal({
     try {
       console.log(`Removendo aluno ${aluno.nome} da turma ${turma.nome}`);
 
-      // 1. Remover turmaId do aluno
+      // ✅ NOVA LÓGICA - Remover da array de turmas
+      const turmasArray =
+        aluno.turmasIds || (aluno.turmaId ? [aluno.turmaId] : []);
+      const novasTurmas = turmasArray.filter((id: string) => id !== turma.id);
+
+      // 1. Atualizar array de turmas do aluno
       const alunoRef = doc(db, "Alunos", aluno.id);
       await updateDoc(alunoRef, {
-        turmaId: "", // ✅ Limpar a turmaId
+        turmasIds: novasTurmas,
+        // ❌ DEPRECATED - Limpar turmaId se array ficar vazio
+        ...(novasTurmas.length === 0 && { turmaId: "" }),
       });
 
       // 2. Decrementar contador da turma
@@ -123,29 +176,40 @@ export default function ManageAlunosModal({
     try {
       console.log("🔍 Buscando alunos matriculados na turma:", turma.nome);
 
-      const q = query(
-        collection(db, "Alunos"),
-        where("turmaId", "==", turma.id)
-      );
-      const querySnapshot = await getDocs(q);
+      // ✅ NOVA LÓGICA - Buscar por array de turmas OU turmaId (compatibilidade)
+      const alunosQuery = collection(db, "Alunos");
+      const querySnapshot = await getDocs(alunosQuery);
 
       const alunosData: Aluno[] = [];
       querySnapshot.forEach((doc) => {
         const docData = doc.data();
-        console.log("👤 Aluno matriculado encontrado:", doc.id, docData);
 
-        alunosData.push({
-          id: doc.id,
-          nome: docData.nome || "",
-          email: docData.email || "",
-          telefone: docData.telefone || "",
-          turmaId: docData.turmaId || "",
-          genero: docData.genero || "",
-          status: docData.status || "",
-          plano: docData.plano || "",
-          role: docData.role || "",
-          horarios: docData.horarios || "",
-        });
+        // ✅ MIGRAÇÃO AUTOMÁTICA
+        const alunoMigrado = migrarTurmaIdParaArray(docData);
+
+        // Verificar se está na turma atual
+        const turmasArray =
+          alunoMigrado.turmasIds ||
+          (alunoMigrado.turmaId ? [alunoMigrado.turmaId] : []);
+        const estaNaTurma = turmasArray.includes(turma.id);
+
+        if (estaNaTurma) {
+          console.log("👤 Aluno matriculado encontrado:", doc.id, alunoMigrado);
+
+          alunosData.push({
+            id: doc.id,
+            nome: alunoMigrado.nome || "",
+            email: alunoMigrado.email || "",
+            telefone: alunoMigrado.telefone || "",
+            turmasIds: alunoMigrado.turmasIds || [],
+            turmaId: alunoMigrado.turmaId || "", // Compatibilidade
+            genero: alunoMigrado.genero || "",
+            status: alunoMigrado.status || "",
+            plano: alunoMigrado.plano || "",
+            role: alunoMigrado.role || "",
+            horarios: alunoMigrado.horarios || "",
+          });
+        }
       });
 
       setAlunos(alunosData);
@@ -174,34 +238,47 @@ export default function ManageAlunosModal({
       const querySnapshot = await getDocs(alunosQuery);
       const todosAlunos: Aluno[] = [];
 
+      // ✅ STEP 1: Buscar todas as turmas para verificar modalidades
+      const todasTurmasSnapshot = await getDocs(collection(db, "turmas"));
+      const turmasMap = new Map();
+      todasTurmasSnapshot.forEach((doc) => {
+        turmasMap.set(doc.id, doc.data());
+      });
+
       querySnapshot.forEach((doc) => {
         const docData = doc.data();
+
+        // ✅ MIGRAÇÃO AUTOMÁTICA
+        const alunoMigrado = migrarTurmaIdParaArray(docData);
+
         console.log("👤 Aluno ativo encontrado:", doc.id, {
-          nome: docData.nome,
-          genero: docData.genero,
-          turmaId: docData.turmaId,
-          status: docData.status,
+          nome: alunoMigrado.nome,
+          genero: alunoMigrado.genero,
+          turmasIds: alunoMigrado.turmasIds,
+          turmaId: alunoMigrado.turmaId, // compatibilidade
+          status: alunoMigrado.status,
         });
 
         todosAlunos.push({
           id: doc.id,
-          nome: docData.nome || "",
-          email: docData.email || "",
-          telefone: docData.telefone || "",
-          genero: docData.genero || "",
-          status: docData.status || "",
-          turmaId: docData.turmaId || "",
-          plano: docData.plano || "",
-          role: docData.role || "",
-          horarios: docData.horarios || "",
+          nome: alunoMigrado.nome || "",
+          email: alunoMigrado.email || "",
+          telefone: alunoMigrado.telefone || "",
+          genero: alunoMigrado.genero || "",
+          status: alunoMigrado.status || "",
+          turmasIds: alunoMigrado.turmasIds || [],
+          turmaId: alunoMigrado.turmaId || "", // compatibilidade
+          plano: alunoMigrado.plano || "",
+          role: alunoMigrado.role || "",
+          horarios: alunoMigrado.horarios || "",
         });
       });
 
       console.log(`📊 Total de alunos ativos: ${todosAlunos.length}`);
 
-      // Filtrar por gênero (se não for Teens)
+      // ✅ STEP 2: Filtrar por gênero (EXCETO Beach Tennis E Teens)
       let alunosPorGenero = todosAlunos;
-      if (turma.genero !== "Teens") {
+      if (turma.modalidade !== "Beach Tennis" && turma.genero !== "Teens") {
         alunosPorGenero = todosAlunos.filter((aluno) => {
           const generoMatch = aluno.genero === turma.genero;
           console.log(
@@ -213,20 +290,34 @@ export default function ManageAlunosModal({
           `👥 Alunos do gênero ${turma.genero}: ${alunosPorGenero.length}`
         );
       } else {
-        console.log("👥 Turma Teens aceita todos os gêneros");
+        console.log("🏖️ Beach Tennis ou Teens aceita todos os gêneros");
       }
 
-      // Filtrar apenas alunos não matriculados nesta turma
+      // ✅ STEP 3: NOVA REGRA - Filtrar por modalidade
       const disponíveis = alunosPorGenero.filter((aluno) => {
-        const isDisponivel = !aluno.turmaId || aluno.turmaId !== turma.id;
+        // Verificar se já está nesta turma específica
+        const turmasArray =
+          aluno.turmasIds || (aluno.turmaId ? [aluno.turmaId] : []);
+        const jaNestaTurma = turmasArray.includes(turma.id!);
 
-        console.log(`🔍 ${aluno.nome}:`, {
-          turmaId: aluno.turmaId,
-          turmaAtual: turma.id,
-          isDisponivel,
+        if (jaNestaTurma) {
+          console.log(`❌ ${aluno.nome}: já está nesta turma`);
+          return false;
+        }
+
+        // ✅ NOVA REGRA: Verificar se já tem turma da mesma modalidade
+        const jaTemModalidade = turmasArray.some((turmaId: string) => {
+          const turmaData = turmasMap.get(turmaId);
+          return turmaData?.modalidade === turma.modalidade;
         });
 
-        return isDisponivel;
+        if (jaTemModalidade) {
+          console.log(`❌ ${aluno.nome}: já tem turma de ${turma.modalidade}`);
+          return false;
+        }
+
+        console.log(`✅ ${aluno.nome}: disponível para ${turma.modalidade}`);
+        return true;
       });
 
       setAlunosDisponiveis(disponíveis);
@@ -253,7 +344,7 @@ export default function ManageAlunosModal({
     const vagasDisponiveis = (turma.capacidade || 0) - alunos.length;
     if (selectedAlunosIds.length > vagasDisponiveis) {
       showToast(
-        `❌ Turma tem apenas ${vagasDisponiveis} vaga(s) disponível(eis)`,
+        ` Turma tem apenas ${vagasDisponiveis} vaga(s) disponível(eis)`,
         "error"
       );
       return;
@@ -262,18 +353,32 @@ export default function ManageAlunosModal({
     setLoadingDisponiveis(true);
     try {
       console.log(
-        `➕ Adicionando ${selectedAlunosIds.length} alunos na turma ${turma.nome}`
+        ` Adicionando ${selectedAlunosIds.length} alunos na turma ${turma.nome}`
       );
 
-      // Atualizar cada aluno selecionado
+      // ✅ NOVA LÓGICA - Atualizar array de turmas de cada aluno
       const updatePromises = selectedAlunosIds.map(async (alunoId) => {
         const alunoRef = doc(db, "Alunos", alunoId);
 
-        await updateDoc(alunoRef, {
-          turmaId: turma.id,
-        });
+        // Buscar dados atuais do aluno
+        const alunoDoc = await getDoc(alunoRef);
+        if (alunoDoc.exists()) {
+          const alunoData = alunoDoc.data();
+          const alunoMigrado = migrarTurmaIdParaArray(alunoData);
 
-        console.log(`✅ Aluno ${alunoId} matriculado na turma ${turma.id}`);
+          const turmasArray =
+            alunoMigrado.turmasIds ||
+            (alunoMigrado.turmaId ? [alunoMigrado.turmaId] : []);
+          const novasTurmas = [...turmasArray, turma.id!];
+
+          await updateDoc(alunoRef, {
+            turmasIds: novasTurmas,
+            // ✅ Manter turmaId para compatibilidade (primeira turma)
+            turmaId: novasTurmas[0] || "",
+          });
+
+          console.log(`✅ Aluno ${alunoId} matriculado na turma ${turma.id}`);
+        }
       });
 
       await Promise.all(updatePromises);

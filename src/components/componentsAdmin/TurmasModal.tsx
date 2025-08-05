@@ -327,6 +327,11 @@ export default function TurmaModal({
                 <option value="">Não informado</option>
                 <option value="Seg-Qua">Segunda e Quarta</option>
                 <option value="Ter-Qui">Terça e Quinta</option>
+                <option value="Seg">Segunda-Feira</option>
+                <option value="Ter">Terça-Feira</option>
+                <option value="Qua">Quarta-Feira</option>
+                <option value="Qui">Quinta-Feira</option>
+                <option value="Sex">Sexta-Feira</option>
               </select>
             </div>
 
