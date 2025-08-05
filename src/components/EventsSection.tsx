@@ -51,7 +51,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
         staggerChildren: 0.2
       }
     }
-  };
+  } as const;
 
   const cardVariants = {
     hidden: { y: 50, opacity: 0 },
@@ -63,7 +63,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
         ease: "easeOut"
       }
     }
-  };
+  } as const;
 
   return (
     <section className="py-0">
