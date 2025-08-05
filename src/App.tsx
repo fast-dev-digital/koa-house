@@ -19,9 +19,10 @@ import EsqueciSenha from "./pages/EsqueciSenha";
 import PrimeiroAcesso from "./pages/pagesAdmin/PrimeiroAcesso";
 
 // Imports Aluno
-import DashboardAluno from './pages/pagesAluno/DashboardAluno';
-import MeusPagamentos from './pages/pagesAluno/MeusPagamentos';
-import GestaoTurmas from './pages/pagesAdmin/GestaoTurmas';
+import DashboardAluno from "./pages/pagesAluno/DashboardAluno";
+import MeusPagamentos from "./pages/pagesAluno/MeusPagamentos";
+import GestaoTurmas from "./pages/pagesAdmin/GestaoTurmas";
+import GestaoProfessores from "./pages/pagesAdmin/GestaoProfessores";
 
 function App() {
   return (
@@ -104,7 +105,7 @@ function App() {
           >
             <Route index element={<GestaoTurmas />} />
           </Route>
-          <Route path="/primeiro-acesso" element={<PrimeiroAcesso />} />
+          <Route path="/gestao-professores" element={<GestaoProfessores />} />
         </Routes>
       </Router>
     </AuthProvider>

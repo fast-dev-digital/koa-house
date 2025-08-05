@@ -49,7 +49,7 @@ const menuItems: MenuItem[] = [
     id: 'professores',
     label: 'Professores',
     icon: <FaChalkboardTeacher />,
-    path: '/admin/professores'
+    path: '/gestao-professores'
   },
   {
     id: 'financeiro',
