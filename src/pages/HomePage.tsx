@@ -1,91 +1,336 @@
-import {useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { useRef } from 'react';
 import Navbar from '../components/Navbar';
 import InfoSection from '../components/InfoSection';
 import EventsSection from '../components/EventsSection';
 import PricingCard from '../components/PricingCard';
 import { planos } from '../data/planosData';
-
 import Modal from '../components/Modal';
 import WhatsappFloat from '../components/WhatsappFloat';
-import HeroCarousel from '../components/HeroCarousel';
-
 import imgTeste from '../assets/torneio-img.png';
 import modalTeste from '../assets/interno-img.png';
 
 function HomePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { scrollYProgress } = useScroll();
+    const heroRef = useRef(null);
+    const featuresRef = useRef(null);
+    const plansRef = useRef(null);
+    const eventsRef = useRef(null);
+    
+    const heroInView = useInView(heroRef, { once: true });
+    const featuresInView = useInView(featuresRef, { once: true });
+    const plansInView = useInView(plansRef, { once: true });
+    const eventsInView = useInView(eventsRef, { once: true });
+    
+    const y = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
+    const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
 
     useEffect(() => {
-        setIsModalOpen(true); // Define o estado como 'aberto'
-    }, []); // O array vazio [] garante que isso só rode uma vez, na montagem do componente
+        setIsModalOpen(true);
+    }, []);
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.3,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 50, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                duration: 0.8,
+                ease: "easeOut"
+            }
+        }
+    };
+
+    const floatingVariants = {
+        animate: {
+            y: [-10, 10, -10],
+            transition: {
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+            }
+        }
+    };
+
     return (
-        <div>
-            {/*Importando componentes para a homepage*/}
+        <div className="overflow-hidden">
             <Navbar />
-            <HeroCarousel />
-            <InfoSection
-                title="Reserve sua quadra de areia"
-                description="Escolha seu horário e aproveite nossas quadras premium para jogar com os amigos. Estrutura moderna, bar e estacionamento seguro!"
-                buttonText="RESERVE AGORA"
-                imageUrl={imgTeste}
-                imageAlt="Pessoas jogando em uma quadra de areia"
-                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20reservar%20uma%20quadra%20"
-            />
             
-            <InfoSection 
-                title="Aprenda e evolua no futevôlei"
-                description="Aulas para iniciantes e avançados, com professores experientes. Venha aprimorar suas habilidades e se divertir!"
-                buttonText="AGENDE SUA AULA"
-                imageUrl={imgTeste}
-                imageAlt="Equipe de ftv posando para a foto"
-                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20"
-                reverse={true}  // Usamos o reverse para inverter a ordem da imagem e do texto
-            />
+            {/* Hero Section Moderna */}
+            <motion.section 
+                ref={heroRef}
+                className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-amber-800 to-orange-600"
+                style={{ y, opacity }}
+            >
+                {/* Background Pattern */}
+                 <div className="absolute inset-0 opacity-10">
+                     <div className="absolute inset-0" style={{
+                         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                     }} />
+                 </div>
+                
+                {/* Floating Elements */}
+                <motion.div 
+                    className="absolute top-20 left-10 w-20 h-20 bg-yellow-400 rounded-full opacity-20"
+                    variants={floatingVariants}
+                    animate="animate"
+                />
+                <motion.div 
+                    className="absolute top-40 right-20 w-16 h-16 bg-emerald-400 rounded-full opacity-20"
+                    variants={floatingVariants}
+                    animate="animate"
+                    transition={{ delay: 1 }}
+                />
+                <motion.div 
+                    className="absolute bottom-40 left-20 w-12 h-12 bg-orange-400 rounded-full opacity-20"
+                    variants={floatingVariants}
+                    animate="animate"
+                    transition={{ delay: 2 }}
+                />
+                
+                <motion.div 
+                    className="text-center z-10 px-4 max-w-6xl mx-auto"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate={heroInView ? "visible" : "hidden"}
+                >
+                    <motion.h1 
+                        className="text-6xl md:text-8xl font-black text-white mb-6 leading-tight"
+                        variants={itemVariants}
+                    >
+                        ARENA
+                        <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                            BRAZUKA
+                        </span>
+                    </motion.h1>
+                    
+                    <motion.p 
+                        className="text-xl md:text-2xl text-emerald-100 mb-8 max-w-3xl mx-auto leading-relaxed"
+                        variants={itemVariants}
+                    >
+                        Viva a experiência única do futevôlei e beach tennis nas melhores quadras de areia da região
+                    </motion.p>
+                    
+                    <motion.div 
+                        className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+                        variants={itemVariants}
+                    >
+                        <motion.a
+                            href="https://wa.me/5519981924006?text=Olá%20quero%20reservar%20uma%20quadra%20"
+                            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-8 rounded-full text-lg shadow-2xl transform transition-all duration-300"
+                            whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            RESERVE SUA QUADRA
+                        </motion.a>
+                        
+                        <motion.a
+                            href="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20"
+                            className="border-2 border-white text-white font-bold py-4 px-8 rounded-full text-lg backdrop-blur-sm bg-white/10 transition-all duration-300"
+                            whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.2)" }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            AULA EXPERIMENTAL
+                        </motion.a>
+                    </motion.div>
+                </motion.div>
+                
+                {/* Scroll Indicator */}
+                <motion.div 
+                    className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+                    animate={{ y: [0, 10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                >
+                    <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
+                        <div className="w-1 h-3 bg-white rounded-full mt-2" />
+                    </div>
+                </motion.div>
+            </motion.section>
 
-            <InfoSection 
-                title="Entre na onda do Beach Tennis"
-                description="Treinos animados para quem quer aprender ou evoluir no esporte que mais cresce no Brasil!"
-                buttonText="QUERO JOGAR"
-                imageUrl={imgTeste}
-                imageAlt="Equipe de beach tennis posando para foto"
-                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20saber%20sobre%20as%20aulas%20de%20beach%20tennis%20"
-            />
-
-            {/* Seção de Planos em Destaque */}
-            <div className="py-16 bg-gray-50">
+            {/* Features Section */}
+            <motion.section 
+                ref={featuresRef}
+                className="py-20 bg-gradient-to-b from-slate-50 to-emerald-50"
+                variants={containerVariants}
+                initial="hidden"
+                animate={featuresInView ? "visible" : "hidden"}
+            >
                 <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold text-center text-zinc-800 mb-6">
-                    Planos em Destaque
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    {planos.filter(plano => plano.destacado).map(plano => (
-                        <PricingCard key={plano.titulo} plano={plano} mode="home"/>
-                    ))}
+                    <motion.h2 
+                        className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
+                        variants={itemVariants}
+                    >
+                        Por que escolher a Arena Brazuka?
+                    </motion.h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                        {[
+                            {
+                                title: "Quadras Premium",
+                                description: "Areia de qualidade profissional, iluminação LED e estrutura moderna para sua melhor experiência",
+                                icon: "🏐",
+                                color: "from-emerald-500 to-emerald-700"
+                            },
+                            {
+                                title: "Professores Expert",
+                                description: "Equipe de profissionais experientes para te levar ao próximo nível no futevôlei e beach tennis",
+                                icon: "🏆",
+                                color: "from-amber-500 to-orange-600"
+                            },
+                            {
+                                title: "Estrutura Completa",
+                                description: "Bar, vestiários, estacionamento seguro e loja de equipamentos. Tudo que você precisa!",
+                                icon: "🌟",
+                                color: "from-orange-500 to-red-500"
+                            }
+                        ].map((feature, index) => (
+                            <motion.div
+                                key={index}
+                                className="relative group"
+                                variants={itemVariants}
+                                whileHover={{ y: -10 }}
+                            >
+                                <div className="bg-white rounded-3xl p-8 shadow-xl border border-emerald-100 h-full transform transition-all duration-300 group-hover:shadow-2xl">
+                                    <div className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto`}>
+                                        {feature.icon}
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-emerald-900 mb-4 text-center">{feature.title}</h3>
+                                    <p className="text-gray-600 text-center leading-relaxed">{feature.description}</p>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
                 </div>
-            </div>
+            </motion.section>
 
-            {/* Seção de Eventos */}
-            <div>
-            <h2 className="text-3xl font-bold text-center text-zinc-800 mb-6 mt-10">
-                 Nossos Próximos Eventos
-            </h2>
-                <EventsSection mode='home' />
-            </div>
+            {/* Planos Section */}
+            <motion.section 
+                ref={plansRef}
+                className="py-20 bg-gradient-to-br from-emerald-900 via-amber-800 to-orange-600"
+                variants={containerVariants}
+                initial="hidden"
+                animate={plansInView ? "visible" : "hidden"}
+            >
+                <div className="container mx-auto px-4">
+                    <motion.h2 
+                        className="text-5xl font-black text-center text-white mb-16"
+                        variants={itemVariants}
+                    >
+                        Planos em Destaque
+                    </motion.h2>
+                    
+                    <motion.div 
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+                        variants={containerVariants}
+                    >
+                        {planos.filter(plano => plano.destacado).map((plano, index) => (
+                            <motion.div
+                                key={plano.titulo}
+                                variants={itemVariants}
+                                whileHover={{ scale: 1.05, rotateY: 5 }}
+                                className="transform-gpu"
+                            >
+                                <PricingCard plano={plano} mode="home" />
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
+            </motion.section>
 
-            {/* Componente Modal aqui */}
+            {/* Events Section */}
+            <motion.section 
+                ref={eventsRef}
+                className="py-20 bg-gradient-to-b from-slate-50 to-emerald-50"
+                variants={containerVariants}
+                initial="hidden"
+                animate={eventsInView ? "visible" : "hidden"}
+            >
+                <div className="container mx-auto px-4">
+                    <motion.h2 
+                        className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
+                        variants={itemVariants}
+                    >
+                        Próximos Eventos
+                    </motion.h2>
+                    
+                    <motion.div variants={itemVariants}>
+                        <EventsSection mode='home' />
+                    </motion.div>
+                </div>
+            </motion.section>
+
+            {/* CTA Section */}
+            <motion.section 
+                className="py-20 bg-gradient-to-r from-emerald-900 to-amber-800 relative overflow-hidden"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 1 }}
+            >
+                <div className="absolute inset-0 bg-black/20" />
+                <div className="container mx-auto px-4 text-center relative z-10">
+                    <motion.h2 
+                        className="text-5xl font-black text-white mb-6"
+                        initial={{ y: 50, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        Pronto para começar?
+                    </motion.h2>
+                    
+                    <motion.p 
+                        className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto"
+                        initial={{ y: 50, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                    >
+                        Entre em contato conosco e descubra como a Arena Brazuka pode transformar sua experiência no esporte!
+                    </motion.p>
+                    
+                    <motion.a
+                        href="https://wa.me/5519981924006?text=Olá%20quero%20saber%20mais%20sobre%20a%20Arena%20Brazuka"
+                        className="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-12 rounded-full text-xl shadow-2xl"
+                        initial={{ y: 50, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ duration: 0.8, delay: 0.4 }}
+                    >
+                        FALE CONOSCO AGORA
+                    </motion.a>
+                </div>
+            </motion.section>
+
+            {/* Modal */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                {/* Este é o conteúdo que aparecerá dentro do pop-up */}
-                <h3 className="text-2xl font-bold text-zinc-800 mb-4 text-center">Nosso Torneio Interno!</h3>
-                <img src={modalTeste} alt="Anúncio de torneio interno" className="w-full rounded-md mb-4" />
-                <p className="text-zinc-600 text-center">
-                Ei, aluno! Participe do melhor torneio interno da região, que ocorrerá nos dias 30 e 31 de Agosto, com muita resenha, futevôlei e brindes para os campeões!
-                </p>
+                <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <h3 className="text-2xl font-bold text-zinc-800 mb-4 text-center">Nosso Torneio Interno!</h3>
+                    <img src={modalTeste} alt="Anúncio de torneio interno" className="w-full rounded-md mb-4" />
+                    <p className="text-zinc-600 text-center">
+                        Ei, aluno! Participe do melhor torneio interno da região, que ocorrerá nos dias 30 e 31 de Agosto, com muita resenha, futevôlei e brindes para os campeões!
+                    </p>
+                </motion.div>
             </Modal>
+            
             <WhatsappFloat />
-            {/*Aqui depois adicionaremos outras seções como Eventos, Aulas, Grade, etc*/}
         </div>
     );
 }
 
-export default HomePage;    
+export default HomePage;
