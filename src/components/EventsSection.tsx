@@ -84,7 +84,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                 y: -8,
                 transition: { duration: 0.4, ease: "easeOut" }
               }}
-              className="group relative backdrop-blur-xl bg-white/80 rounded-3xl shadow-2xl overflow-hidden border border-white/30 hover:shadow-yellow-500/20 hover:shadow-3xl transition-all duration-700 hover:border-yellow-300/50"
+              className="group relative bg-white/90 rounded-3xl shadow-lg overflow-hidden border border-white/30 hover:shadow-yellow-500/20 hover:shadow-xl transition-all duration-700 hover:border-yellow-300/50"
             >
               {/* Enhanced image section */}
               <div className="relative overflow-hidden h-80">
@@ -93,9 +93,8 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                   alt={evento.titulo}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
                 />
-                {/* Multi-layered gradient overlay */}
+                {/* Simplified gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-transparent to-purple-500/10 group-hover:from-yellow-400/30 transition-all duration-700" />
                 
                 {/* Enhanced type badge */}
                 <div className="absolute top-6 left-6">
@@ -110,7 +109,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                 
                 {/* Floating date badge */}
                 <div className="absolute top-6 right-6">
-                  <div className="backdrop-blur-md bg-white/20 rounded-2xl px-4 py-2 border border-white/30">
+                  <div className="bg-white/25 rounded-2xl px-4 py-2 border border-white/30">
                     <p className="text-white text-sm font-semibold">{evento.data.split(',')[0]}</p>
                     <p className="text-white/80 text-xs">{evento.data.split(',')[1]}</p>
                   </div>
@@ -131,16 +130,16 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
               </div>
               
               {/* Enhanced content section */}
-              <div className="p-8 relative backdrop-blur-sm">
+              <div className="p-8 relative">
                 {/* Quick info pills */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                  <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-full border border-white/30">
+                  <div className="inline-flex items-center px-3 py-1 bg-blue-500/25 rounded-full border border-white/30">
                     <svg className="w-3 h-3 mr-1 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
                     <span className="text-xs font-medium text-gray-700">{evento.horario}</span>
                   </div>
-                  <div className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-full border border-white/30">
+                  <div className="inline-flex items-center px-3 py-1 bg-green-500/25 rounded-full border border-white/30">
                     <svg className="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
@@ -204,7 +203,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                           animate={{ opacity: 1, height: 'auto', y: 0 }}
                           exit={{ opacity: 0, height: 0, y: -20 }}
                           transition={{ duration: 0.5, ease: "easeOut" }}
-                          className="backdrop-blur-xl bg-gradient-to-br from-white/60 via-white/40 to-yellow-50/60 rounded-2xl p-6 border border-white/40 shadow-xl"
+                          className="bg-white/80 rounded-2xl p-6 border border-white/40 shadow-lg"
                         >
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
