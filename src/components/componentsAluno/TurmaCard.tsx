@@ -1,6 +1,6 @@
 // src/components/componentsAluno/ResumoCard.tsx
 
-import { FaClock, FaUser, FaCalendarCheck } from 'react-icons/fa';
+import { FaClock, FaUser } from 'react-icons/fa';
 
 type TurmaCardProps = {
     modalidade: string;
