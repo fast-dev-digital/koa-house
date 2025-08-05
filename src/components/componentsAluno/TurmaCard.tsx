@@ -6,11 +6,10 @@ type TurmaCardProps = {
     modalidade: string;
     professor: string;
     horario: string;
-    proximaAula?: string;
     status: 'ativa' | 'inativa';
 };
 
-export default function TurmaCard({ modalidade, professor, horario, proximaAula, status }: TurmaCardProps) {
+export default function TurmaCard({ modalidade, professor, horario, status }: TurmaCardProps) {
     return (
         <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
