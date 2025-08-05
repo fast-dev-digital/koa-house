@@ -6,7 +6,7 @@ type TurmaCardProps = {
     modalidade: string;
     professor: string;
     horario: string;
-    proximaAula: string;
+    proximaAula?: string;
     status: 'ativa' | 'inativa';
 };
 
@@ -34,10 +34,6 @@ export default function TurmaCard({ modalidade, professor, horario, proximaAula,
         <div className="flex items-center gap-2">
           <FaClock className="text-gray-400" />
           <span>{horario}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <FaCalendarCheck className="text-green-500" />
-          <span className="font-medium">Próxima: {proximaAula}</span>
         </div>
       </div>
     </div>
