@@ -3,7 +3,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'fire
 import { auth, db } from '../firebase-config';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
-import BackgroundImage from '../assets/background-image.svg';
+import BackgroundImage from '../assets/bg-hawaii-desk.png';
+import BackgroundImageMobile from '../assets/bg-hawaii-mobile.png';
 
 function PaginaLogin() {
   const [email, setEmail] = useState('');
@@ -120,9 +121,16 @@ function PaginaLogin() {
 
   return (
     <>
+      {/* Background Desktop */}
       <div
         style={{ backgroundImage: `url(${BackgroundImage})` }}
-        className="fixed inset-0 w-full h-full bg-cover bg-center -z-10"
+        className="hidden md:block fixed inset-0 w-full h-full bg-cover bg-center -z-10"
+      ></div>
+      
+      {/* Background Mobile */}
+      <div
+        style={{ backgroundImage: `url(${BackgroundImageMobile})` }}
+        className="block md:hidden fixed inset-0 w-full h-full bg-cover bg-center -z-10"
       ></div>
 
       <div className="min-h-screen w-full flex items-center justify-center relative">
