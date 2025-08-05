@@ -79,11 +79,10 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
               key={evento.titulo}
               variants={cardVariants}
               whileHover={{ 
-                scale: 1.05, 
-                rotateY: 5,
+                scale: 1.02,
                 transition: { duration: 0.3 }
               }}
-              className="group relative backdrop-blur-sm bg-white/90 rounded-2xl shadow-2xl overflow-hidden border border-white/20 hover:shadow-3xl transition-all duration-500"
+              className="group relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-white/20 hover:shadow-3xl transition-all duration-500"
             >
               {/* Gradient overlay on image */}
               <div className="relative overflow-hidden">
