@@ -194,13 +194,32 @@ function HomePage() {
             {/* Features Section */}
             <motion.section 
                 ref={featuresRef}
-                className="py-20 bg-gradient-to-b from-slate-50 to-emerald-50"
+                className="py-20 relative"
+                style={{
+                    backgroundImage: `url(${bgHawaiiDesk})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundAttachment: 'fixed'
+                }}
                 variants={containerVariants}
                 initial="hidden"
                 animate={featuresInView ? "visible" : "hidden"}
                 transition={containerTransition}
             >
-                <div className="container mx-auto px-4">
+                {/* Mobile Background */}
+                <div 
+                    className="absolute inset-0 md:hidden"
+                    style={{
+                        backgroundImage: `url(${bgHawaiiMobile})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                    }}
+                />
+                {/* Overlay for better readability */}
+                 <div className="absolute inset-0 bg-white bg-opacity-85" />
+                 <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
                         className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
                         variants={itemVariants}
@@ -253,13 +272,32 @@ function HomePage() {
             {/* Planos Section */}
             <motion.section 
                 ref={plansRef}
-                className="py-20 bg-gradient-to-br from-emerald-900 via-amber-800 to-orange-600"
+                className="py-20 relative"
+                style={{
+                    backgroundImage: `url(${bgHawaiiDesk})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundAttachment: 'fixed'
+                }}
                 variants={containerVariants}
                 initial="hidden"
                 animate={plansInView ? "visible" : "hidden"}
                 transition={containerTransition}
             >
-                <div className="container mx-auto px-4">
+                {/* Mobile Background */}
+                <div 
+                    className="absolute inset-0 md:hidden"
+                    style={{
+                        backgroundImage: `url(${bgHawaiiMobile})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                    }}
+                />
+                {/* Overlay for better readability */}
+                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/80 via-amber-800/80 to-orange-600/80" />
+                 <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
                         className="text-5xl font-black text-center text-white mb-16"
                         variants={itemVariants}
@@ -291,13 +329,32 @@ function HomePage() {
             {/* Events Section */}
             <motion.section 
                 ref={eventsRef}
-                className="py-20 bg-gradient-to-b from-slate-50 to-emerald-50"
+                className="py-20 relative"
+                style={{
+                    backgroundImage: `url(${bgHawaiiDesk})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundAttachment: 'fixed'
+                }}
                 variants={containerVariants}
                 initial="hidden"
                 animate={eventsInView ? "visible" : "hidden"}
                 transition={containerTransition}
             >
-                <div className="container mx-auto px-4">
+                {/* Mobile Background */}
+                <div 
+                    className="absolute inset-0 md:hidden"
+                    style={{
+                        backgroundImage: `url(${bgHawaiiMobile})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                    }}
+                />
+                {/* Overlay for better readability */}
+                 <div className="absolute inset-0 bg-emerald-50/90" />
+                 <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
                         className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
                         variants={itemVariants}
