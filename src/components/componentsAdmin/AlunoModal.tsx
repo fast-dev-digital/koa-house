@@ -3,7 +3,7 @@ import { FaTimes, FaSave } from "react-icons/fa";
 import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase-config";
 
-// ✅ INTERFACE ATUALIZADA COM GÊNERO
+// ✅ INTERFACE ATUALIZADA COM MÚLTIPLAS TURMAS
 interface Aluno {
   id: string;
   nome: string;
@@ -12,7 +12,10 @@ interface Aluno {
   genero: string;
   plano: string;
   status: string;
-  turmas: string;
+  // ✅ NOVA ESTRUTURA - Array de turmaIds
+  turmasIds?: string[]; // Array de turmaIds (para relacionamento com turmas)
+  // ✅ MANTER - Campo turmas como string (para dias da semana)
+  turmas: string; // "Seg-Qua", "Ter-Qui" etc.
   horarios: string;
   dataMatricula: string;
   authCreated?: boolean; // ✅ ADICIONAR PARA CONTROLE DE AUTH
