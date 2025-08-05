@@ -93,7 +93,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <div className="absolute top-4 left-4">
-                  <span className="inline-block px-3 py-1 bg-gradient-to-r from-emerald-500 to-amber-500 text-white text-xs font-bold rounded-full shadow-lg">
+                  <span className="inline-block px-3 py-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs font-bold rounded-full shadow-lg">
                     {evento.tipo}
                   </span>
                 </div>
@@ -110,7 +110,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                     href="/eventos"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="inline-flex items-center justify-center w-full bg-gradient-to-r from-emerald-600 to-amber-600 hover:from-emerald-700 hover:to-amber-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform"
+                    className="inline-flex items-center justify-center w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform"
                   >
                     Ver todos os eventos
                     <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,7 +123,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                       onClick={() => toggleExpand(evento.titulo)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="w-full bg-gradient-to-r from-emerald-600 to-amber-600 hover:from-emerald-700 hover:to-amber-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mb-4"
+                      className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mb-4"
                     >
                       {expandedEvent === evento.titulo ? 'Ver Menos' : 'Ver Mais'}
                     </motion.button>
