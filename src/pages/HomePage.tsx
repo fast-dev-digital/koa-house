@@ -34,11 +34,7 @@ function HomePage() {
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.3,
-                delayChildren: 0.2
-            }
+            opacity: 1
         }
     };
 
@@ -46,24 +42,21 @@ function HomePage() {
         hidden: { y: 50, opacity: 0 },
         visible: {
             y: 0,
-            opacity: 1,
-            transition: {
-                duration: 0.8,
-                ease: "easeOut"
-            }
+            opacity: 1
         }
     };
 
-    const floatingVariants = {
-        animate: {
-            y: [-10, 10, -10],
-            transition: {
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-            }
-        }
+    const containerTransition = {
+        staggerChildren: 0.3,
+        delayChildren: 0.2
     };
+
+    const itemTransition = {
+        duration: 0.8,
+        ease: "easeOut" as const
+    };
+
+
 
     return (
         <div className="overflow-hidden">
@@ -85,20 +78,38 @@ function HomePage() {
                 {/* Floating Elements */}
                 <motion.div 
                     className="absolute top-20 left-10 w-20 h-20 bg-yellow-400 rounded-full opacity-20"
-                    variants={floatingVariants}
-                    animate="animate"
+                    animate={{
+                        y: [-10, 10, -10],
+                        transition: {
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }
+                    }}
                 />
                 <motion.div 
                     className="absolute top-40 right-20 w-16 h-16 bg-emerald-400 rounded-full opacity-20"
-                    variants={floatingVariants}
-                    animate="animate"
-                    transition={{ delay: 1 }}
+                    animate={{
+                        y: [-10, 10, -10],
+                        transition: {
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: 1
+                        }
+                    }}
                 />
                 <motion.div 
                     className="absolute bottom-40 left-20 w-12 h-12 bg-orange-400 rounded-full opacity-20"
-                    variants={floatingVariants}
-                    animate="animate"
-                    transition={{ delay: 2 }}
+                    animate={{
+                        y: [-10, 10, -10],
+                        transition: {
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: 2
+                        }
+                    }}
                 />
                 
                 <motion.div 
@@ -106,10 +117,12 @@ function HomePage() {
                     variants={containerVariants}
                     initial="hidden"
                     animate={heroInView ? "visible" : "hidden"}
+                    transition={containerTransition}
                 >
                     <motion.h1 
                         className="text-6xl md:text-8xl font-black text-white mb-6 leading-tight"
                         variants={itemVariants}
+                        transition={itemTransition}
                     >
                         ARENA
                         <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
@@ -120,6 +133,7 @@ function HomePage() {
                     <motion.p 
                         className="text-xl md:text-2xl text-emerald-100 mb-8 max-w-3xl mx-auto leading-relaxed"
                         variants={itemVariants}
+                        transition={itemTransition}
                     >
                         Viva a experiência única do futevôlei e beach tennis nas melhores quadras de areia da região
                     </motion.p>
@@ -127,6 +141,7 @@ function HomePage() {
                     <motion.div 
                         className="flex flex-col sm:flex-row gap-4 justify-center items-center"
                         variants={itemVariants}
+                        transition={itemTransition}
                     >
                         <motion.a
                             href="https://wa.me/5519981924006?text=Olá%20quero%20reservar%20uma%20quadra%20"
@@ -167,11 +182,13 @@ function HomePage() {
                 variants={containerVariants}
                 initial="hidden"
                 animate={featuresInView ? "visible" : "hidden"}
+                transition={containerTransition}
             >
                 <div className="container mx-auto px-4">
                     <motion.h2 
                         className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
                         variants={itemVariants}
+                        transition={itemTransition}
                     >
                         Por que escolher a Arena Brazuka?
                     </motion.h2>
@@ -201,6 +218,7 @@ function HomePage() {
                                 key={index}
                                 className="relative group"
                                 variants={itemVariants}
+                                transition={itemTransition}
                                 whileHover={{ y: -10 }}
                             >
                                 <div className="bg-white rounded-3xl p-8 shadow-xl border border-emerald-100 h-full transform transition-all duration-300 group-hover:shadow-2xl">
@@ -223,11 +241,13 @@ function HomePage() {
                 variants={containerVariants}
                 initial="hidden"
                 animate={plansInView ? "visible" : "hidden"}
+                transition={containerTransition}
             >
                 <div className="container mx-auto px-4">
                     <motion.h2 
                         className="text-5xl font-black text-center text-white mb-16"
                         variants={itemVariants}
+                        transition={itemTransition}
                     >
                         Planos em Destaque
                     </motion.h2>
@@ -235,11 +255,13 @@ function HomePage() {
                     <motion.div 
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
                         variants={containerVariants}
+                        transition={containerTransition}
                     >
                         {planos.filter(plano => plano.destacado).map((plano, index) => (
                             <motion.div
                                 key={plano.titulo}
                                 variants={itemVariants}
+                                transition={itemTransition}
                                 whileHover={{ scale: 1.05, rotateY: 5 }}
                                 className="transform-gpu"
                             >
@@ -257,16 +279,18 @@ function HomePage() {
                 variants={containerVariants}
                 initial="hidden"
                 animate={eventsInView ? "visible" : "hidden"}
+                transition={containerTransition}
             >
                 <div className="container mx-auto px-4">
                     <motion.h2 
                         className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
                         variants={itemVariants}
+                        transition={itemTransition}
                     >
                         Próximos Eventos
                     </motion.h2>
                     
-                    <motion.div variants={itemVariants}>
+                    <motion.div variants={itemVariants} transition={itemTransition}>
                         <EventsSection mode='home' />
                     </motion.div>
                 </div>
