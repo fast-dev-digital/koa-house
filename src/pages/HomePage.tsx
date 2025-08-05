@@ -417,9 +417,9 @@ function HomePage() {
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.3 }}
                 >
-                    <h3 className="text-2xl font-bold text-zinc-800 mb-4 text-center">Nosso Torneio Interno!</h3>
+                    <h3 className="text-2xl font-bold text-white mb-4 text-center">Nosso Torneio Interno!</h3>
                     <img src={modalTeste} alt="Anúncio de torneio interno" className="w-full rounded-md mb-4" />
-                    <p className="text-zinc-600 text-center">
+                    <p className="text-white text-center">
                         Ei, aluno! Participe do melhor torneio interno da região, que ocorrerá nos dias 30 e 31 de Agosto, com muita resenha, futevôlei e brindes para os campeões!
                     </p>
                 </motion.div>
