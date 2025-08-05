@@ -19,9 +19,7 @@ import EsqueciSenha from './pages/EsqueciSenha';
 
 // Imports Aluno
 import DashboardAluno from './pages/pagesAluno/DashboardAluno';
-import MinhasTurmas from './pages/pagesAluno/MinhasTurmas';
 import MeusPagamentos from './pages/pagesAluno/MeusPagamentos';
-import MeuPerfil from './pages/pagesAluno/MeuPerfil';
 import GestaoTurmas from './pages/pagesAdmin/GestaoTurmas';
 
 function App() {
@@ -53,27 +51,12 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/aluno/turmas"
-            element={
-              <ProtectedRoute requiredRole="user">
-                <MinhasTurmas />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/aluno/pagamentos"
             element={
               <ProtectedRoute requiredRole="user">
                 <MeusPagamentos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/aluno/perfil"
-            element={
-              <ProtectedRoute requiredRole="user">
-                <MeuPerfil />
               </ProtectedRoute>
             }
           />
