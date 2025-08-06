@@ -83,7 +83,9 @@ function Navbar() {
               <motion.button 
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="border-2 border-yellow-500 bg-white/80 backdrop-blur-sm text-yellow-600 py-2 px-4 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-medium shadow-md hover:shadow-lg transition-all duration-300"
+                className={`border-2 border-yellow-500 backdrop-blur-sm text-yellow-600 py-2.5 px-4 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-bold text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 ${
+                  scrolled ? 'bg-transparent' : 'bg-transparent'
+                }`}
               >
                 ACESSO RESTRITO
               </motion.button>
