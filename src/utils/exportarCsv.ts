@@ -28,7 +28,15 @@ interface Turma {
   alunosInscritos?: number;
   createdAt?: string;
 }
-
+interface Professor {
+  id: string;
+  nome?: string;
+  email?: string;
+  telefone?: string;
+  especialidade?: string;
+  status?: string;
+  turmaIds?: string[];
+}
 // ✅ FUNÇÃO PARA EXPORTAR ALUNOS (MANTIDA COMPATÍVEL)
 export const exportarAlunosCSV = async () => {
   try {
@@ -272,6 +280,172 @@ const converterTurmasParaCSV = (turmas: Turma[]): string => {
     `"Alunos Matriculados: ${totalAlunos}"`,
     `"Vagas Livres: ${totalCapacidade - totalAlunos}"`,
     `"Ocupação Geral: ${ocupacaoGeral}%"`,
+  ].join("\n");
+
+  return [cabecalho, ...linhas].join("\n") + "\n" + resumo;
+};
+// ...existing code...
+
+// ✅ NOVA FUNÇÃO PARA EXPORTAR PROFESSORES (SEGUINDO O PADRÃO DOS ALUNOS)
+export const exportarProfessoresCSV = async () => {
+  try {
+    console.log("🔄 Iniciando exportação dos professores...");
+
+    const professoresRef = collection(db, "professores");
+    const snapshot = await getDocs(professoresRef);
+
+    console.log(`📊 Encontrados ${snapshot.size} professores`);
+
+    if (snapshot.empty) {
+      alert("⚠️ Nenhum professor encontrado para exportar!");
+      return;
+    }
+
+    const professores: Professor[] = [];
+    snapshot.forEach((doc) => {
+      professores.push({
+        id: doc.id,
+        ...doc.data(),
+      } as Professor);
+    });
+
+    const csvContent = converterProfessoresParaCSV(professores);
+    const nomeArquivo = gerarNomeArquivoComData("professores");
+    baixarCSV(csvContent, nomeArquivo);
+
+    console.log("✅ Exportação de professores concluída!");
+    return true;
+  } catch (error) {
+    console.error("❌ Erro ao exportar professores:", error);
+    alert("❌ Erro ao exportar dados. Verifique o console para mais detalhes.");
+    throw error;
+  }
+};
+
+// ✅ NOVA FUNÇÃO PARA EXPORTAR PROFESSORES COM FILTROS
+export const exportarProfessoresComFiltros = (
+  professores: Professor[],
+  filtros?: {
+    searchText?: string;
+    statusFilter?: string;
+    especialidadeFilter?: string;
+  }
+) => {
+  try {
+    console.log("🔄 Exportando professores com filtros aplicados...");
+
+    let professoresFiltrados = [...professores];
+
+    // ✅ APLICAR FILTROS SE FORNECIDOS
+    if (filtros) {
+      professoresFiltrados = professores.filter((professor) => {
+        const matchSearch =
+          !filtros.searchText ||
+          (professor.nome || "")
+            .toLowerCase()
+            .includes(filtros.searchText.toLowerCase()) ||
+          (professor.email || "")
+            .toLowerCase()
+            .includes(filtros.searchText.toLowerCase());
+
+        const matchStatus =
+          !filtros.statusFilter || professor.status === filtros.statusFilter;
+
+        const matchEspecialidade =
+          !filtros.especialidadeFilter ||
+          professor.especialidade === filtros.especialidadeFilter;
+
+        return matchSearch && matchStatus && matchEspecialidade;
+      });
+    }
+
+    console.log(`📊 ${professoresFiltrados.length} professores após filtros`);
+
+    if (professoresFiltrados.length === 0) {
+      alert("⚠️ Nenhum professor encontrado com os filtros aplicados!");
+      return;
+    }
+
+    const csvContent = converterProfessoresParaCSV(professoresFiltrados);
+    const nomeArquivo = gerarNomeArquivoComData("professores_filtrados");
+    baixarCSV(csvContent, nomeArquivo);
+
+    console.log("✅ Exportação de professores filtrados concluída!");
+    return {
+      sucesso: true,
+      nomeArquivo,
+      totalRegistros: professoresFiltrados.length,
+    };
+  } catch (error) {
+    console.error("❌ Erro ao exportar professores filtrados:", error);
+    throw error;
+  }
+};
+
+// ✅ FUNÇÃO PARA CONVERTER PROFESSORES PARA CSV
+const converterProfessoresParaCSV = (professores: Professor[]): string => {
+  if (professores.length === 0) {
+    return "Nenhum professor encontrado";
+  }
+
+  // ✅ CABEÇALHO COM TODOS OS CAMPOS RELEVANTES
+  const cabecalho = [
+    "Nome",
+    "Email",
+    "Telefone",
+    "Especialidade",
+    "Status",
+    "Quantidade de Turmas",
+    "Turmas (IDs)",
+    "Data Cadastro",
+  ].join(",");
+
+  const linhas = professores.map((professor) => {
+    const quantidadeTurmas = professor.turmaIds?.length || 0;
+    const turmasIds = professor.turmaIds?.join("; ") || "";
+
+    return [
+      `"${professor.nome || ""}"`,
+      `"${professor.email || ""}"`,
+      `"${professor.telefone || ""}"`,
+      `"${professor.especialidade || ""}"`,
+      `"${professor.status || ""}"`,
+      `"${quantidadeTurmas}"`,
+      `"${turmasIds}"`,
+    ].join(",");
+  });
+
+  // ✅ ADICIONAR RESUMO NO FINAL
+  const totalProfessores = professores.length;
+  const professoresAtivos = professores.filter(
+    (p) => p.status === "Ativo"
+  ).length;
+  const professoresInativos = professores.filter(
+    (p) => p.status === "Inativo"
+  ).length;
+  const totalTurmas = professores.reduce(
+    (sum, prof) => sum + (prof.turmaIds?.length || 0),
+    0
+  );
+  const futevolei = professores.filter(
+    (p) => p.especialidade === "Futevôlei"
+  ).length;
+  const beachTennis = professores.filter(
+    (p) => p.especialidade === "Beach Tennis"
+  ).length;
+
+  const resumo = [
+    "",
+    `"=== RESUMO GERAL ==="`,
+    `"Total de Professores: ${totalProfessores}"`,
+    `"Professores Ativos: ${professoresAtivos}"`,
+    `"Professores Inativos: ${professoresInativos}"`,
+    `"Total de Turmas Atribuídas: ${totalTurmas}"`,
+    `"Especialidade Futevôlei: ${futevolei}"`,
+    `"Especialidade Beach Tennis: ${beachTennis}"`,
+    `"Média de Turmas por Professor: ${
+      totalProfessores > 0 ? (totalTurmas / totalProfessores).toFixed(1) : 0
+    }"`,
   ].join("\n");
 
   return [cabecalho, ...linhas].join("\n") + "\n" + resumo;
