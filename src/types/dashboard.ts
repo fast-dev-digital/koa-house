@@ -5,22 +5,22 @@ export interface AlunoLogado {
   email: string;
   telefone: string;
   genero: string;
-  status: 'ativo' | 'inativo' | 'suspenso';
+  status: "ativo" | "inativo" | "suspenso";
   plano: string;
   turmaId?: string; // ID da turma que o aluno está matriculado
   dataMatricula: string;
   // Campos financeiros (simulados por enquanto)
-  statusPagamento?: 'em-dia' | 'pendente' | 'atrasado';
+  statusPagamento?: "em-dia" | "pendente" | "atrasado";
   proximoVencimento?: string;
   valorMensalidade?: string;
 }
 
 export interface TurmaDashboard {
-    id: string;
-    nome: string;
-    modalidade: string;
-    professorNome: string;
-    dias: string; 
-    horario: string;
-    status: 'ativa' | 'inativa';
+  id: string;
+  nome: string;
+  modalidade: string;
+  professorNome: string;
+  dias: string;
+  horario: string;
+  status: "ativa" | "inativa";
 }
