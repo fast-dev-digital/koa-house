@@ -8,19 +8,7 @@ import AlunoModal from "../../components/componentsAdmin/AlunoModal";
 import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";
 import Toast from "../../components/componentsAdmin/Toast";
 import { exportarAlunosCSV } from "../../utils/exportarCsv";
-
-interface Aluno {
-  id: string;
-  nome: string;
-  email: string;
-  telefone: string;
-  genero: string;
-  plano: string;
-  status: "ativo" | "inativo" | "suspenso";
-  turmas: "Seg-Qua" | "Ter-Qui";
-  horarios: "18:00" | "19:00" | "20:00" | "21:00";
-  dataMatricula: string;
-}
+import type { Aluno } from "../../types/alunos";
 
 // Configuração das colunas da tabela
 const alunosColumns = [
@@ -286,13 +274,13 @@ export default function GestaoAlunos() {
       {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">
-          <FaUser className="text-2xl text-blue-600" />
+          <FaUser className="text-2xl text-green-600" />
           <h1 className="text-2xl font-bold text-gray-900">Gestão de Alunos</h1>
         </div>
         <div className="flex space-x-3">
           <button
             onClick={handleExportarCSV}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             disabled={alunos.length === 0 || csvLoading}
           >
             <FaDownload className={csvLoading ? "animate-spin" : ""} />
@@ -300,7 +288,7 @@ export default function GestaoAlunos() {
           </button>
           <button
             onClick={handleCreateAluno}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-blue-700"
           >
             <FaPlus />
             <span>Novo Aluno</span>
@@ -413,7 +401,7 @@ export default function GestaoAlunos() {
         selectable={true}
         title="Lista de Alunos"
         emptyMessage="Nenhum aluno encontrado. Cadastre o primeiro aluno!"
-        itemsPerPage={15}
+        itemsPerPage={20}
       />
 
       {/* Modal de Aluno - CREATE e UPDATE */}
