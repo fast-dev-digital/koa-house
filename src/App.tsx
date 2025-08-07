@@ -105,7 +105,16 @@ function App() {
           >
             <Route index element={<GestaoTurmas />} />
           </Route>
-          <Route path="/gestao-professores" element={<GestaoProfessores />} />
+          <Route
+            path="/gestao-professores"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<GestaoProfessores />} />
+          </Route>
         </Routes>
       </Router>
     </AuthProvider>
