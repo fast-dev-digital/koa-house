@@ -22,7 +22,7 @@ function Professores() {
             y: 0,
             transition: {
                 duration: 0.8,
-                ease: "easeOut"
+                ease: [0.25, 0.46, 0.45, 0.94] as const
             }
         }
     };
@@ -35,7 +35,7 @@ function Professores() {
             transition: {
                 duration: 0.6,
                 delay: 0.2,
-                ease: "easeOut"
+                ease: [0.25, 0.46, 0.45, 0.94] as const
             }
         }
     };
