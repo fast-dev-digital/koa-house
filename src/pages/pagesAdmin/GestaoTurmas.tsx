@@ -296,7 +296,7 @@ export default function GestaoTurmas() {
     }
   };
 
-  // ✅ FUNÇÃO DELETE MÚLTIPLO CORRIGIDA
+  // FUNÇÃO DELETE MÚLTIPLO
   const handleDeleteSelected = async (selectedTurmas: Turma[]) => {
     if (selectedTurmas.length === 0) return;
 
