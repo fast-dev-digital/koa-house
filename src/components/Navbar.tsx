@@ -149,25 +149,25 @@ function Navbar() {
             className="md:hidden flex-col absolute top-20 left-0 w-full backdrop-blur-md bg-white/90 shadow-xl border-b border-white/20 z-40"
         >
             <motion.div whileHover={{ x: 10 }} transition={{ duration: 0.2 }}>
-                <Link to="/sobre-nos" className="hover:bg-yellow-50 px-6 py-10 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Sobre Nós</Link>
+                <Link to="/sobre-nos" className="block hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100 focus:outline-none focus:bg-yellow-50 active:bg-yellow-100 text-center" onClick={() => setMenuOpen(false)}>Sobre Nós</Link>
             </motion.div>
             <motion.div whileHover={{ x: 10 }} transition={{ duration: 0.2 }}>
-                <Link to="/eventos" className="hover:bg-yellow-50 px-6 py-10 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Eventos</Link>
+                <Link to="/eventos" className="block hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100 focus:outline-none focus:bg-yellow-50 active:bg-yellow-100 text-center" onClick={() => setMenuOpen(false)}>Eventos</Link>
             </motion.div>
             <motion.div whileHover={{ x: 10 }} transition={{ duration: 0.2 }}>
-                <Link to="/professores" className="hover:bg-yellow-50 px-6 py-10 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Professores</Link>
+                <Link to="/professores" className="block hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100 focus:outline-none focus:bg-yellow-50 active:bg-yellow-100 text-center" onClick={() => setMenuOpen(false)}>Professores</Link>
             </motion.div>
             <motion.div whileHover={{ x: 10 }} transition={{ duration: 0.2 }}>
-                <Link to="/planos" className="hover:bg-yellow-50 px-6 py-10 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Planos</Link>
+                <Link to="/planos" className="block hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100 focus:outline-none focus:bg-yellow-50 active:bg-yellow-100 text-center" onClick={() => setMenuOpen(false)}>Planos</Link>
             </motion.div>
           
             {/* Adicionamos o botão de admin aqui também para consistência */}
-            <div className='p-6'>
+            <div className='p-6 text-center'>
                 <Link to="/login" onClick={() => setMenuOpen(false)}>
                     <motion.button 
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="border-2 border-yellow-500 bg-white/80 backdrop-blur-sm text-yellow-600 py-3 px-6 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-medium shadow-md hover:shadow-lg transition-all duration-300 w-full"
+                        className="border-2 border-yellow-500 bg-white/80 backdrop-blur-sm text-yellow-600 py-3 px-6 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-medium shadow-md hover:shadow-lg transition-all duration-300 w-full focus:outline-none focus:bg-yellow-50 focus:border-yellow-600 active:bg-yellow-100"
                     >
                         ACESSO RESTRITO
                     </motion.button>
