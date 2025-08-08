@@ -7,7 +7,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../../firebase-config";
-import { FaTimes, FaSpinner } from "react-icons/fa";
+import { FaTimes, FaUsers, FaSave } from "react-icons/fa";
 import type { Turma } from "../../types/turmas";
 
 interface Professor {
@@ -209,34 +209,40 @@ export default function TurmaModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        style={{ transform: "scale(0.9)", transformOrigin: "center" }}
+      >
         {/* HEADER */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {mode === "create" ? "Nova Turma" : "Editar Turma"}
-          </h3>
+        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+          <div className="flex items-center space-x-2">
+            <FaUsers className="text-lg text-green-600" />
+            <h3 className="text-base font-semibold text-gray-900">
+              {mode === "create" ? "Nova Turma" : "Editar Turma"}
+            </h3>
+          </div>
           <button
             onClick={onClose}
             disabled={loading}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <FaTimes />
+            <FaTimes className="text-sm" />
           </button>
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* NOME DA TURMA - ÚNICO OBRIGATÓRIO */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Nome da Turma *
               </label>
               <input
                 type="text"
                 value={formData.nome || ""}
                 onChange={(e) => handleInputChange("nome", e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                className={`w-full px-2.5 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
                   errors.nome ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="Ex: Teste Futevôlei"
@@ -248,7 +254,7 @@ export default function TurmaModal({
 
             {/* MODALIDADE */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Modalidade
               </label>
               <select
@@ -256,7 +262,7 @@ export default function TurmaModal({
                 onChange={(e) =>
                   handleInputChange("modalidade", e.target.value)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="Futevôlei">Futevôlei</option>
                 <option value="Beach Tennis">Beach Tennis</option>
@@ -265,13 +271,13 @@ export default function TurmaModal({
 
             {/* GÊNERO */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Gênero
               </label>
               <select
                 value={formData.genero || "Masculino"}
                 onChange={(e) => handleInputChange("genero", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="Masculino">Masculino</option>
                 <option value="Feminino">Feminino</option>
@@ -281,13 +287,13 @@ export default function TurmaModal({
 
             {/* NÍVEL */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Nível
               </label>
               <select
                 value={formData.nivel || "Estreante"}
                 onChange={(e) => handleInputChange("nivel", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="Estreante">Estreante</option>
                 <option value="Iniciante">Iniciante</option>
@@ -297,13 +303,13 @@ export default function TurmaModal({
 
             {/* PROFESSOR - OPCIONAL PARA TESTE */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Professor (Opcional para teste)
               </label>
               <select
                 value={formData.professorId || ""}
                 onChange={(e) => handleProfessorChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="">Nenhum professor (teste)</option>
                 {professores.map((professor) => (
@@ -316,13 +322,13 @@ export default function TurmaModal({
 
             {/* DIAS - OPCIONAL PARA TESTE */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Dias da Semana (Opcional para teste)
               </label>
               <select
                 value={formData.dias || ""}
                 onChange={(e) => handleInputChange("dias", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="">Não informado</option>
                 <option value="Seg-Qua">Segunda e Quarta</option>
@@ -337,21 +343,21 @@ export default function TurmaModal({
 
             {/* HORÁRIO - OPCIONAL PARA TESTE */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Horário (Opcional para teste)
               </label>
               <input
                 type="text"
                 value={formData.horario || ""}
                 onChange={(e) => handleInputChange("horario", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 placeholder="Ex: 18:00 - 19:00 (opcional)"
               />
             </div>
 
             {/* CAPACIDADE - OPCIONAL PARA TESTE */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Capacidade (Opcional para teste)
               </label>
               <input
@@ -361,7 +367,7 @@ export default function TurmaModal({
                 onChange={(e) =>
                   handleInputChange("capacidade", parseInt(e.target.value) || 0)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 placeholder="Ex: 12 (opcional)"
               />
             </div>
@@ -369,27 +375,27 @@ export default function TurmaModal({
 
           {/* ERRO GERAL */}
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-600 text-sm">{errors.submit}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-2">
+              <p className="text-red-600 text-xs">{errors.submit}</p>
             </div>
           )}
 
           {/* BOTÕES */}
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-2 pt-3">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+              className="px-3 py-1.5 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center space-x-2"
+              className="px-3 py-1.5 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center space-x-1.5"
             >
-              {loading && <FaSpinner className="animate-spin" />}
+              <FaSave className="text-xs" />
               <span>
                 {loading
                   ? mode === "create"

@@ -1,18 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../../firebase-config';
-import { 
-  FaUsers, 
-  FaUserGraduate, 
-  FaChalkboardTeacher, 
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "../../firebase-config";
+import {
+  FaUsers,
+  FaUserGraduate,
+  FaChalkboardTeacher,
   FaTachometerAlt,
   FaSignOutAlt,
   FaBars,
   FaTimes,
   FaUserShield,
-  FaDollarSign
-} from 'react-icons/fa';
+  FaDollarSign,
+} from "react-icons/fa";
 
 interface SidebarProps {
   className?: string;
@@ -28,44 +28,44 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
+    id: "dashboard",
+    label: "Dashboard",
     icon: <FaTachometerAlt />,
-    path: '/admin-dashboard'
+    path: "/admin-dashboard",
   },
   {
-    id: 'alunos',
-    label: 'Gestão de Alunos',
+    id: "alunos",
+    label: "Gestão de Alunos",
     icon: <FaUsers />,
-    path: '/gestao-alunos'
+    path: "/gestao-alunos",
   },
   {
-    id: 'turmas',
-    label: 'Gestão de Turmas',
+    id: "turmas",
+    label: "Gestão de Turmas",
     icon: <FaUserGraduate />,
-    path: '/gestao-turmas'
+    path: "/gestao-turmas",
   },
   {
-    id: 'professores',
-    label: 'Professores',
+    id: "professores",
+    label: "Gestão de Professores",
     icon: <FaChalkboardTeacher />,
-    path: '/gestao-professores'
+    path: "/gestao-professores",
   },
   {
-    id: 'financeiro',
-    label: 'Financeiro',
+    id: "financeiro",
+    label: "Financeiro",
     icon: <FaDollarSign />,
-    path: '/admin/financeiro'
+    path: "/admin/financeiro",
   },
   {
-    id: 'cadastrar-admin',
-    label: 'Cadastrar Admin',
+    id: "cadastrar-admin",
+    label: "Cadastrar Admin",
     icon: <FaUserShield />,
-    path: '/cadastrar-admin'
+    path: "/cadastrar-admin",
   },
 ];
 
-export default function Sidebar({ className = '' }: SidebarProps) {
+export default function Sidebar({ className = "" }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -83,8 +83,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
     };
 
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Fechar sidebar ao mudar de rota no mobile
@@ -106,9 +106,11 @@ export default function Sidebar({ className = '' }: SidebarProps) {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      
+
       // Confirmar antes de sair
-      const confirmLogout = window.confirm('Tem certeza que deseja sair do sistema?');
+      const confirmLogout = window.confirm(
+        "Tem certeza que deseja sair do sistema?"
+      );
       if (!confirmLogout) {
         setIsLoggingOut(false);
         return;
@@ -116,21 +118,20 @@ export default function Sidebar({ className = '' }: SidebarProps) {
 
       // Fazer logout no Firebase
       await signOut(auth);
-      
+
       // Limpar dados locais (se houver)
-      localStorage.removeItem('adminData');
-      localStorage.removeItem('authToken');
+      localStorage.removeItem("adminData");
+      localStorage.removeItem("authToken");
       sessionStorage.clear();
-      
+
       // Mostrar mensagem de sucesso
-      console.log('✅ Logout realizado com sucesso!');
-      
+      console.log("✅ Logout realizado com sucesso!");
+
       // Redirecionar para página de HomePage
       navigate("/");
-      
     } catch (error: any) {
-      console.error('❌ Erro ao fazer logout:', error);
-      alert('Erro ao sair do sistema. Tente novamente.');
+      console.error("❌ Erro ao fazer logout:", error);
+      alert("Erro ao sair do sistema. Tente novamente.");
     } finally {
       setIsLoggingOut(false);
     }
@@ -150,27 +151,35 @@ export default function Sidebar({ className = '' }: SidebarProps) {
 
       {/* Overlay para mobile */}
       {isMobile && isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={closeSidebar}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`
-        ${isMobile ? 'fixed' : 'sticky'} 
+      <div
+        className={`
+        ${isMobile ? "fixed" : "sticky"} 
         top-0 left-0 h-screen 
-        ${isMobile ? (isOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
+        ${
+          isMobile
+            ? isOpen
+              ? "translate-x-0"
+              : "-translate-x-full"
+            : "translate-x-0"
+        }
         transition-transform duration-300 ease-in-out
         z-50 bg-white shadow-lg border-r border-gray-200
-        ${isMobile ? 'w-80' : 'w-64'}
+        ${isMobile ? "w-80" : "w-64"}
         ${className}
-      `}>
+      `}
+      >
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-1 rounded-lg flex items-center justify-center">
-              <img src="/logo-brazuka.png" alt="Logo"  />
+              <img src="/logo-brazuka.png" alt="Logo" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Arena Brazuka</h1>
@@ -184,20 +193,25 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           <ul className="space-y-1 px-4">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
-              
+
               return (
                 <li key={item.id}>
                   <Link
                     to={item.path}
                     className={`
                       flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
-                      ${isActive 
-                        ? 'bg-green-100 text-green-700 border-r-4 border-green-600' 
-                        : 'text-gray-700 hover:bg-gray-100'
+                      ${
+                        isActive
+                          ? "bg-green-100 text-green-700 border-r-4 border-green-600"
+                          : "text-gray-700 hover:bg-gray-100"
                       }
                     `}
                   >
-                    <span className={`text-lg ${isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                    <span
+                      className={`text-lg ${
+                        isActive ? "text-green-600" : "text-gray-500"
+                      }`}
+                    >
                       {item.icon}
                     </span>
                     <span className="font-medium">{item.label}</span>
@@ -215,14 +229,18 @@ export default function Sidebar({ className = '' }: SidebarProps) {
 
         {/* Footer - Botão de Logout */}
         <div className="border-t border-gray-200 p-4">
-          <button 
+          <button
             onClick={handleLogout}
             disabled={isLoggingOut}
             className="flex items-center space-x-3 w-full px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
           >
-            <FaSignOutAlt className={`text-gray-500 group-hover:text-red-600 transition-colors ${isLoggingOut ? 'animate-spin' : ''}`} />
+            <FaSignOutAlt
+              className={`text-gray-500 group-hover:text-red-600 transition-colors ${
+                isLoggingOut ? "animate-spin" : ""
+              }`}
+            />
             <span className="font-medium">
-              {isLoggingOut ? 'Saindo...' : 'Sair'}
+              {isLoggingOut ? "Saindo..." : "Sair"}
             </span>
             {isLoggingOut && (
               <div className="ml-auto">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FaTimes, FaSave } from "react-icons/fa";
+import { FaTimes, FaSave, FaUser } from "react-icons/fa";
 import { doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase-config";
 
@@ -215,8 +215,9 @@ export default function AlunoModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 transform scale-90">
         <div className="flex justify-between items-center p-3 border-b">
+          <FaUser className="text-lg text-green-600" />
           <h2 className="text-base font-bold text-gray-800">
-            {mode === "create" ? "🆕 Cadastrar Novo Aluno" : "📝 Editar Aluno"}
+            {mode === "create" ? " Cadastrar Novo Aluno" : "📝 Editar Aluno"}
           </h2>
           <button
             onClick={handleClose}

@@ -33,7 +33,6 @@ const WhatsappFloat = () => {
       aria-label="Chat no WhatsApp"
     >
       <FaWhatsapp className="w-6 h-6" />
-      
     </a>
   );
 };
