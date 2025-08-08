@@ -146,19 +146,19 @@ function Navbar() {
                 display: menuOpen ? 'flex' : 'none'
             }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="md:hidden flex-col absolute top-16 left-0 w-full backdrop-blur-md bg-white/90 shadow-xl border-b border-white/20 z-40"
+            className="md:hidden flex-col absolute top-20 left-0 w-full backdrop-blur-md bg-white/90 shadow-xl border-b border-white/20 z-40"
         >
             <motion.div whileHover={{ x: 10 }} transition={{ duration: 0.2 }}>
-                <Link to="/sobre-nos" className="hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Sobre Nós</Link>
+                <Link to="/sobre-nos" className="hover:bg-yellow-50 px-6 py-10 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Sobre Nós</Link>
             </motion.div>
             <motion.div whileHover={{ x: 10 }} transition={{ duration: 0.2 }}>
-                <Link to="/eventos" className="hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Eventos</Link>
+                <Link to="/eventos" className="hover:bg-yellow-50 px-6 py-10 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Eventos</Link>
             </motion.div>
             <motion.div whileHover={{ x: 10 }} transition={{ duration: 0.2 }}>
-                <Link to="/professores" className="hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Professores</Link>
+                <Link to="/professores" className="hover:bg-yellow-50 px-6 py-10 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Professores</Link>
             </motion.div>
             <motion.div whileHover={{ x: 10 }} transition={{ duration: 0.2 }}>
-                <Link to="/planos" className="hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Planos</Link>
+                <Link to="/planos" className="hover:bg-yellow-50 px-6 py-10 font-medium transition-colors duration-200 border-b border-gray-100" onClick={() => setMenuOpen(false)}>Planos</Link>
             </motion.div>
           
             {/* Adicionamos o botão de admin aqui também para consistência */}
