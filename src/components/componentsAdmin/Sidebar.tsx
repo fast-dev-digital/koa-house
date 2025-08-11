@@ -55,7 +55,7 @@ const menuItems: MenuItem[] = [
     id: "financeiro",
     label: "Financeiro",
     icon: <FaDollarSign />,
-    path: "/admin/financeiro",
+    path: "/gestao-pagamentos",
   },
   {
     id: "cadastrar-admin",

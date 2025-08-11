@@ -23,6 +23,7 @@ import DashboardAluno from "./pages/pagesAluno/DashboardAluno";
 import MeusPagamentos from "./pages/pagesAluno/MeusPagamentos";
 import GestaoTurmas from "./pages/pagesAdmin/GestaoTurmas";
 import GestaoProfessores from "./pages/pagesAdmin/GestaoProfessores";
+import GestaoPagamentos from "./pages/pagesAdmin/GestaoPagamentos";
 
 function App() {
   return (
@@ -114,6 +115,16 @@ function App() {
             }
           >
             <Route index element={<GestaoProfessores />} />
+          </Route>
+          <Route
+            path="/gestao-pagamentos"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<GestaoPagamentos />} />
           </Route>
         </Routes>
       </Router>
