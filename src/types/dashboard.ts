@@ -7,7 +7,10 @@ export interface AlunoLogado {
   genero: string;
   status: "ativo" | "inativo" | "suspenso";
   plano: string;
+  turmas: string;
+  horarios: string;
   turmaId?: string; // ID da turma que o aluno está matriculado
+  turmasIds?: string[];
   dataMatricula: string;
   // Campos financeiros (simulados por enquanto)
   statusPagamento?: "em-dia" | "pendente" | "atrasado";
