@@ -53,7 +53,7 @@ const menuItems: MenuItem[] = [
   },
   {
     id: "financeiro",
-    label: "Financeiro",
+    label: "Gestão de Pagamentos",
     icon: <FaDollarSign />,
     path: "/gestao-pagamentos",
   },
