@@ -21,8 +21,7 @@ export default function GestaoPagamentos() {
   // Modal e toast
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"sucess" | "erro">("sucess");
-
+  const [toastType, setToastType] = useState<"success" | "error">("success");
   const fetchPagamentos = async () => {
     try {
       setLoading(true);
@@ -62,6 +61,39 @@ export default function GestaoPagamentos() {
     fetchPagamentos();
   }, []);
 
+  const calcularEstatisticas = () => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0); // Zerar horas para comparação precisa
+
+    // Filtrar por status
+    const pagamentosPendentes = pagamentos.filter(
+      (p) => p.status === "Pendente"
+    );
+    const pagamentosPagos = pagamentos.filter((p) => p.status === "Pago");
+
+    // Calcular valores
+    const totalReceber = pagamentosPendentes.reduce(
+      (sum, p) => sum + p.valor,
+      0
+    );
+    const totalRecebido = pagamentosPagos.reduce((sum, p) => sum + p.valor, 0);
+
+    // Pagamentos em atraso (vencimento já passou)
+    const emAtraso = pagamentosPendentes.filter((p) => {
+      const vencimento = new Date(p.dataVencimento);
+      vencimento.setHours(0, 0, 0, 0);
+      return vencimento < hoje;
+    });
+
+    return {
+      totalReceber,
+      totalRecebido,
+      quantidadePendente: pagamentosPendentes.length,
+      quantidadeEmAtraso: emAtraso.length,
+      valorEmAtraso: emAtraso.reduce((sum, p) => sum + p.valor, 0),
+    };
+  };
+  const estatisticas = calcularEstatisticas();
   return (
     <div className="p-6">
       {/* 1. HEADER com título e botão "Exportar CSV" */}
@@ -88,34 +120,51 @@ export default function GestaoPagamentos() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-500">Total a Receber</h3>
-          <p className="text-2xl font-bold text-red-600">R$ 0,00</p>
+          <p className="text-2xl font-bold text-red-600">
+            R${" "}
+            {estatisticas.totalReceber.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            {estatisticas.quantidadePendente} pagamento(s) pendente(s)
+          </p>
         </div>
+
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-500">Total Recebido</h3>
-          <p className="text-2xl font-bold text-green-600">R$ 0,00</p>
+          <p className="text-2xl font-bold text-green-600">
+            R${" "}
+            {estatisticas.totalRecebido.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            {pagamentos.filter((p) => p.status === "Pago").length} pagamento(s)
+            realizado(s)
+          </p>
         </div>
+
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-500">Pendentes</h3>
-          <p className="text-2xl font-bold text-yellow-600">0</p>
+          <p className="text-2xl font-bold text-yellow-600">
+            {estatisticas.quantidadePendente}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">No prazo</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-500">Em Atraso</h3>
-          <p className="text-2xl font-bold text-red-600">0</p>
-        </div>
-      </div>
-
-      {/* 3. SEARCH E FILTERS - TODO: implementar */}
-      <div className="mb-6">
-        <p className="text-gray-600">Search e Filters aqui...</p>
-      </div>
-
-      {/* 4. TABELA - TODO: implementar */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Lista de Pagamentos</h2>
-          <p className="text-gray-600">DataTable aqui...</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Total de pagamentos: {pagamentos.length}
+          <p className="text-2xl font-bold text-red-600">
+            {estatisticas.quantidadeEmAtraso}
+          </p>
+          <p className="text-xs text-red-500 mt-1">
+            R${" "}
+            {estatisticas.valorEmAtraso.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </p>
         </div>
       </div>
