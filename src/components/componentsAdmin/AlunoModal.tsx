@@ -147,12 +147,7 @@ export default function AlunoModal({
 
         console.log("✅ Aluno salvo no Firestore");
 
-        setSuccessMessage(` Aluno ${nome} cadastrado com sucesso!
-
-📧 INSTRUÇÃO PARA O ALUNO:
-"Acesse ${window.location.origin}/primeiro-acesso para ativar sua conta usando o email ${email}"
-
-✅ Admin permanece logado!`);
+        setSuccessMessage(` Aluno ${nome} cadastrado com sucesso!`);
 
         //  FECHAR MODAL APÓS SUCESSO
         setTimeout(() => {
