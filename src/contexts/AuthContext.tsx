@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Verificar se é admin
           const adminQuery = query(
             collection(db, "admins"),
-            where("email", "==", currentUser.email)
+            where("email", "==", currentUser.email?.toLowerCase())
           );
           const adminSnapshot = await getDocs(adminQuery);
 
@@ -61,12 +61,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             });
           } else {
             // Verificar se é aluno
+            console.log("🔍 Buscando aluno...");
+
             const alunoQuery = query(
               collection(db, "Alunos"),
-              where("email", "==", currentUser.email)
+              where("email", "==", currentUser.email?.toLowerCase())
             );
             const alunoSnapshot = await getDocs(alunoQuery);
-
+            console.log(
+              "✅ Aluno query executada, vazio?",
+              alunoSnapshot.empty
+            );
             if (!alunoSnapshot.empty) {
               const alunoDoc = alunoSnapshot.docs[0];
               const alunoData = alunoDoc.data();
