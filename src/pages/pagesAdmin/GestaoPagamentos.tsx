@@ -94,6 +94,44 @@ export default function GestaoPagamentos() {
     };
   };
   const estatisticas = calcularEstatisticas();
+
+  // Filtros disponíveis
+  const searchFilters = [
+    {
+      label: "Status do Pagamento",
+      options: [
+        { value: "Pendente", label: "Pendente" },
+        { value: "Pago", label: "Pago" },
+        { value: "Atrasado", label: "Em Atraso" },
+      ],
+      value: statusFilter,
+      onChange: setStatusFilter,
+      placeholder: "Todos os Status",
+    },
+  ];
+
+  // Filtragem dos pagamentos
+  useEffect(() => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    let filtrados = pagamentos.filter((p) =>
+      p.alunoNome.toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    if (statusFilter === "Atrasado") {
+      filtrados = filtrados.filter(
+        (p) =>
+          p.status === "Pendente" &&
+          new Date(p.dataVencimento).setHours(0, 0, 0, 0) < hoje.getTime()
+      );
+    } else if (statusFilter) {
+      filtrados = filtrados.filter((p) => p.status === statusFilter);
+    }
+
+    setPagamentosFiltrados(filtrados);
+  }, [pagamentos, searchText, statusFilter]);
+
   return (
     <div className="p-6">
       {/* 1. HEADER com título e botão "Exportar CSV" */}
@@ -168,6 +206,14 @@ export default function GestaoPagamentos() {
           </p>
         </div>
       </div>
+      {/* 3. SEARCH E FILTERS */}
+      <SearchAndFilters
+        searchValue={searchText}
+        onSearchChange={setSearchText}
+        filters={searchFilters}
+        searchPlaceholder="Buscar por nome do aluno..."
+        searchLabel="Buscar Aluno"
+      />
     </div>
   );
 }
