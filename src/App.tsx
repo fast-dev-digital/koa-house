@@ -11,6 +11,7 @@ import Eventos from "./pages/Eventos";
 import Professores from "./pages/Professores";
 import Planos from "./pages/Planos";
 import ProtectedRoute from "./components/ProtectedRoute";
+import LoginProtectedRoute from "./components/LoginProtectedRoute";
 import AdminDashboard from "./pages/pagesAdmin/AdminDashboard";
 import CadastrarAdmin from "./pages/pagesAdmin/CadastrarAdmin";
 import GestaoAlunos from "./pages/pagesAdmin/GestaoAlunosNovo";
@@ -34,7 +35,11 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="sobre-nos" element={<SobreNos />} />
-            <Route path="login" element={<PaginaLogin />} />
+            <Route path="login" element={
+              <LoginProtectedRoute>
+                <PaginaLogin />
+              </LoginProtectedRoute>
+            } />
             <Route path="eventos" element={<Eventos />} />
             <Route path="professores" element={<Professores />} />
             <Route path="planos" element={<Planos />} />
