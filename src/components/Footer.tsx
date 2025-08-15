@@ -42,6 +42,7 @@ function Footer() {
             <ul>
               <li className='mb-2 text-xs'>Email: arenabrazuka@gmail.com</li>
               <li className='mb-2 text-xs'>Telefone: (19) 9231-2145</li>
+              <li className='mb-2 text-xs'>R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180</li>
             </ul>
           </div>
 
