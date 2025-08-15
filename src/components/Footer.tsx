@@ -22,9 +22,10 @@ function Footer() {
             <h4 className="font-semibold text-white mb-2 pt-6 ">Navegação</h4>
             <ul>
               <li className="mb-2"><Link to="/" className="hover:text-orange-400">Home</Link></li>
-              <li className="mb-2"><Link to="/aulas" className="hover:text-orange-400">Aulas</Link></li>
+              <li className="mb-2"><Link to="/sobre-nos" className="hover:text-orange-400">Sobre nós</Link></li>
               <li className="mb-2"><Link to="/eventos" className="hover:text-orange-400">Eventos</Link></li>
-              <li className="mb-2"><Link to="/contato" className="hover:text-orange-400">Contato</Link></li>
+              <li className="mb-2"><Link to="/professores" className="hover:text-orange-400">Professores</Link></li>
+              <li className="mb-2"><Link to="/planos" className="hover:text-orange-400">Planos</Link></li>
             </ul>
             
           </div>
@@ -41,7 +42,7 @@ function Footer() {
             <h4 className="font-semibold text-white mb-2 pt-6">Contato</h4>
             <ul>
               <li className='mb-2 text-xs'>Email: arenabrazuka@gmail.com</li>
-              <li className='mb-2 text-xs'>Telefone: (19) 9231-2145</li>
+              <li className='mb-2 text-xs'>Telefone: (19) 98192-4006</li>
               <li className='mb-2 text-xs'>R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180</li>
             </ul>
           </div>
