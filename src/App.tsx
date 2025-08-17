@@ -35,11 +35,14 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="sobre-nos" element={<SobreNos />} />
-            <Route path="login" element={
-              <LoginProtectedRoute>
-                <PaginaLogin />
-              </LoginProtectedRoute>
-            } />
+            <Route
+              path="login"
+              element={
+                <LoginProtectedRoute>
+                  <PaginaLogin />
+                </LoginProtectedRoute>
+              }
+            />
             <Route path="eventos" element={<Eventos />} />
             <Route path="professores" element={<Professores />} />
             <Route path="planos" element={<Planos />} />
