@@ -67,6 +67,22 @@ const colunasTurmas = [
     sortable: true,
   },
   {
+    key: "status",
+    label: "Status",
+    sortable: true,
+    render: (value: string) => (
+      <span
+        className={`px-2 py-1 text-xs rounded-full font-medium ${
+          value === "Ativa"
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800"
+        }`}
+      >
+        {value}
+      </span>
+    ),
+  },
+  {
     key: "dias",
     label: "Dias",
     render: (value: string) => value || "A definir",
@@ -146,27 +162,38 @@ export default function GestaoTurmas() {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log("📄 Documento raw:", doc.id, data); // Debug dos dados
+
         if (data && typeof data === "object") {
-          turmasData.push({
+          const turma: Turma = {
             id: doc.id,
-            nome: data.nome || "",
-            modalidade: data.modalidade || "Futevôlei",
-            genero: data.genero || "Masculino",
-            nivel: data.nivel || "Estreante",
-            dias: data.dias || "",
-            horario: data.horario || "",
-            professorId: data.professorId || "",
-            professorNome: data.professorNome || "",
-            capacidade: data.capacidade || 0,
-            alunosInscritos: data.alunosInscritos || 0,
+            nome: String(data.nome || ""),
+            modalidade:
+              (data.modalidade as "Futevôlei" | "Beach Tennis") || "Futevôlei",
+            genero:
+              (data.genero as "Masculino" | "Feminino" | "Teens") ||
+              "Masculino",
+            nivel:
+              (data.nivel as "Estreante" | "Iniciante" | "Intermediário") ||
+              "Estreante",
+            dias: String(data.dias || ""),
+            horario: String(data.horario || ""),
+            professorId: String(data.professorId || ""),
+            professorNome: String(data.professorNome || ""),
+            capacidade: Number(data.capacidade) || 0,
+            alunosInscritos: Number(data.alunosInscritos) || 0,
+            status: (data.status as "Ativa" | "Inativa") || "Ativa", // Campo que estava faltando
             createdAt: data.createdAt?.toDate?.() || new Date(),
             updatedAt: data.updatedAt?.toDate?.() || new Date(),
-          } as Turma);
+          };
+
+          console.log("✅ Turma processada:", turma); // Debug da turma processada
+          turmasData.push(turma);
         }
       });
 
       setTurmas(turmasData);
-      console.log("✅ Turmas carregadas:", turmasData.length);
+      console.log("✅ Total de turmas carregadas:", turmasData.length);
     } catch (erro) {
       console.error("❌ Erro ao listar turmas:", erro);
       showToastMessage("Erro ao carregar turmas", "error");
