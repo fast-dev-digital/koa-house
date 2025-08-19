@@ -7,9 +7,10 @@ export interface Turma {
   dias: string;
   horario: string;
   professorId: string;
+  status: "Ativa" | "Inativa";
   professorNome: string;
   capacidade?: number;
   alunosInscritos?: number;
   createdAt?: Date;
-  updateAt?: Date;
+  updatedAt?: Date;
 }
