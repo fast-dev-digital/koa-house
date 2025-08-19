@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { FaTimes, FaSave, FaUser } from "react-icons/fa";
-import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase-config";
+import { gerarPagamentoParaAluno } from "../../services/integracaoService";
 
 // ✅ INTERFACE ATUALIZADA COM MÚLTIPLAS TURMAS
 interface Aluno {
@@ -12,13 +13,14 @@ interface Aluno {
   genero: string;
   plano: string;
   status: string;
+  valorMensalidade: number;
   // ✅ NOVA ESTRUTURA - Array de turmaIds
   turmasIds?: string[]; // Array de turmaIds (para relacionamento com turmas)
   // ✅ MANTER - Campo turmas como string (para dias da semana)
   turmas: string; // "Seg-Qua", "Ter-Qui" etc.
   horarios: string;
   dataMatricula: string;
-  authCreated?: boolean; // ✅ ADICIONAR PARA CONTROLE DE AUTH
+  authCreated?: boolean; //
   authUid?: string;
   role?: string;
 }
@@ -28,7 +30,7 @@ interface AlunoModalProps {
   onClose: () => void;
   onSuccess: () => void;
   mode: "create" | "edit";
-  alunoData?: Aluno | null;
+  alunoData?: Aluno | null | undefined;
 }
 
 export default function AlunoModal({
@@ -52,6 +54,8 @@ export default function AlunoModal({
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  const [valorMensalidade, setValorMensalidade] = useState(150);
+
   // ✅ useEffect ATUALIZADO
   useEffect(() => {
     if (mode === "edit" && alunoData) {
@@ -61,6 +65,7 @@ export default function AlunoModal({
       setGenero(alunoData.genero || "Masculino"); // ✅ FALLBACK PARA DADOS ANTIGOS
       setPlano(alunoData.plano);
       setStatus(alunoData.status);
+      setValorMensalidade(alunoData.valorMensalidade || 150);
       setTurmas(alunoData.turmas);
       setHorarios(alunoData.horarios);
     } else {
@@ -79,6 +84,7 @@ export default function AlunoModal({
     setTurmas("Seg-Qua");
     setHorarios("19:00");
     setError("");
+    setValorMensalidade(150);
     setSuccessMessage("");
   };
 
@@ -136,6 +142,7 @@ export default function AlunoModal({
           telefone: telefone.trim(),
           genero,
           plano,
+          valorMensalidade,
           status,
           turmas,
           horarios,
@@ -148,6 +155,17 @@ export default function AlunoModal({
         console.log("✅ Aluno salvo no Firestore");
 
         setSuccessMessage(` Aluno ${nome} cadastrado com sucesso!`);
+
+        // ✅ GERAR PAGAMENTO AUTOMATICAMENTE
+        await gerarPagamentoParaAluno({
+          id: alunoId,
+          nome: nome.trim(),
+          plano: plano,
+          valorMensalidade: valorMensalidade,
+          status: status,
+        });
+
+        console.log("✅ Aluno criado e pagamento gerado automaticamente");
 
         //  FECHAR MODAL APÓS SUCESSO
         setTimeout(() => {
@@ -166,9 +184,10 @@ export default function AlunoModal({
         await updateDoc(doc(db, "Alunos", alunoData.id), {
           nome: nome.trim(),
           telefone: telefone.trim(),
-          genero: alunoData.genero, //
+          genero: genero, //
           plano,
           status,
+          valorMensalidade,
           turmas,
           horarios,
           updatedAt: new Date().toISOString(),
@@ -317,6 +336,22 @@ export default function AlunoModal({
               <option value="Semestral"> Semestral</option>
               <option value="Trimestral">Trimestral</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Valor da Mensalidade *
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={valorMensalidade}
+              onChange={(e) => setValorMensalidade(Number(e.target.value))}
+              className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              placeholder="Ex: 150.00"
+              disabled={loading}
+              required
+            />
           </div>
 
           {/* Status */}
