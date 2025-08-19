@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaUser } from "react-icons/fa";
 import DataTable from "../../components/componentsAdmin/DataTable";
 import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters";
 import AlunoModal from "../../components/componentsAdmin/AlunoModal";
-import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";
 import Toast from "../../components/componentsAdmin/Toast";
 import { exportarAlunosCSV } from "../../utils/exportarCsv";
 import type { Aluno } from "../../types/alunos";
@@ -47,17 +46,17 @@ const alunosColumns = [
     sortable: true,
     render: (value: string) => {
       const colors = {
-        ativo: "bg-green-100 text-green-700",
-        inativo: "bg-gray-100 text-gray-700",
-        suspenso: "bg-red-100 text-red-700",
+        Ativo: "bg-green-100 text-green-700",
+        Inativo: "bg-gray-100 text-gray-700",
+        Suspenso: "bg-red-100 text-red-700",
       };
       return (
         <span
           className={`px-2 py-1 text-xs font-semibold rounded-full ${
-            colors[value as keyof typeof colors] || colors.inativo
+            colors[value as keyof typeof colors] || colors.Inativo
           }`}
         >
-          {value || "inativo"}
+          {value || "Inativo"}
         </span>
       );
     },
@@ -79,11 +78,6 @@ export default function GestaoAlunos() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
-
-  // Estados do Modal de Confirmação de Delete
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [alunoToDelete, setAlunoToDelete] = useState<Aluno | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Estados do Toast
   const [toastMessage, setToastMessage] = useState("");
@@ -123,10 +117,13 @@ export default function GestaoAlunos() {
             telefone: data.telefone || "",
             genero: data.genero || "Masculino",
             plano: data.plano || "",
-            status: data.status || "inativo",
+            valorMensalidade: data.valorMensalidade || 150,
+            status: data.status || "Inativo",
             turmas: data.turmas || "Seg-Qua",
             horarios: data.horarios || "19:00",
             dataMatricula: data.dataMatricula || "",
+            createdAt: data.createdAt || "",
+            updatedAt: data.updatedAt || "",
           } as Aluno);
         }
       });
@@ -156,76 +153,6 @@ export default function GestaoAlunos() {
     setSelectedAluno(aluno);
     setModalMode("edit");
     setIsModalOpen(true);
-  };
-
-  const handleDelete = (aluno: Aluno) => {
-    setAlunoToDelete(aluno);
-    setIsDeleteModalOpen(true);
-  };
-
-  // Função para confirmar a exclusão
-  const handleConfirmDelete = async () => {
-    if (!alunoToDelete) return;
-
-    setDeleteLoading(true);
-    try {
-      await deleteDoc(doc(db, "Alunos", alunoToDelete.id));
-
-      // Atualizar a lista local
-      setAlunos(alunos.filter((aluno) => aluno.id !== alunoToDelete.id));
-
-      // Fechar modal
-      setIsDeleteModalOpen(false);
-      setAlunoToDelete(null);
-
-      // Mostrar toast de sucesso
-      showToastMessage(
-        `Aluno "${alunoToDelete.nome}" foi excluído com sucesso!`,
-        "success"
-      );
-    } catch (error: any) {
-      console.error("❌ Erro ao excluir aluno:", error);
-      showToastMessage(`Erro ao excluir aluno: ${error.message}`, "error");
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  // Função para deletar múltiplos alunos
-  const handleDeleteSelected = async (selectedAlunos: Aluno[]) => {
-    if (selectedAlunos.length === 0) return;
-
-    const confirmMessage = `Tem certeza que deseja excluir ${selectedAlunos.length} aluno(s) selecionado(s)? Esta ação não pode ser desfeita.`;
-    if (!window.confirm(confirmMessage)) return;
-
-    setLoading(true);
-    try {
-      const deletePromises = selectedAlunos.map((aluno) =>
-        deleteDoc(doc(db, "Alunos", aluno.id))
-      );
-
-      await Promise.all(deletePromises);
-
-      // Atualizar a lista local removendo os alunos excluídos
-      const deletedIds = selectedAlunos.map((aluno) => aluno.id);
-      setAlunos(alunos.filter((aluno) => !deletedIds.includes(aluno.id)));
-
-      showToastMessage(
-        `${selectedAlunos.length} aluno(s) excluído(s) com sucesso!`,
-        "success"
-      );
-    } catch (error) {
-      console.error("Erro ao excluir alunos:", error);
-      showToastMessage("Erro ao excluir alguns alunos!", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Função para cancelar a exclusão
-  const handleCancelDelete = () => {
-    setIsDeleteModalOpen(false);
-    setAlunoToDelete(null);
   };
 
   // Função para fechar toast
@@ -316,7 +243,7 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Ativos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "ativo").length}
+                {alunosFiltrados.filter((a) => a.status === "Ativo").length}
               </p>
             </div>
           </div>
@@ -328,7 +255,7 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Inativos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "inativo").length}
+                {alunosFiltrados.filter((a) => a.status === "Inativo").length}
               </p>
             </div>
           </div>
@@ -340,7 +267,7 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Suspensos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "suspenso").length}
+                {alunosFiltrados.filter((a) => a.status === "Suspenso").length}
               </p>
             </div>
           </div>
@@ -360,9 +287,9 @@ export default function GestaoAlunos() {
             onChange: setStatusFilter,
             placeholder: "Todos os Status",
             options: [
-              { value: "ativo", label: "Ativo" },
-              { value: "inativo", label: "Inativo" },
-              { value: "suspenso", label: "Suspenso" },
+              { value: "Ativo", label: "Ativo" },
+              { value: "Inativo", label: "Inativo" },
+              { value: "Suspenso", label: "Suspenso" },
             ],
           },
           {
@@ -396,12 +323,9 @@ export default function GestaoAlunos() {
         columns={alunosColumns}
         loading={loading}
         onEdit={handleEdit}
-        onDelete={handleDelete}
-        onDeleteSelected={handleDeleteSelected}
-        selectable={true}
         title="Lista de Alunos"
-        emptyMessage="Nenhum aluno encontrado. Cadastre o primeiro aluno!"
         itemsPerPage={20}
+        emptyMessage="Nenhum aluno encontrado. Cadastre o primeiro aluno!"
       />
 
       {/* Modal de Aluno - CREATE e UPDATE */}
@@ -410,19 +334,7 @@ export default function GestaoAlunos() {
         onClose={handleCloseModal}
         onSuccess={handleModalSuccess}
         mode={modalMode}
-        alunoData={selectedAluno}
-      />
-
-      {/* Modal de Confirmação de Delete */}
-      <DeleteConfirmModal
-        isOpen={isDeleteModalOpen}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-        loading={deleteLoading}
-        item={alunoToDelete}
-        itemType="aluno"
-        title="Excluir Aluno"
-        message="Tem certeza que deseja excluir este aluno? Esta ação não pode ser desfeita."
+        alunoData={selectedAluno as any}
       />
 
       {/* Toast de Notificação */}
