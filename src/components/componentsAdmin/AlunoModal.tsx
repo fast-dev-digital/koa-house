@@ -344,7 +344,7 @@ export default function AlunoModal({
             <input
               type="number"
               step="0.01"
-              min="0"
+              min="1"
               value={valorMensalidade}
               onChange={(e) => setValorMensalidade(Number(e.target.value))}
               className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"

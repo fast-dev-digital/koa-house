@@ -243,7 +243,7 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Ativos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "Ativo").length}
+                {alunosFiltrados.filter((a) => a.status === "ativo").length}
               </p>
             </div>
           </div>
@@ -255,7 +255,7 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Inativos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "Inativo").length}
+                {alunosFiltrados.filter((a) => a.status === "inativo").length}
               </p>
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function GestaoAlunos() {
             <div>
               <p className="text-sm text-gray-600">Alunos Suspensos</p>
               <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "Suspenso").length}
+                {alunosFiltrados.filter((a) => a.status === "suspenso").length}
               </p>
             </div>
           </div>
