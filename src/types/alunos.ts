@@ -10,7 +10,7 @@ export interface Aluno {
   horarios: string;
   plano: "Mensal" | "Trimestral" | "Semestral";
   valorMensalidade?: number; // Novo campo
-  status: "Ativo" | "Inativo" | "Suspenso";
+  status: "ativo" | "inativo" | "suspenso";
   createdAt?: string;
   updatedAt?: string;
 }

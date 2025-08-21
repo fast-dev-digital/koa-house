@@ -9,8 +9,8 @@ export interface Turma {
   professorId: string;
   status: "Ativa" | "Inativa";
   professorNome: string;
-  capacidade?: number;
-  alunosInscritos?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  capacidade: number;
+  alunosInscritos: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
