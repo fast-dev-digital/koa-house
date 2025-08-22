@@ -1,5 +1,6 @@
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase-config";
+import type { Pagamento } from "../types/pagamentos";
 
 // ✅ INTERFACES EXPANDIDAS
 interface Aluno {
@@ -37,6 +38,7 @@ interface Professor {
   status?: string;
   turmaIds?: string[];
 }
+
 // ✅ FUNÇÃO PARA EXPORTAR ALUNOS (MANTIDA COMPATÍVEL)
 export const exportarAlunosCSV = async () => {
   try {
@@ -483,4 +485,219 @@ export const gerarNomeArquivoComData = (prefixo: string = "dados"): string => {
     })
     .replace(/:/g, "-");
   return `${prefixo}_${data}_${hora}.csv`;
+};
+
+export const exportarPagamentosCSV = async () => {
+  try {
+    console.log("🔄 Iniciando exportação dos pagamentos...");
+
+    const pagamentosRef = collection(db, "pagamentos");
+    const snapshot = await getDocs(pagamentosRef);
+
+    console.log(`📊 Encontrados ${snapshot.size} pagamentos`);
+
+    if (snapshot.empty) {
+      alert("⚠️ Nenhum pagamento encontrado para exportar!");
+      return;
+    }
+
+    const pagamentos: Pagamento[] = [];
+    snapshot.forEach((doc) => {
+      pagamentos.push({
+        id: doc.id,
+        ...doc.data(),
+      } as Pagamento);
+    });
+
+    const csvContent = converterPagamentosParaCSV(pagamentos);
+    const nomeArquivo = gerarNomeArquivoComData("pagamentos");
+    baixarCSV(csvContent, nomeArquivo);
+
+    console.log("✅ Exportação de pagamentos concluída!");
+    return true;
+  } catch (error) {
+    console.error("❌ Erro ao exportar pagamentos:", error);
+    alert("❌ Erro ao exportar dados. Verifique o console para mais detalhes.");
+    throw error;
+  }
+};
+
+// ✅ NOVA FUNÇÃO PARA EXPORTAR PAGAMENTOS COM FILTROS
+export const exportarPagamentosComFiltros = (
+  pagamentos: Pagamento[],
+  filtros?: {
+    searchText?: string;
+    statusFilter?: string;
+    planoFilter?: string;
+  }
+) => {
+  try {
+    console.log("🔄 Exportando pagamentos com filtros aplicados...");
+
+    let pagamentosFiltrados = [...pagamentos];
+
+    // ✅ APLICAR FILTROS SE FORNECIDOS
+    if (filtros) {
+      pagamentosFiltrados = pagamentos.filter((pagamento) => {
+        const matchSearch =
+          !filtros.searchText ||
+          (pagamento.alunoNome || "")
+            .toLowerCase()
+            .includes(filtros.searchText.toLowerCase()) ||
+          (pagamento.mesReferencia || "")
+            .toLowerCase()
+            .includes(filtros.searchText.toLowerCase());
+
+        const matchStatus =
+          !filtros.statusFilter || pagamento.status === filtros.statusFilter;
+
+        const matchPlano =
+          !filtros.planoFilter || pagamento.planoTipo === filtros.planoFilter;
+
+        return matchSearch && matchStatus && matchPlano;
+      });
+    }
+
+    console.log(`📊 ${pagamentosFiltrados.length} pagamentos após filtros`);
+
+    if (pagamentosFiltrados.length === 0) {
+      alert("⚠️ Nenhum pagamento encontrado com os filtros aplicados!");
+      return;
+    }
+
+    const csvContent = converterPagamentosParaCSV(pagamentosFiltrados);
+    const nomeArquivo = gerarNomeArquivoComData("pagamentos_filtrados");
+    baixarCSV(csvContent, nomeArquivo);
+
+    console.log("✅ Exportação de pagamentos filtrados concluída!");
+    return {
+      sucesso: true,
+      nomeArquivo,
+      totalRegistros: pagamentosFiltrados.length,
+    };
+  } catch (error) {
+    console.error("❌ Erro ao exportar pagamentos filtrados:", error);
+    throw error;
+  }
+};
+
+// ✅ FUNÇÃO PARA CONVERTER PAGAMENTOS PARA CSV
+const converterPagamentosParaCSV = (pagamentos: Pagamento[]): string => {
+  if (pagamentos.length === 0) {
+    return "Nenhum pagamento encontrado";
+  }
+
+  // ✅ CABEÇALHO COM TODOS OS CAMPOS RELEVANTES
+  const cabecalho = [
+    "Aluno",
+    "Plano",
+    "Mês Referência",
+    "Valor",
+    "Data Vencimento",
+    "Status",
+    "Data Pagamento",
+    "Dias em Atraso",
+    "Situação",
+    "Data Criação",
+  ].join(",");
+
+  const hoje = new Date();
+
+  const linhas = pagamentos.map((pagamento) => {
+    const dataVencimento = pagamento.dataVencimento
+      ? new Date(pagamento.dataVencimento)
+      : null;
+
+    const dataPagamento = pagamento.dataPagamento
+      ? new Date(pagamento.dataPagamento).toLocaleDateString("pt-BR")
+      : "";
+
+    const dataVencimentoFormatada = dataVencimento
+      ? dataVencimento.toLocaleDateString("pt-BR")
+      : "";
+
+    // Calcular dias em atraso
+    let diasAtraso = 0;
+    let situacao = pagamento.status || "";
+
+    if (pagamento.status === "Pendente" && dataVencimento) {
+      const diffTime = hoje.getTime() - dataVencimento.getTime();
+      diasAtraso = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+
+      if (diasAtraso > 0) {
+        situacao = "Atrasado";
+      }
+    } else if (pagamento.status === "Pago") {
+      situacao = "Pago";
+    }
+
+    const dataFormatada = pagamento.createdAt
+      ? new Date(pagamento.createdAt).toLocaleDateString("pt-BR")
+      : "";
+
+    return [
+      `"${pagamento.alunoNome || ""}"`,
+      `"${pagamento.planoTipo || ""}"`,
+      `"${pagamento.mesReferencia || ""}"`,
+      `"${pagamento.valor || 0}"`,
+      `"${dataVencimentoFormatada}"`,
+      `"${pagamento.status || ""}"`,
+      `"${dataPagamento}"`,
+      `"${diasAtraso > 0 ? diasAtraso : ""}"`,
+      `"${situacao}"`,
+      `"${dataFormatada}"`,
+    ].join(",");
+  });
+
+  // ✅ ADICIONAR RESUMO FINANCEIRO NO FINAL
+  const totalPagamentos = pagamentos.length;
+  const pagamentosPagos = pagamentos.filter((p) => p.status === "Pago");
+  const pagamentosPendentes = pagamentos.filter((p) => p.status === "Pendente");
+
+  const valorTotal = pagamentos.reduce((sum, p) => sum + (p.valor || 0), 0);
+  const valorPago = pagamentosPagos.reduce((sum, p) => sum + (p.valor || 0), 0);
+  const valorPendente = pagamentosPendentes.reduce(
+    (sum, p) => sum + (p.valor || 0),
+    0
+  );
+
+  // Calcular pagamentos em atraso
+  const pagamentosAtrasados = pagamentos.filter((p) => {
+    if (p.status !== "Pendente" || !p.dataVencimento) return false;
+    const vencimento = new Date(p.dataVencimento);
+    return vencimento < hoje;
+  });
+
+  const valorAtrasado = pagamentosAtrasados.reduce(
+    (sum, p) => sum + (p.valor || 0),
+    0
+  );
+
+  const resumo = [
+    "",
+    `"=== RESUMO FINANCEIRO ==="`,
+    `"Total de Pagamentos: ${totalPagamentos}"`,
+    `"Valor Total: R$ ${valorTotal.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+    })}"`,
+    `"Pagamentos Realizados: ${pagamentosPagos.length}"`,
+    `"Valor Recebido: R$ ${valorPago.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+    })}"`,
+    `"Pagamentos Pendentes: ${pagamentosPendentes.length}"`,
+    `"Valor a Receber: R$ ${valorPendente.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+    })}"`,
+    `"Pagamentos em Atraso: ${pagamentosAtrasados.length}"`,
+    `"Valor em Atraso: R$ ${valorAtrasado.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+    })}"`,
+    `"Taxa de Recebimento: ${
+      totalPagamentos > 0
+        ? ((pagamentosPagos.length / totalPagamentos) * 100).toFixed(1)
+        : 0
+    }%"`,
+  ].join("\n");
+
+  return [cabecalho, ...linhas].join("\n") + "\n" + resumo;
 };
