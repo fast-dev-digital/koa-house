@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FaTimes, FaSave, FaUser } from "react-icons/fa";
 import { collection, doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase-config";
-import { gerarPagamentoParaAluno } from "../../services/integracaoService";
+import { criarAlunoComPagamentosArray } from "../../services/integracaoService";
 
 // ✅ INTERFACE ATUALIZADA COM MÚLTIPLAS TURMAS
 interface Aluno {
@@ -157,12 +157,13 @@ export default function AlunoModal({
         setSuccessMessage(` Aluno ${nome} cadastrado com sucesso!`);
 
         // ✅ GERAR PAGAMENTO AUTOMATICAMENTE
-        await gerarPagamentoParaAluno({
+        await criarAlunoComPagamentosArray({
           id: alunoId,
           nome: nome.trim(),
           plano: plano,
           valorMensalidade: valorMensalidade,
           status: status,
+          dataMatricula: new Date().toISOString().split("T")[0],
         });
 
         console.log("✅ Aluno criado e pagamento gerado automaticamente");
