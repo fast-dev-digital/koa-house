@@ -7,7 +7,8 @@ export interface Pagamento {
   dataVencimento: Date; // Calculada pela regra dia 5
   dataPagamento?: Date; // Quando foi pago
   status: "Pendente" | "Pago" | "Atrasado" | "Arquivado";
-  planoTipo: "Mensal" | "Semestral" | "Trimestral"; // "Pendente" | "Pago"
+  planoTipo: string; // Tipo do plano (ex: "Mensal", "Trimestral")
   createdAt?: Date;
   updatedAt?: Date;
+  arquivadoEm?: Date;
 }
