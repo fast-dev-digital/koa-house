@@ -288,3 +288,117 @@ export async function buscarResumoAluno(alunoId: string): Promise<{
     };
   }
 }
+
+// ✅ FUNÇÃO AUXILIAR - Converter data com segurança
+const converterDataSegura = (data: any): Date => {
+  if (!data) return new Date();
+
+  // Se já é uma Date
+  if (data instanceof Date) return data;
+
+  // Se é um Timestamp do Firestore
+  if (data.toDate && typeof data.toDate === "function") {
+    return data.toDate();
+  }
+
+  // Se é uma string de data
+  if (typeof data === "string") {
+    const parsedDate = new Date(data);
+    return isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+  }
+
+  // Se é um número (timestamp)
+  if (typeof data === "number") {
+    return new Date(data);
+  }
+
+  // Fallback
+  return new Date();
+};
+
+// ✅ FUNÇÃO PRINCIPAL - Buscar histórico na nova estrutura
+export async function buscarHistoricoAlunoNovo(
+  alunoId: string
+): Promise<HistoricoResponse | null> {
+  try {
+    console.log(
+      `📚 Buscando histórico na nova estrutura para aluno: ${alunoId}`
+    );
+
+    const alunoQuery = query(
+      collection(db, "alunosPagamentos"),
+      where("alunoId", "==", alunoId)
+    );
+
+    const alunoSnapshot = await getDocs(alunoQuery);
+
+    if (alunoSnapshot.empty) {
+      console.log("❌ Aluno não encontrado na nova estrutura");
+      return null;
+    }
+
+    const docSnapshot = alunoSnapshot.docs[0];
+    const alunoData = docSnapshot.data();
+
+    console.log(`📊 Dados do aluno encontrados:`, alunoData);
+
+    // ✅ PROCESSAR pagamentos com conversão segura de datas
+    const pagamentosProcessados: Pagamento[] = (alunoData.pagamentos || []).map(
+      (p: any, index: number) => {
+        const dataVencimento = converterDataSegura(p.dataVencimento);
+        const dataPagamento = p.dataPagamento
+          ? converterDataSegura(p.dataPagamento)
+          : undefined;
+        const arquivadoEm = p.arquivadoEm
+          ? converterDataSegura(p.arquivadoEm)
+          : undefined;
+
+        return {
+          id: `${alunoId}_${p.mesReferencia || index}`, // Gerar ID único
+          alunoId: alunoData.alunoId || alunoId,
+          alunoNome: alunoData.nome || "Nome não informado",
+          valor: typeof p.valor === "number" ? p.valor : 0,
+          planoTipo: alunoData.plano || "Mensal",
+          mesReferencia: p.mesReferencia || "",
+          dataVencimento,
+          dataPagamento,
+          status: p.status || "Pendente",
+          createdAt: converterDataSegura(alunoData.createdAt),
+          updatedAt: converterDataSegura(alunoData.updatedAt),
+          arquivadoEm,
+        };
+      }
+    );
+
+    // ✅ PROCESSAR data de matrícula com conversão segura
+    const dataMatricula = converterDataSegura(alunoData.dataMatricula);
+
+    // ✅ ORDENAR por data (mais recente primeiro)
+    pagamentosProcessados.sort(
+      (a, b) => b.dataVencimento.getTime() - a.dataVencimento.getTime()
+    );
+
+    const resultado: HistoricoResponse = {
+      aluno: {
+        id: alunoData.alunoId || alunoId,
+        nome: alunoData.nome || "Nome não informado",
+        plano: alunoData.plano || "Não informado",
+        valorMensalidade: alunoData.valorMensalidade || 0,
+        status: alunoData.status || "ativo",
+        dataMatricula,
+        telefone: alunoData.telefone,
+        email: alunoData.email,
+      },
+      pagamentos: pagamentosProcessados,
+      estatisticas: calcularEstatisticas(pagamentosProcessados),
+    };
+
+    console.log(
+      `✅ Histórico processado na nova estrutura: ${resultado.pagamentos.length} itens`
+    );
+    return resultado;
+  } catch (error) {
+    console.error("❌ Erro ao buscar histórico na nova estrutura:", error);
+    throw error;
+  }
+}
