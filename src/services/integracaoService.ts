@@ -7,7 +7,6 @@ import {
   getDoc,
   doc,
   updateDoc,
-  writeBatch,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../firebase-config";
@@ -30,34 +29,61 @@ interface PagamentoExistente {
   valor: number;
 }
 
-// ✅ FUNÇÃO 1 - Gerar primeiro pagamento para aluno novo
-export async function gerarPagamentoParaAluno(
+interface PagamentoItem {
+  mesReferencia: string;
+  dataVencimento: Date;
+  valor: number;
+  status: "Pendente" | "Pago" | "Arquivado";
+  dataPagamento?: Date;
+  arquivadoEm?: Date;
+  statusAnterior?: string;
+  observacoes?: string;
+}
+
+interface AlunoComPagamentos {
+  id?: string;
+  alunoId: string;
+  nome: string;
+  plano: string;
+  valorMensalidade: number;
+  status: string;
+  dataMatricula: Date;
+  pagamentos: PagamentoItem[];
+  totais: {
+    pago: number;
+    pendente: number;
+    arquivado: number;
+  };
+  proximoVencimento?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Criar aluno na nova estrutura com primeiro pagamento
+export async function criarAlunoComPagamentosArray(
   alunoData: AlunoData
 ): Promise<void> {
   try {
     if (alunoData.status !== "ativo") {
-      console.log(
-        `⏸️ Aluno ${alunoData.nome} não está ativo, não gerando pagamento`
-      );
+      console.log(`⏸️ Aluno ${alunoData.nome} não está ativo`);
       return;
     }
 
-    const pagamentosExistentes = await getDocs(
-      query(
-        collection(db, "pagamentos"),
-        where("alunoId", "==", alunoData.id),
-        where("status", "in", ["Pendente", "Pago"])
-      )
+    // Verificar se já existe na nova estrutura
+    const existeQuery = query(
+      collection(db, "alunosPagamentos"),
+      where("alunoId", "==", alunoData.id)
     );
+    const existeSnapshot = await getDocs(existeQuery);
 
-    if (!pagamentosExistentes.empty) {
-      console.log(`⏸️ Aluno ${alunoData.nome} já possui pagamento ativo`);
+    if (!existeSnapshot.empty) {
+      console.log(`⏸️ ${alunoData.nome} já existe na nova estrutura`);
       return;
     }
 
+    // Calcular primeiro vencimento
     const hoje = new Date();
     const diaHoje = hoje.getDate();
-    const diaVencimento = 5;
     let dataVencimento = new Date(hoje);
 
     if (diaHoje <= 5) {
@@ -71,65 +97,171 @@ export async function gerarPagamentoParaAluno(
       year: "numeric",
     });
 
-    console.log(`📅 Gerando primeiro pagamento para ${alunoData.nome}:`);
-    console.log(`   • Plano: ${alunoData.plano}`);
-    console.log(`   • Cadastrado dia: ${diaHoje}`);
-    console.log(
-      `   • Próximo vencimento: ${dataVencimento.toLocaleDateString("pt-BR")}`
-    );
-    console.log(`   • Valor: R$ ${alunoData.valorMensalidade.toFixed(2)}`);
-
-    await addDoc(collection(db, "pagamentos"), {
+    // Criar documento na nova estrutura
+    await addDoc(collection(db, "alunosPagamentos"), {
       alunoId: alunoData.id,
-      alunoNome: alunoData.nome,
-      valor: alunoData.valorMensalidade,
-      planoTipo: alunoData.plano,
-      mesReferencia,
-      dataVencimento: Timestamp.fromDate(dataVencimento),
-      status: "Pendente",
+      nome: alunoData.nome,
+      plano: alunoData.plano,
+      valorMensalidade: alunoData.valorMensalidade,
+      status: alunoData.status,
+      dataMatricula: Timestamp.fromDate(
+        alunoData.dataMatricula ? new Date(alunoData.dataMatricula) : hoje
+      ),
+      pagamentos: [
+        {
+          mesReferencia,
+          dataVencimento: Timestamp.fromDate(dataVencimento),
+          valor: alunoData.valorMensalidade,
+          status: "Pendente",
+        },
+      ],
+      totais: {
+        pago: 0,
+        pendente: alunoData.valorMensalidade,
+        arquivado: 0,
+      },
+      proximoVencimento: Timestamp.fromDate(dataVencimento),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
 
-    console.log(`✅ Primeiro pagamento gerado para ${alunoData.nome}`);
+    console.log(`✅ ${alunoData.nome} criado na nova estrutura`);
   } catch (error) {
-    console.error("❌ Erro ao gerar pagamento:", error);
+    console.error("❌ Erro ao criar aluno na nova estrutura:", error);
     throw error;
   }
 }
 
-// ✅ FUNÇÃO 2 - Gerar próximo pagamento
-export async function gerarProximoPagamento(
-  pagamentoAtual: PagamentoExistente
-): Promise<void> {
+// ✅ FUNÇÃO 5 - Buscar aluno específico com pagamentos
+export async function buscarAlunoComPagamentos(
+  alunoId: string
+): Promise<AlunoComPagamentos | null> {
   try {
-    const pagamentosExistentes = await getDocs(
-      query(
-        collection(db, "pagamentos"),
-        where("alunoId", "==", pagamentoAtual.alunoId),
-        where("status", "==", "Pendente")
-      )
+    const alunoQuery = query(
+      collection(db, "alunosPagamentos"),
+      where("alunoId", "==", alunoId)
     );
 
-    if (!pagamentosExistentes.empty) {
-      console.log(
-        `⏸️ ${pagamentoAtual.alunoNome} já possui pagamento pendente`
-      );
+    const alunoSnapshot = await getDocs(alunoQuery);
+
+    if (alunoSnapshot.empty) {
+      return null;
+    }
+
+    const docSnapshot = alunoSnapshot.docs[0];
+    const data = docSnapshot.data();
+
+    return {
+      id: docSnapshot.id,
+      alunoId: data.alunoId,
+      nome: data.nome,
+      plano: data.plano,
+      valorMensalidade: data.valorMensalidade,
+      status: data.status,
+      dataMatricula: data.dataMatricula?.toDate() || new Date(),
+      pagamentos:
+        data.pagamentos?.map((p: any) => ({
+          ...p,
+          dataVencimento: p.dataVencimento?.toDate() || new Date(),
+          dataPagamento: p.dataPagamento?.toDate(),
+          arquivadoEm: p.arquivadoEm?.toDate(),
+        })) || [],
+      totais: data.totais || { pago: 0, pendente: 0, arquivado: 0 },
+      proximoVencimento: data.proximoVencimento?.toDate(),
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+    };
+  } catch (error) {
+    console.error("❌ Erro ao buscar aluno:", error);
+    return null;
+  }
+}
+
+// ✅ FUNÇÃO 6 - Listar todos alunos com pagamentos
+export async function listarAlunosComPagamentos(): Promise<
+  AlunoComPagamentos[]
+> {
+  try {
+    const snapshot = await getDocs(collection(db, "alunosPagamentos"));
+    const alunos: AlunoComPagamentos[] = [];
+
+    snapshot.forEach((docSnapshot) => {
+      const data = docSnapshot.data();
+      alunos.push({
+        id: docSnapshot.id,
+        alunoId: data.alunoId,
+        nome: data.nome,
+        plano: data.plano,
+        valorMensalidade: data.valorMensalidade,
+        status: data.status,
+        dataMatricula: data.dataMatricula?.toDate() || new Date(),
+        pagamentos:
+          data.pagamentos?.map((p: any) => ({
+            ...p,
+            dataVencimento: p.dataVencimento?.toDate() || new Date(),
+            dataPagamento: p.dataPagamento?.toDate(),
+            arquivadoEm: p.arquivadoEm?.toDate(),
+          })) || [],
+        totais: data.totais || { pago: 0, pendente: 0, arquivado: 0 },
+        proximoVencimento: data.proximoVencimento?.toDate(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      });
+    });
+
+    return alunos;
+  } catch (error) {
+    console.error("❌ Erro ao listar alunos:", error);
+    return [];
+  }
+}
+
+// ✅ FUNÇÃO 7 - Adicionar próximo pagamento ao array de um aluno
+// ...existing code...
+
+// ✅ FUNÇÃO UTILITÁRIA - Remover campos undefined de um objeto (EXPORTADA)
+export function limparObjetoUndefined(obj: any): any {
+  const objetoLimpo: any = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined && value !== null) {
+      objetoLimpo[key] = value;
+    }
+  }
+
+  return objetoLimpo;
+}
+
+// ✅ FUNÇÃO ULTRA-DEFENSIVA - Adicionar próximo pagamento ao array de um aluno
+export async function adicionarProximoPagamentoArray(
+  alunoId: string
+): Promise<void> {
+  try {
+    const alunoComPagamentos = await buscarAlunoComPagamentos(alunoId);
+
+    if (!alunoComPagamentos) {
+      throw new Error("Aluno não encontrado na nova estrutura");
+    }
+
+    // Verificar se aluno está ativo
+    if (alunoComPagamentos.status !== "ativo") {
+      console.log(`⏸️ Aluno ${alunoComPagamentos.nome} não está ativo`);
       return;
     }
 
-    const alunoDoc = await getDoc(doc(db, "Alunos", pagamentoAtual.alunoId));
-    if (!alunoDoc.exists()) {
-      throw new Error("Aluno não encontrado");
-    }
-
-    const aluno = alunoDoc.data();
-    if (aluno.status !== "ativo") {
-      console.log(`⏸️ Aluno ${aluno.nome} não está mais ativo`);
+    // Verificar se já tem pagamento pendente
+    const temPendente = alunoComPagamentos.pagamentos.some(
+      (p) => p.status === "Pendente"
+    );
+    if (temPendente) {
+      console.log(`⏸️ ${alunoComPagamentos.nome} já possui pagamento pendente`);
       return;
     }
 
-    const proximoVencimento = new Date(pagamentoAtual.dataVencimento);
+    // Calcular próximo vencimento (último vencimento + 1 mês)
+    const ultimoPagamento =
+      alunoComPagamentos.pagamentos[alunoComPagamentos.pagamentos.length - 1];
+    const proximoVencimento = new Date(ultimoPagamento.dataVencimento);
     proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
 
     const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
@@ -137,152 +269,735 @@ export async function gerarProximoPagamento(
       year: "numeric",
     });
 
-    await addDoc(collection(db, "pagamentos"), {
-      alunoId: pagamentoAtual.alunoId,
-      alunoNome: pagamentoAtual.alunoNome,
-      valor: aluno.valorMensalidade || pagamentoAtual.valor,
-      planoTipo: aluno.plano || "Mensal",
+    console.log(`📅 Gerando próximo pagamento:`);
+    console.log(`   • Aluno: ${alunoComPagamentos.nome}`);
+    console.log(
+      `   • Próximo vencimento: ${proximoVencimento.toLocaleDateString(
+        "pt-BR"
+      )}`
+    );
+
+    // ✅ CRIAR ARRAY COMPLETAMENTE LIMPO
+    const novosPagamentos: any[] = [];
+
+    // ✅ PROCESSAR pagamentos existentes
+    for (const pagamento of alunoComPagamentos.pagamentos) {
+      const pagamentoBase: any = {
+        mesReferencia: pagamento.mesReferencia || "",
+        dataVencimento: Timestamp.fromDate(
+          pagamento.dataVencimento
+            ? new Date(pagamento.dataVencimento)
+            : new Date()
+        ),
+        valor: typeof pagamento.valor === "number" ? pagamento.valor : 0,
+        status: pagamento.status || "Pendente",
+      };
+
+      // Adicionar campos opcionais apenas se válidos
+      if (pagamento.dataPagamento && pagamento.dataPagamento instanceof Date) {
+        pagamentoBase.dataPagamento = Timestamp.fromDate(
+          pagamento.dataPagamento
+        );
+      }
+
+      if (pagamento.arquivadoEm && pagamento.arquivadoEm instanceof Date) {
+        pagamentoBase.arquivadoEm = Timestamp.fromDate(pagamento.arquivadoEm);
+      }
+
+      if (
+        pagamento.statusAnterior &&
+        typeof pagamento.statusAnterior === "string" &&
+        pagamento.statusAnterior.trim()
+      ) {
+        pagamentoBase.statusAnterior = pagamento.statusAnterior.trim();
+      }
+
+      if (
+        pagamento.observacoes &&
+        typeof pagamento.observacoes === "string" &&
+        pagamento.observacoes.trim()
+      ) {
+        pagamentoBase.observacoes = pagamento.observacoes.trim();
+      }
+
+      // ✅ LIMPAR undefined antes de adicionar
+      novosPagamentos.push(limparObjetoUndefined(pagamentoBase));
+    }
+
+    // ✅ ADICIONAR novo pagamento (sem campos undefined)
+    const novoPagamento = {
       mesReferencia,
       dataVencimento: Timestamp.fromDate(proximoVencimento),
+      valor:
+        typeof alunoComPagamentos.valorMensalidade === "number"
+          ? alunoComPagamentos.valorMensalidade
+          : 0,
       status: "Pendente",
-      createdAt: Timestamp.now(),
+    };
+
+    novosPagamentos.push(novoPagamento);
+
+    const novoTotalPendente =
+      (alunoComPagamentos.totais?.pendente || 0) +
+      (alunoComPagamentos.valorMensalidade || 0);
+
+    // ✅ DADOS LIMPOS para atualização (sem undefined)
+    const dadosLimpos = {
+      pagamentos: novosPagamentos,
+      proximoVencimento: Timestamp.fromDate(proximoVencimento),
+      totais: {
+        pago: alunoComPagamentos.totais?.pago || 0,
+        pendente: novoTotalPendente,
+        arquivado: alunoComPagamentos.totais?.arquivado || 0,
+      },
       updatedAt: Timestamp.now(),
-    });
+    };
+
+    await updateDoc(
+      doc(db, "alunosPagamentos", alunoComPagamentos.id!),
+      dadosLimpos
+    );
 
     console.log(
-      `✅ Próximo pagamento gerado para ${
-        aluno.nome
-      } - Vencimento: ${proximoVencimento.toLocaleDateString("pt-BR")}`
+      `✅ Próximo pagamento adicionado para ${alunoComPagamentos.nome}`
     );
   } catch (error) {
-    console.error("❌ Erro ao gerar próximo pagamento:", error);
+    console.error("❌ Erro ao adicionar próximo pagamento:", error);
     throw error;
   }
 }
 
-// ✅ FUNÇÃO 3 - CORRIGIDA com tipagem adequada
-export async function arquivarPagamentosMesAtual(): Promise<{
-  arquivados: number;
-  gerados: number;
-  erro?: string;
-}> {
+// ✅ FUNÇÃO 8 - Marcar pagamento como pago na nova estrutura
+// ...existing code...
+
+// ✅ FUNÇÃO ULTRA-DEFENSIVA - Marcar pagamento como pago na nova estrutura
+export async function marcarPagamentoPagoArray(
+  alunoId: string,
+  mesReferencia: string,
+  dataPagamento: Date = new Date()
+): Promise<void> {
   try {
-    console.log("🔍 Iniciando fechamento do mês atual...");
+    const alunoComPagamentos = await buscarAlunoComPagamentos(alunoId);
 
-    const hoje = new Date();
-    const mesReferenciaAtual = hoje.toLocaleDateString("pt-BR", {
-      month: "2-digit",
-      year: "numeric",
-    });
+    if (!alunoComPagamentos) {
+      throw new Error("Aluno não encontrado");
+    }
 
-    console.log(`📅 Fechando mês: ${mesReferenciaAtual}`);
+    console.log(`💰 Marcando pagamento como pago:`);
+    console.log(`   • Aluno: ${alunoComPagamentos.nome}`);
+    console.log(`   • Mês: ${mesReferencia}`);
 
-    const pagamentosQuery = query(
-      collection(db, "pagamentos"),
-      where("mesReferencia", "==", mesReferenciaAtual)
+    // ✅ Verificar se o pagamento existe e está pendente
+    const pagamentoEncontrado = alunoComPagamentos.pagamentos.find(
+      (p) => p.mesReferencia === mesReferencia && p.status === "Pendente"
     );
 
-    const pagamentosSnapshot = await getDocs(pagamentosQuery);
-
-    if (pagamentosSnapshot.empty) {
-      console.log(
-        `⚠️ Nenhum pagamento encontrado para o mês ${mesReferenciaAtual}`
+    if (!pagamentoEncontrado) {
+      throw new Error(
+        `Pagamento não encontrado ou não está pendente para o mês ${mesReferencia}`
       );
+    }
+
+    // ✅ CRIAR PAGAMENTOS COMPLETAMENTE NOVOS (sem undefined)
+    const novosPagamentos: any[] = [];
+
+    for (const pagamento of alunoComPagamentos.pagamentos) {
+      // ✅ OBJETO BASE sempre limpo
+      const pagamentoBase: any = {
+        mesReferencia: pagamento.mesReferencia || "",
+        dataVencimento: Timestamp.fromDate(
+          pagamento.dataVencimento instanceof Date
+            ? pagamento.dataVencimento
+            : new Date(pagamento.dataVencimento)
+        ),
+        valor: typeof pagamento.valor === "number" ? pagamento.valor : 0,
+        status: pagamento.status || "Pendente",
+      };
+
+      // ✅ Se é o pagamento que estamos marcando como pago
+      if (
+        pagamento.mesReferencia === mesReferencia &&
+        pagamento.status === "Pendente"
+      ) {
+        pagamentoBase.status = "Pago";
+        pagamentoBase.dataPagamento = Timestamp.fromDate(dataPagamento);
+
+        console.log(`   ✅ Pagamento ${mesReferencia} marcado como pago`);
+      } else {
+        // ✅ Para outros pagamentos, adicionar campos opcionais apenas se válidos
+
+        // Adicionar dataPagamento apenas se existir e for válida
+        if (pagamento.dataPagamento) {
+          const dataParaConverter =
+            pagamento.dataPagamento instanceof Date
+              ? pagamento.dataPagamento
+              : new Date(pagamento.dataPagamento);
+          if (!isNaN(dataParaConverter.getTime())) {
+            pagamentoBase.dataPagamento = Timestamp.fromDate(dataParaConverter);
+          }
+        }
+
+        // Adicionar arquivadoEm apenas se existir e for válida
+        if (pagamento.arquivadoEm) {
+          const dataParaConverter =
+            pagamento.arquivadoEm instanceof Date
+              ? pagamento.arquivadoEm
+              : new Date(pagamento.arquivadoEm);
+          if (!isNaN(dataParaConverter.getTime())) {
+            pagamentoBase.arquivadoEm = Timestamp.fromDate(dataParaConverter);
+          }
+        }
+
+        // Adicionar statusAnterior apenas se existir e não for vazio
+        if (
+          pagamento.statusAnterior &&
+          typeof pagamento.statusAnterior === "string" &&
+          pagamento.statusAnterior.trim()
+        ) {
+          pagamentoBase.statusAnterior = pagamento.statusAnterior.trim();
+        }
+
+        // Adicionar observacoes apenas se existir e não for vazio
+        if (
+          pagamento.observacoes &&
+          typeof pagamento.observacoes === "string" &&
+          pagamento.observacoes.trim()
+        ) {
+          pagamentoBase.observacoes = pagamento.observacoes.trim();
+        }
+      }
+
+      // ✅ LIMPAR undefined antes de adicionar
+      novosPagamentos.push(limparObjetoUndefined(pagamentoBase));
+    }
+
+    // ✅ RECALCULAR totais com segurança
+    const totalPago = novosPagamentos
+      .filter((p) => p.status === "Pago")
+      .reduce((sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0), 0);
+
+    const totalPendente = novosPagamentos
+      .filter((p) => p.status === "Pendente")
+      .reduce((sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0), 0);
+
+    const totalArquivado = novosPagamentos
+      .filter((p) => p.status === "Arquivado")
+      .reduce((sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0), 0);
+
+    console.log(`📊 Totais atualizados:`);
+    console.log(`   • Pago: R$ ${totalPago.toFixed(2)}`);
+    console.log(`   • Pendente: R$ ${totalPendente.toFixed(2)}`);
+    console.log(`   • Arquivado: R$ ${totalArquivado.toFixed(2)}`);
+
+    // ✅ DADOS PARA ATUALIZAR completamente limpos (sem undefined)
+    const dadosLimpos = {
+      pagamentos: novosPagamentos,
+      totais: {
+        pago: totalPago,
+        pendente: totalPendente,
+        arquivado: totalArquivado,
+      },
+      updatedAt: Timestamp.now(),
+    };
+
+    await updateDoc(
+      doc(db, "alunosPagamentos", alunoComPagamentos.id!),
+      dadosLimpos
+    );
+
+    console.log(
+      `✅ Pagamento marcado como pago para ${alunoComPagamentos.nome}`
+    );
+  } catch (error) {
+    console.error("❌ Erro ao marcar pagamento como pago:", error);
+    throw error;
+  }
+}
+
+// ✅ FUNÇÃO 9 - Fechar próximo mês disponível (PARA TESTES - SEM LÓGICA DE MÊS ATUAL)
+export async function fecharMesComArray(): Promise<{
+  alunosProcessados: number;
+  pagamentosArquivados: number;
+  novosPagamentosGerados: number;
+  erro?: string;
+  mensagem?: string;
+}> {
+  try {
+    console.log("🔍 Iniciando fechamento do próximo mês disponível...");
+
+    // Buscar todos os alunos ativos
+    const alunosSnapshot = await getDocs(
+      query(collection(db, "alunosPagamentos"), where("status", "==", "ativo"))
+    );
+
+    if (alunosSnapshot.empty) {
       return {
-        arquivados: 0,
-        gerados: 0,
-        erro: `Nenhum pagamento do mês ${mesReferenciaAtual} encontrado`,
+        alunosProcessados: 0,
+        pagamentosArquivados: 0,
+        novosPagamentosGerados: 0,
+        erro: "Nenhum aluno ativo encontrado",
       };
     }
 
-    console.log(
-      `📊 Encontrados ${pagamentosSnapshot.size} pagamento(s) do mês atual`
-    );
+    // ✅ ENCONTRAR O PRÓXIMO MÊS DISPONÍVEL PARA FECHAR
+    let mesParaFechar = "";
+    const mesesDisponiveis = new Set<string>();
 
-    // ✅ CORREÇÃO: Tipagem explícita dos arrays
-    const pagamentosParaArquivar: any[] = [];
-    const pagamentosPendentesParaProximo: PagamentoExistente[] = [];
-
-    pagamentosSnapshot.forEach((docSnapshot) => {
-      const data = docSnapshot.data();
-
-      if (data.status !== "Arquivado") {
-        const pagamento = {
-          id: docSnapshot.id,
-          ref: docSnapshot.ref,
-          ...data,
-        };
-
-        pagamentosParaArquivar.push(pagamento);
-
-        if (data.status === "Pendente") {
-          pagamentosPendentesParaProximo.push({
-            id: docSnapshot.id,
-            alunoId: data.alunoId,
-            alunoNome: data.alunoNome,
-            dataVencimento: data.dataVencimento?.toDate() || new Date(),
-            valor: data.valor,
-          });
+    // Coletar todos os meses que têm pagamentos não arquivados
+    alunosSnapshot.docs.forEach((alunoDoc) => {
+      const alunoData = alunoDoc.data() as any;
+      alunoData.pagamentos?.forEach((p: any) => {
+        if (p.status !== "Arquivado") {
+          mesesDisponiveis.add(p.mesReferencia);
         }
-      }
+      });
     });
 
-    console.log(
-      `📊 ${pagamentosParaArquivar.length} pagamento(s) para arquivar`
-    );
-    console.log(
-      `📊 ${pagamentosPendentesParaProximo.length} pagamento(s) pendente(s) precisam de próximo`
-    );
+    // Ordenar meses e pegar o primeiro (mais antigo)
+    const mesesOrdenados = Array.from(mesesDisponiveis).sort();
 
-    if (pagamentosParaArquivar.length > 0) {
-      const batch = writeBatch(db);
-
-      pagamentosParaArquivar.forEach((pagamento) => {
-        batch.update(pagamento.ref, {
-          status: "Arquivado",
-          arquivadoEm: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-          statusAnterior: pagamento.status,
-        });
-      });
-
-      await batch.commit();
-      console.log(
-        `✅ ${pagamentosParaArquivar.length} pagamento(s) arquivados com sucesso`
-      );
+    if (mesesOrdenados.length === 0) {
+      return {
+        alunosProcessados: 0,
+        pagamentosArquivados: 0,
+        novosPagamentosGerados: 0,
+        mensagem: "Não há pagamentos disponíveis para fechar",
+      };
     }
 
-    let novosGerados = 0;
+    mesParaFechar = mesesOrdenados[0];
+    console.log(`📅 Fechando próximo mês disponível: ${mesParaFechar}`);
+    console.log(`📋 Meses disponíveis: ${mesesOrdenados.join(", ")}`);
 
-    for (const pagamentoPendente of pagamentosPendentesParaProximo) {
+    let alunosProcessados = 0;
+    let pagamentosArquivados = 0;
+    let novosPagamentosGerados = 0;
+    let alunosComPagamentosJaArquivados = 0;
+    let alunosSemPagamentosDoMes = 0;
+
+    // Processar cada aluno
+    for (const alunoDoc of alunosSnapshot.docs) {
       try {
-        await gerarProximoPagamento(pagamentoPendente);
-        novosGerados++;
+        const alunoData = alunoDoc.data() as any;
+
+        console.log(`🔍 Processando aluno: ${alunoData.nome}`);
+
+        // ✅ VERIFICAR se tem pagamentos do mês escolhido
+        const todosPagamentosDoMes =
+          alunoData.pagamentos?.filter(
+            (p: any) => p.mesReferencia === mesParaFechar
+          ) || [];
+
+        // ✅ VERIFICAR se tem pagamentos do mês que NÃO estão arquivados
+        const pagamentosDoMesParaProcessar = todosPagamentosDoMes.filter(
+          (p: any) => p.status !== "Arquivado"
+        );
+
         console.log(
-          `✅ Próximo pagamento gerado para: ${pagamentoPendente.alunoNome}`
+          `   📊 Pagamentos do mês ${mesParaFechar} - Total: ${todosPagamentosDoMes.length}, Para processar: ${pagamentosDoMesParaProcessar.length}`
         );
+
+        // ✅ CASOS DIFERENTES
+        if (todosPagamentosDoMes.length === 0) {
+          // Não tem nenhum pagamento do mês
+          alunosSemPagamentosDoMes++;
+          console.log(
+            `   ⏸️ ${alunoData.nome} - Sem pagamentos para o mês ${mesParaFechar}`
+          );
+          continue;
+        }
+
+        if (pagamentosDoMesParaProcessar.length === 0) {
+          // Tem pagamentos do mês, mas todos já estão arquivados
+          alunosComPagamentosJaArquivados++;
+          console.log(
+            `   ✅ ${alunoData.nome} - Pagamentos do mês ${mesParaFechar} já foram arquivados`
+          );
+          continue;
+        }
+
+        // ✅ VERIFICAR se tinha pendente antes de arquivar
+        const tinhaPendente = pagamentosDoMesParaProcessar.some(
+          (p: any) => p.status === "Pendente"
+        );
+
+        console.log(
+          `   🔄 ${alunoData.nome} - Tinha pendente: ${tinhaPendente}`
+        );
+
+        // ✅ CRIAR ARRAY DE PAGAMENTOS ATUALIZADO
+        const pagamentosAtualizados =
+          alunoData.pagamentos?.map((pagamento: any) => {
+            // Se é pagamento do mês escolhido e não está arquivado
+            if (
+              pagamento.mesReferencia === mesParaFechar &&
+              pagamento.status !== "Arquivado"
+            ) {
+              pagamentosArquivados++;
+              console.log(
+                `   📦 Arquivando pagamento: ${pagamento.mesReferencia} - Status: ${pagamento.status}`
+              );
+
+              return limparObjetoUndefined({
+                mesReferencia: pagamento.mesReferencia,
+                dataVencimento: pagamento.dataVencimento,
+                valor: pagamento.valor,
+                status: "Arquivado",
+                statusAnterior: pagamento.status,
+                arquivadoEm: Timestamp.now(),
+                // Manter campos existentes se válidos
+                ...(pagamento.dataPagamento && {
+                  dataPagamento: pagamento.dataPagamento,
+                }),
+                ...(pagamento.observacoes && {
+                  observacoes: pagamento.observacoes,
+                }),
+              });
+            }
+
+            // Para outros pagamentos, manter como está (mas limpo)
+            return limparObjetoUndefined(pagamento);
+          }) || [];
+
+        // ✅ GERAR PRÓXIMO PAGAMENTO APENAS SE TINHA PENDENTE
+        if (tinhaPendente) {
+          // Encontrar último pagamento (pode ser o recém-arquivado)
+          const ultimoPagamento =
+            pagamentosAtualizados[pagamentosAtualizados.length - 1];
+
+          const ultimaDataVencimento = ultimoPagamento.dataVencimento?.toDate
+            ? ultimoPagamento.dataVencimento.toDate()
+            : new Date(ultimoPagamento.dataVencimento);
+
+          const proximoVencimento = new Date(ultimaDataVencimento);
+          proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
+
+          const proximoMes = proximoVencimento.toLocaleDateString("pt-BR", {
+            month: "2-digit",
+            year: "numeric",
+          });
+
+          console.log(`   📅 Gerando próximo pagamento para: ${proximoMes}`);
+
+          // ✅ VERIFICAR se já existe pagamento para o próximo mês
+          const jaExisteProximo = pagamentosAtualizados.some(
+            (p: any) => p.mesReferencia === proximoMes
+          );
+
+          if (!jaExisteProximo) {
+            const novoPagamento = limparObjetoUndefined({
+              mesReferencia: proximoMes,
+              dataVencimento: Timestamp.fromDate(proximoVencimento),
+              valor: alunoData.valorMensalidade,
+              status: "Pendente",
+            });
+
+            pagamentosAtualizados.push(novoPagamento);
+            novosPagamentosGerados++;
+            console.log(`   ✅ Próximo pagamento gerado: ${proximoMes}`);
+          } else {
+            console.log(`   ⏸️ Pagamento para ${proximoMes} já existe`);
+          }
+        }
+
+        // ✅ RECALCULAR totais
+        const totalPago = pagamentosAtualizados
+          .filter((p: any) => p.status === "Pago")
+          .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+
+        const totalPendente = pagamentosAtualizados
+          .filter((p: any) => p.status === "Pendente")
+          .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+
+        const totalArquivado = pagamentosAtualizados
+          .filter((p: any) => p.status === "Arquivado")
+          .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+
+        console.log(
+          `   📊 Totais recalculados - Pago: ${totalPago}, Pendente: ${totalPendente}, Arquivado: ${totalArquivado}`
+        );
+
+        // ✅ ATUALIZAR próximo vencimento
+        const pagamentosPendentes = pagamentosAtualizados.filter(
+          (p: any) => p.status === "Pendente"
+        );
+
+        const proximoVencimento =
+          pagamentosPendentes.length > 0
+            ? pagamentosPendentes.sort((a: any, b: any) => {
+                const dateA = a.dataVencimento?.toDate
+                  ? a.dataVencimento.toDate()
+                  : new Date(a.dataVencimento);
+                const dateB = b.dataVencimento?.toDate
+                  ? b.dataVencimento.toDate()
+                  : new Date(b.dataVencimento);
+                return dateA.getTime() - dateB.getTime();
+              })[0].dataVencimento
+            : null;
+
+        // ✅ SALVAR alterações com dados limpos
+        const dadosParaAtualizar = limparObjetoUndefined({
+          pagamentos: pagamentosAtualizados,
+          totais: {
+            pago: totalPago,
+            pendente: totalPendente,
+            arquivado: totalArquivado,
+          },
+          proximoVencimento: proximoVencimento,
+          updatedAt: Timestamp.now(),
+        });
+
+        await updateDoc(alunoDoc.ref, dadosParaAtualizar);
+
+        alunosProcessados++;
+        console.log(`   ✅ ${alunoData.nome} processado com sucesso`);
       } catch (error) {
-        console.error(
-          `❌ Erro ao gerar próximo para ${pagamentoPendente.alunoNome}:`,
-          error
-        );
+        console.error(`❌ Erro ao processar aluno ${alunoDoc.id}:`, error);
+        // Continua processando outros alunos mesmo se um der erro
       }
     }
 
-    console.log(`🎉 Fechamento concluído:`);
-    console.log(`   • ${pagamentosParaArquivar.length} pagamentos arquivados`);
-    console.log(`   • ${novosGerados} novos pagamentos gerados`);
+    console.log(`🎉 Fechamento do mês ${mesParaFechar} concluído:`);
+    console.log(`   • ${alunosProcessados} alunos processados`);
+    console.log(`   • ${pagamentosArquivados} pagamentos arquivados`);
+    console.log(`   • ${novosPagamentosGerados} novos pagamentos gerados`);
+    console.log(
+      `   • ${alunosComPagamentosJaArquivados} alunos já tinham pagamentos arquivados`
+    );
+    console.log(
+      `   • ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês`
+    );
+
+    // ✅ MENSAGEM MAIS CLARA
+    let mensagem = "";
+    if (pagamentosArquivados === 0 && alunosComPagamentosJaArquivados > 0) {
+      mensagem = `Mês ${mesParaFechar} já foi fechado anteriormente. ${alunosComPagamentosJaArquivados} alunos já tinham pagamentos arquivados.`;
+    } else if (pagamentosArquivados === 0 && alunosSemPagamentosDoMes > 0) {
+      mensagem = `Nenhum pagamento encontrado para o mês ${mesParaFechar}. ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês.`;
+    }
 
     return {
-      arquivados: pagamentosParaArquivar.length,
-      gerados: novosGerados,
+      alunosProcessados,
+      pagamentosArquivados,
+      novosPagamentosGerados,
+      mensagem,
     };
   } catch (error: any) {
-    console.error("❌ Erro crítico ao fechar mês:", error);
+    console.error("❌ Erro ao fechar mês:", error);
     return {
-      arquivados: 0,
-      gerados: 0,
-      erro: `Erro crítico: ${error?.message || "Erro desconhecido"}`,
+      alunosProcessados: 0,
+      pagamentosArquivados: 0,
+      novosPagamentosGerados: 0,
+      erro: `Erro: ${error?.message}`,
     };
   }
 }
+
+// ✅ FUNÇÃO 10 - Migração da estrutura antiga para nova (corrigida)
+export async function migrarPagamentosParaNovaEstrutura(): Promise<{
+  alunosMigrados: number;
+  pagamentosMigrados: number;
+  erro?: string;
+}> {
+  try {
+    console.log("🔄 Iniciando migração para nova estrutura...");
+
+    // 1. Buscar todos os pagamentos da estrutura ANTIGA
+    const pagamentosSnapshot = await getDocs(collection(db, "pagamentos"));
+    const pagamentosPorAluno: { [alunoId: string]: any[] } = {};
+
+    // 2. Agrupar pagamentos por aluno
+    pagamentosSnapshot.forEach((doc) => {
+      const data = doc.data();
+      const alunoId = data.alunoId;
+
+      if (!pagamentosPorAluno[alunoId]) {
+        pagamentosPorAluno[alunoId] = [];
+      }
+
+      // ✅ Tratamento seguro das datas
+      const dataVencimento = data.dataVencimento?.toDate
+        ? data.dataVencimento.toDate()
+        : new Date(data.dataVencimento || Date.now());
+
+      const dataPagamento = data.dataPagamento?.toDate
+        ? data.dataPagamento.toDate()
+        : data.dataPagamento
+        ? new Date(data.dataPagamento)
+        : undefined;
+
+      const arquivadoEm = data.arquivadoEm?.toDate
+        ? data.arquivadoEm.toDate()
+        : data.arquivadoEm
+        ? new Date(data.arquivadoEm)
+        : undefined;
+
+      pagamentosPorAluno[alunoId].push({
+        mesReferencia: data.mesReferencia || "",
+        dataVencimento,
+        valor: typeof data.valor === "number" ? data.valor : 0,
+        status: data.status || "Pendente",
+        dataPagamento,
+        arquivadoEm,
+        statusAnterior: data.statusAnterior || undefined,
+        observacoes: data.observacoes || undefined,
+      });
+    });
+
+    let alunosMigrados = 0;
+    let pagamentosMigrados = 0;
+
+    // 3. Para cada aluno, criar documento na nova estrutura
+    for (const [alunoId, pagamentos] of Object.entries(pagamentosPorAluno)) {
+      try {
+        // Verificar se já existe na nova estrutura
+        const existeQuery = query(
+          collection(db, "alunosPagamentos"),
+          where("alunoId", "==", alunoId)
+        );
+        const existeSnapshot = await getDocs(existeQuery);
+
+        if (!existeSnapshot.empty) {
+          console.log(`⏸️ Aluno ${alunoId} já migrado`);
+          continue;
+        }
+
+        // Buscar dados do aluno
+        const alunoDoc = await getDoc(doc(db, "Alunos", alunoId));
+        if (!alunoDoc.exists()) {
+          console.log(`⚠️ Aluno ${alunoId} não encontrado`);
+          continue;
+        }
+
+        const alunoData = alunoDoc.data();
+
+        // Calcular totais
+        const totalPago = pagamentos
+          .filter((p) => p.status === "Pago")
+          .reduce(
+            (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
+            0
+          );
+        const totalPendente = pagamentos
+          .filter((p) => p.status === "Pendente")
+          .reduce(
+            (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
+            0
+          );
+        const totalArquivado = pagamentos
+          .filter((p) => p.status === "Arquivado")
+          .reduce(
+            (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
+            0
+          );
+
+        // Próximo vencimento
+        const pagamentosPendentes = pagamentos.filter(
+          (p) => p.status === "Pendente"
+        );
+        const proximoVencimento =
+          pagamentosPendentes.length > 0
+            ? pagamentosPendentes.sort(
+                (a, b) =>
+                  a.dataVencimento.getTime() - b.dataVencimento.getTime()
+              )[0].dataVencimento
+            : null;
+
+        // ✅ Preparar pagamentos para salvar (SEM UNDEFINED)
+        const pagamentosParaSalvar = pagamentos.map((p) => {
+          const pagamentoBase: any = {
+            mesReferencia: p.mesReferencia,
+            dataVencimento: Timestamp.fromDate(p.dataVencimento),
+            valor: p.valor,
+            status: p.status,
+          };
+
+          // Adicionar campos opcionais apenas se válidos
+          if (p.dataPagamento && !isNaN(p.dataPagamento.getTime())) {
+            pagamentoBase.dataPagamento = Timestamp.fromDate(p.dataPagamento);
+          }
+
+          if (p.arquivadoEm && !isNaN(p.arquivadoEm.getTime())) {
+            pagamentoBase.arquivadoEm = Timestamp.fromDate(p.arquivadoEm);
+          }
+
+          if (
+            p.statusAnterior &&
+            typeof p.statusAnterior === "string" &&
+            p.statusAnterior.trim()
+          ) {
+            pagamentoBase.statusAnterior = p.statusAnterior.trim();
+          }
+
+          if (
+            p.observacoes &&
+            typeof p.observacoes === "string" &&
+            p.observacoes.trim()
+          ) {
+            pagamentoBase.observacoes = p.observacoes.trim();
+          }
+
+          // ✅ RETORNAR SEM UNDEFINED
+          return limparObjetoUndefined(pagamentoBase);
+        });
+
+        // ✅ Criar na nova estrutura (SEM UNDEFINED)
+        const dadosAluno: any = {
+          alunoId,
+          nome: alunoData.nome || "Nome não informado",
+          plano: alunoData.plano || "Mensal",
+          valorMensalidade:
+            typeof alunoData.valorMensalidade === "number"
+              ? alunoData.valorMensalidade
+              : 150,
+          status: alunoData.status || "ativo",
+          dataMatricula: alunoData.dataMatricula || Timestamp.now(),
+          pagamentos: pagamentosParaSalvar,
+          totais: {
+            pago: totalPago,
+            pendente: totalPendente,
+            arquivado: totalArquivado,
+          },
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        };
+
+        // Adicionar proximoVencimento apenas se válido
+        if (proximoVencimento) {
+          dadosAluno.proximoVencimento = Timestamp.fromDate(proximoVencimento);
+        }
+
+        await addDoc(collection(db, "alunosPagamentos"), dadosAluno);
+
+        alunosMigrados++;
+        pagamentosMigrados += pagamentos.length;
+        console.log(
+          `✅ ${alunoData.nome} migrado com ${pagamentos.length} pagamentos`
+        );
+      } catch (error) {
+        console.error(`❌ Erro ao migrar aluno ${alunoId}:`, error);
+      }
+    }
+
+    console.log(`🎉 Migração concluída:`);
+    console.log(`   • ${alunosMigrados} alunos migrados`);
+    console.log(`   • ${pagamentosMigrados} pagamentos migrados`);
+
+    return { alunosMigrados, pagamentosMigrados };
+  } catch (error: any) {
+    console.error("❌ Erro na migração:", error);
+    return {
+      alunosMigrados: 0,
+      pagamentosMigrados: 0,
+      erro: `Erro: ${error?.message || "Erro desconhecido"}`,
+    };
+  }
+}
+
+// ✅ EXPORTAR TIPOS
+export type {
+  AlunoData,
+  PagamentoExistente,
+  PagamentoItem,
+  AlunoComPagamentos,
+};
