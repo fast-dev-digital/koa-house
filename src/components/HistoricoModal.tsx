@@ -13,6 +13,7 @@ import {
 import {
   buscarHistoricoParaAdmin,
   buscarHistoricoParaAluno,
+  buscarHistoricoAlunoNovo, // ✅ IMPORTAR nova função
   type HistoricoResponse,
 } from "../services/historicoService";
 
@@ -34,10 +35,6 @@ export default function HistoricoModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados de filtros internos
-  const [filtroStatus, setFiltroStatus] = useState<string>("");
-  const [filtroMes, setFiltroMes] = useState<string>("");
-
   // Buscar histórico quando modal abrir
   useEffect(() => {
     if (isOpen && alunoId) {
@@ -50,12 +47,23 @@ export default function HistoricoModal({
       setLoading(true);
       setError(null);
 
-      let response: HistoricoResponse;
+      let response: HistoricoResponse | null;
 
-      if (userType === "admin") {
-        response = await buscarHistoricoParaAdmin(alunoId);
-      } else {
-        response = await buscarHistoricoParaAluno(alunoId);
+      // ✅ SEMPRE TENTAR A NOVA ESTRUTURA PRIMEIRO
+      response = await buscarHistoricoAlunoNovo(alunoId);
+
+      // ✅ SE NÃO ENCONTRAR NA NOVA ESTRUTURA, TENTAR A ANTIGA
+      if (!response) {
+        console.log("🔄 Tentando estrutura antiga...");
+        if (userType === "admin") {
+          response = await buscarHistoricoParaAdmin(alunoId);
+        } else {
+          response = await buscarHistoricoParaAluno(alunoId);
+        }
+      }
+
+      if (!response) {
+        throw new Error("Histórico não encontrado em nenhuma estrutura");
       }
 
       setHistorico(response);
@@ -67,13 +75,8 @@ export default function HistoricoModal({
     }
   };
 
-  // Filtrar pagamentos baseado nos filtros internos
-  const pagamentosFiltrados =
-    historico?.pagamentos.filter((pagamento: any) => {
-      const matchStatus = !filtroStatus || pagamento.status === filtroStatus;
-      const matchMes = !filtroMes || pagamento.mesReferencia === filtroMes;
-      return matchStatus && matchMes;
-    }) || [];
+  // ✅ REMOVER FILTROS - Mostrar todos os pagamentos
+  const pagamentosFiltrados = historico?.pagamentos || [];
 
   // Função para obter cor do status
   const getStatusColor = (status: string) => {
@@ -113,20 +116,13 @@ export default function HistoricoModal({
     return pagamento.status === "Pendente" && vencimento < hoje;
   };
 
-  // Obter meses únicos para filtro
-  const mesesDisponiveis = Array.from(
-    new Set(historico?.pagamentos.map((p: any) => p.mesReferencia) || [])
-  )
-    .sort()
-    .reverse();
-
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* 1. HEADER */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-orange-600 to-orange-600 text-white">
           <div className="flex items-center gap-3">
             <FaUser className="text-xl" />
             <div>
@@ -225,125 +221,13 @@ export default function HistoricoModal({
               </div>
             </div>
 
-            {/* 4.2 ESTATÍSTICAS */}
-            <div className="p-6 border-b border-gray-200">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h4 className="text-sm font-medium text-green-700">
-                    Total Pago
-                  </h4>
-                  <p className="text-2xl font-bold text-green-600">
-                    R${" "}
-                    {historico.estatisticas.totalPago.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </p>
-                </div>
-
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <h4 className="text-sm font-medium text-yellow-700">
-                    Pendente
-                  </h4>
-                  <p className="text-2xl font-bold text-yellow-600">
-                    R${" "}
-                    {historico.estatisticas.totalPendente.toLocaleString(
-                      "pt-BR",
-                      {
-                        minimumFractionDigits: 2,
-                      }
-                    )}
-                  </p>
-                </div>
-
-                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                  <h4 className="text-sm font-medium text-red-700">
-                    Em Atraso
-                  </h4>
-                  <p className="text-2xl font-bold text-red-600">
-                    R${" "}
-                    {historico.estatisticas.totalAtrasado.toLocaleString(
-                      "pt-BR",
-                      {
-                        minimumFractionDigits: 2,
-                      }
-                    )}
-                  </p>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h4 className="text-sm font-medium text-blue-700">
-                    Total Pagamentos
-                  </h4>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {historico.estatisticas.quantidadePagamentos}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 4.3 FILTROS */}
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <div className="flex flex-wrap gap-4">
-                {/* Filtro por Status */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={filtroStatus}
-                    onChange={(e) => setFiltroStatus(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 bg-white"
-                  >
-                    <option value="">Todos</option>
-                    <option value="Pago">Pago</option>
-                    <option value="Pendente">Pendente</option>
-                    {userType === "admin" && (
-                      <option value="Arquivado">Arquivado</option>
-                    )}
-                  </select>
-                </div>
-
-                {/* Filtro por Mês */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mês
-                  </label>
-                  <select
-                    value={filtroMes}
-                    onChange={(e) => setFiltroMes(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-2 bg-white"
-                  >
-                    <option value="">Todos</option>
-                    {mesesDisponiveis.map((mes: any) => (
-                      <option key={mes} value={mes}>
-                        {mes}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Botão Limpar Filtros */}
-                <div className="flex items-end">
-                  <button
-                    onClick={() => {
-                      setFiltroStatus("");
-                      setFiltroMes("");
-                    }}
-                    className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-                  >
-                    Limpar
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* 4.4 LISTA DE PAGAMENTOS */}
+            {/* 4.2 LISTA DE PAGAMENTOS */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-3">
                 {pagamentosFiltrados.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <FaCalendarAlt className="mx-auto text-4xl mb-4 opacity-50" />
-                    <p>Nenhum pagamento encontrado com os filtros aplicados</p>
+                    <p>Nenhum pagamento encontrado</p>
                   </div>
                 ) : (
                   pagamentosFiltrados.map((pagamento: any) => (
@@ -412,16 +296,6 @@ export default function HistoricoModal({
             </div>
           </div>
         )}
-
-        {/* 5. FOOTER */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
-          <button
-            onClick={onClose}
-            className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Fechar
-          </button>
-        </div>
       </div>
     </div>
   );
