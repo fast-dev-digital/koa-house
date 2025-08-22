@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, doc } from "firebase/firestore";
 import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaChalkboardTeacher } from "react-icons/fa";
 import DataTable from "../../components/componentsAdmin/DataTable";
 import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters";
-import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";
 import Toast from "../../components/componentsAdmin/Toast";
 import ProfessorModal from "../../components/componentsAdmin/ProfessorModal";
 import { exportarProfessoresCSV } from "../../utils/exportarCsv";
@@ -128,74 +127,6 @@ export default function GestaoProfessores() {
     setModalMode("edit");
   };
 
-  const handleDeleteProf = (professor: Professor) => {
-    setProfessorToDelete(professor);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!professorToDelete?.id) return;
-
-    try {
-      setDeleteLoading(true);
-      await deleteDoc(doc(db, "professores", professorToDelete.id));
-
-      setToastMessage("Professor excluído com sucesso!");
-      setToastType("success");
-      setShowToast(true);
-
-      fetchProfessores(); // Recarregar lista
-    } catch (error) {
-      setToastMessage("Erro ao excluir professor");
-      setToastType("error");
-      setShowToast(true);
-    } finally {
-      setDeleteLoading(false);
-      setIsDeleteModalOpen(false);
-      setProfessorToDelete(null);
-    }
-  };
-  // FUNÇÃO DELETE MÚLTIPLO
-  const handleDeleteSelected = async (selectedProfessores: Professor[]) => {
-    if (selectedProfessores.length === 0) return;
-
-    const confirmMessage = `Tem certeza que deseja excluir ${selectedProfessores.length} professor(s) selecionada(s)? Esta ação não pode ser desfeita.`;
-    if (!window.confirm(confirmMessage)) return;
-
-    setLoading(true);
-    try {
-      const professoresComId = selectedProfessores.filter((turma) => turma.id);
-
-      if (professoresComId.length === 0) {
-        setToastMessage("Nenhum professor é válido para exclusão!");
-        setLoading(false);
-        return;
-      }
-
-      const deletePromises = professoresComId.map((professor) =>
-        deleteDoc(doc(db, "professores", professor.id!))
-      );
-
-      await Promise.all(deletePromises);
-
-      // Atualizar lista local
-      const deletedIds = professoresComId.map((professor) => professor.id);
-      setListProf(
-        professoresComId.filter(
-          (professor) => !deletedIds.includes(professor.id)
-        )
-      );
-
-      setToastMessage(
-        `${professoresComId.length} turma(s) excluída(s) com sucesso!`
-      );
-    } catch (error) {
-      console.error("Erro ao excluir turmas:", error);
-      setToastMessage("Erro ao excluir algumas turmas!");
-    } finally {
-      setLoading(false);
-    }
-  };
   const handleExportarCSV = async () => {
     try {
       setCsvLoading(true);
@@ -320,9 +251,6 @@ export default function GestaoProfessores() {
         data={professoresFiltrados} // Use os dados filtrados
         loading={loading}
         onEdit={handleEditProf}
-        onDelete={handleDeleteProf}
-        onDeleteSelected={handleDeleteSelected}
-        selectable={true}
         title="Lista de Professores"
         emptyMessage="Nenhum professor encontrado. Cadastre o primeiro professor!"
         itemsPerPage={10}
@@ -336,20 +264,6 @@ export default function GestaoProfessores() {
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
-
-      {isModalDeleteOpen && (
-        <DeleteConfirmModal
-          isOpen={isModalDeleteOpen}
-          onClose={() => {
-            setIsDeleteModalOpen(false);
-            setProfessorToDelete(null);
-          }}
-          onConfirm={handleConfirmDelete}
-          loading={deleteLoading}
-          title="Excluir Professor"
-          message={`Tem certeza que deseja excluir o professor "${professorToDelete?.nome}"?`}
-        />
-      )}
 
       {/* MODAL DO PROFESSOR */}
       {isModalOpen && (

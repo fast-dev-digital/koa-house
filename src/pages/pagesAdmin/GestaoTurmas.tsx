@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaUsers } from "react-icons/fa";
 import DataTable from "../../components/componentsAdmin/DataTable";
 import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters";
-import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";
+
 import Toast from "../../components/componentsAdmin/Toast";
 import TurmasModal from "../../components/componentsAdmin/TurmasModal";
 import type { Turma } from "../../types/turmas";
@@ -122,14 +122,14 @@ export default function GestaoTurmas() {
   // ESTADOS DOS MODAIS
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedTurma, setSelectedTurma] = useState<Turma | null>(null);
   const [turmaToView, setTurmaToView] = useState<Turma | null>(null);
-  const [turmaToDelete, setTurmaToDelete] = useState<Turma | null>(null);
+  
 
   // ESTADOS DE CONTROLE
-  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [showToast, setShowToast] = useState(false);
@@ -252,19 +252,6 @@ export default function GestaoTurmas() {
     setIsViewModalOpen(true);
   };
 
-  // ✅ FUNÇÃO DELETE CORRIGIDA COM DEBUG
-  const handleDelete = (turma: Turma) => {
-    console.log("🗑️ handleDelete CHAMADO!");
-    console.log("🗑️ Turma recebida:", turma);
-    console.log("🗑️ turma.id:", turma.id);
-    console.log("🗑️ turma.nome:", turma.nome);
-
-    setTurmaToDelete(turma);
-    setIsDeleteModalOpen(true);
-
-    console.log("🗑️ Modal deve abrir agora");
-  };
-
   // ✅ FUNÇÃO FECHAR MODAL
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -279,87 +266,6 @@ export default function GestaoTurmas() {
 
     const action = modalMode === "create" ? "criada" : "atualizada";
     showToastMessage(`Turma ${action} com sucesso!`, "success");
-  };
-
-  // ✅ FUNÇÃO CANCELAR DELETE
-  const handleCancelDelete = () => {
-    console.log("🗑️ Cancelando delete");
-    setIsDeleteModalOpen(false);
-    setTurmaToDelete(null);
-  };
-
-  // ✅ FUNÇÃO CONFIRMAR DELETE CORRIGIDA
-  const handleConfirmDelete = async () => {
-    console.log("🗑️ handleConfirmDelete iniciado");
-    console.log("🗑️ turmaToDelete:", turmaToDelete);
-
-    if (!turmaToDelete?.id) {
-      console.error("❌ Nenhuma turma selecionada para deletar");
-      return;
-    }
-
-    setDeleteLoading(true);
-    try {
-      await deleteDoc(doc(db, "turmas", turmaToDelete.id));
-      console.log("✅ Turma deletada com sucesso");
-
-      // Atualizar lista local
-      setTurmas(turmas.filter((turma) => turma.id !== turmaToDelete.id));
-
-      // Fechar modal
-      setIsDeleteModalOpen(false);
-      setTurmaToDelete(null);
-
-      // Mensagem de sucesso
-      const nomeTurma =
-        turmaToDelete.nome ||
-        `${turmaToDelete.modalidade} - ${turmaToDelete.professorNome}`;
-      showToastMessage(`Turma "${nomeTurma}" excluída com sucesso!`, "success");
-    } catch (error) {
-      console.error("❌ Erro ao excluir turma:", error);
-      showToastMessage("Erro ao excluir turma", "error");
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
-  // FUNÇÃO DELETE MÚLTIPLO
-  const handleDeleteSelected = async (selectedTurmas: Turma[]) => {
-    if (selectedTurmas.length === 0) return;
-
-    const confirmMessage = `Tem certeza que deseja excluir ${selectedTurmas.length} turma(s) selecionada(s)? Esta ação não pode ser desfeita.`;
-    if (!window.confirm(confirmMessage)) return;
-
-    setLoading(true);
-    try {
-      const turmasComId = selectedTurmas.filter((turma) => turma.id);
-
-      if (turmasComId.length === 0) {
-        showToastMessage("Nenhuma turma válida para exclusão!", "error");
-        setLoading(false);
-        return;
-      }
-
-      const deletePromises = turmasComId.map((turma) =>
-        deleteDoc(doc(db, "turmas", turma.id!))
-      );
-
-      await Promise.all(deletePromises);
-
-      // Atualizar lista local
-      const deletedIds = turmasComId.map((turma) => turma.id);
-      setTurmas(turmas.filter((turma) => !deletedIds.includes(turma.id)));
-
-      showToastMessage(
-        `${turmasComId.length} turma(s) excluída(s) com sucesso!`,
-        "success"
-      );
-    } catch (error) {
-      console.error("Erro ao excluir turmas:", error);
-      showToastMessage("Erro ao excluir algumas turmas!", "error");
-    } finally {
-      setLoading(false);
-    }
   };
 
   // ✅ FUNÇÃO EXPORTAR CSV
@@ -383,12 +289,7 @@ export default function GestaoTurmas() {
     }
   };
 
-  // ✅ DEBUG DOS ESTADOS
-  useEffect(() => {
-    console.log("🎯 Estado isDeleteModalOpen:", isDeleteModalOpen);
-    console.log("🎯 Estado turmaToDelete:", turmaToDelete);
-  }, [isDeleteModalOpen, turmaToDelete]);
-
+ 
   return (
     <div className="p-6">
       {/* HEADER */}
@@ -529,14 +430,12 @@ export default function GestaoTurmas() {
         data={turmasFiltradas}
         columns={colunasTurmas}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        
         onView={handleManageAlunos}
-        onDeleteSelected={handleDeleteSelected}
         loading={loading}
         title="Lista de Turmas"
         emptyMessage="Nenhuma turma encontrada. Crie sua primeira turma!"
         itemsPerPage={15}
-        selectable={true}
       />
 
       {/* MODAL DE VISUALIZAÇÃO DE ALUNOS */}
@@ -548,18 +447,6 @@ export default function GestaoTurmas() {
           showToastMessage("Alunos gerenciados com sucesso!", "success");
         }}
         turma={turmaToView}
-      />
-
-      {/* MODAL DE DELETE */}
-      <DeleteConfirmModal
-        isOpen={isDeleteModalOpen}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-        loading={deleteLoading}
-        item={turmaToDelete}
-        itemType="turma"
-        title="Excluir Turma"
-        message="Tem certeza que deseja excluir esta turma? Todos os alunos matriculados serão desvinculados."
       />
 
       {/* TOAST */}
