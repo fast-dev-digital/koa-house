@@ -21,11 +21,11 @@ const eventos = [
   {
     tipo: 'Torneio',
     titulo: 'Torneio Interno de Futevôlei',
-    data: 'Sábado e Domingo, 23 e 24 de Agosto a partir das 9h',
+    data: 'Sábado e Domingo, 27 e 28 de Setembro a partir das 9h',
     imagem: 'interno-img.png',
     link: '/torneios/interno-agosto',
     local: 'R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180',
-    descricao: 'Participe do melhor torneio interno da região, que ocorrerá nos dias 30 e 31 de Agosto, com muita resenha, futevôlei e brindes para os campeões!',
+    descricao: 'Participe do melhor torneio interno da região, que ocorrerá nos dias 27 e 28 de Setembro, com muita resenha, futevôlei e brindes para os campeões!',
     horario: '09:00 às 17:00',
   },
 ];
