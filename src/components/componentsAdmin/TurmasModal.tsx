@@ -45,6 +45,9 @@ export default function TurmaModal({
     professorNome: "",
     capacidade: 0,
     alunosInscritos: 0,
+    status: "Ativa",
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
 
   // ESTADOS DE CONTROLE
@@ -101,6 +104,9 @@ export default function TurmaModal({
         professorNome: "",
         capacidade: 0,
         alunosInscritos: 0,
+        status: "Ativa",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
     }
     setErrors({});
@@ -174,7 +180,9 @@ export default function TurmaModal({
         professorId: formData.professorId || "",
         professorNome: formData.professorNome || "Professor não definido",
         capacidade: formData.capacidade || 10,
-        alunosInscritos: 0,
+        // ✅ CORREÇÃO: Preservar alunosInscritos ao editar, zerar apenas ao criar
+        alunosInscritos: mode === "edit" ? (formData.alunosInscritos || 0) : 0,
+        status: formData.status || "Ativa",
         createdAt: new Date(), // ✅ CORRETO: new Date() com D maiúsculo
         updatedAt: new Date(), // ✅ CORRETO: new Date() com D maiúsculo
       };
