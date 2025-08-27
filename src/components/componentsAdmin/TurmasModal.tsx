@@ -112,15 +112,12 @@ export default function TurmaModal({
     setErrors({});
   }, [mode, turmaData, isOpen]);
 
-  // 🎯 VALIDAÇÕES SIMPLIFICADAS - SÓ NOME OBRIGATÓRIO PARA TESTE
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
     if (!formData.nome?.trim()) {
       newErrors.nome = "Nome da turma é obrigatório";
     }
-
-    // ✅ REMOVIDAS TODAS AS OUTRAS VALIDAÇÕES PARA TESTE
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -181,7 +178,7 @@ export default function TurmaModal({
         professorNome: formData.professorNome || "Professor não definido",
         capacidade: formData.capacidade || 10,
         // ✅ CORREÇÃO: Preservar alunosInscritos ao editar, zerar apenas ao criar
-        alunosInscritos: mode === "edit" ? (formData.alunosInscritos || 0) : 0,
+        alunosInscritos: mode === "edit" ? formData.alunosInscritos || 0 : 0,
         status: formData.status || "Ativa",
         createdAt: new Date(), // ✅ CORRETO: new Date() com D maiúsculo
         updatedAt: new Date(), // ✅ CORRETO: new Date() com D maiúsculo
@@ -274,6 +271,7 @@ export default function TurmaModal({
               >
                 <option value="Futevôlei">Futevôlei</option>
                 <option value="Beach Tennis">Beach Tennis</option>
+                <option value="Vôlei">Vôlei</option>
               </select>
             </div>
 
@@ -361,6 +359,19 @@ export default function TurmaModal({
                 className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 placeholder="Ex: 18:00 - 19:00 (opcional)"
               />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                value={formData.status || "Ativa"}
+                onChange={(e) => handleInputChange("status", e.target.value)}
+                className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="Ativa">Ativa</option>
+                <option value="Inativa">Inativa</option>
+              </select>
             </div>
 
             {/* CAPACIDADE - OPCIONAL PARA TESTE */}

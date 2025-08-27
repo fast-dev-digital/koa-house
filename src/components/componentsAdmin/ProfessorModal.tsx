@@ -183,6 +183,7 @@ export default function ProfessorModal({
             >
               <option value="Futevôlei">Futevôlei</option>
               <option value="Beach Tennis">Beach Tennis</option>
+              <option value="Vôlei">Vôlei</option>
             </select>
           </div>
 
