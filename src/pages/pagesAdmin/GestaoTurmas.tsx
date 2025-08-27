@@ -36,6 +36,8 @@ const colunasTurmas = [
         className={`px-2 py-1 text-xs rounded-full font-medium ${
           value === "Futevôlei"
             ? "bg-blue-100 text-blue-800"
+            : value === "Beach Tennis"
+            ? "bg-pink-100 text-pink-800"
             : "bg-green-100 text-green-800"
         }`}
       >
@@ -122,11 +124,10 @@ export default function GestaoTurmas() {
   // ESTADOS DOS MODAIS
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  
+
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedTurma, setSelectedTurma] = useState<Turma | null>(null);
   const [turmaToView, setTurmaToView] = useState<Turma | null>(null);
-  
 
   // ESTADOS DE CONTROLE
 
@@ -289,7 +290,6 @@ export default function GestaoTurmas() {
     }
   };
 
- 
   return (
     <div className="p-6">
       {/* HEADER */}
@@ -388,6 +388,7 @@ export default function GestaoTurmas() {
             options: [
               { value: "Futevôlei", label: "Futevôlei" },
               { value: "Beach Tennis", label: "Beach Tennis" },
+              { value: "Vôlei", label: "Vôlei" },
             ],
           },
           {
@@ -430,7 +431,6 @@ export default function GestaoTurmas() {
         data={turmasFiltradas}
         columns={colunasTurmas}
         onEdit={handleEdit}
-        
         onView={handleManageAlunos}
         loading={loading}
         title="Lista de Turmas"
