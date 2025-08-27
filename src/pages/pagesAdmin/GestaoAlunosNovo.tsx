@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaUser } from "react-icons/fa";
@@ -9,98 +9,146 @@ import Toast from "../../components/componentsAdmin/Toast";
 import { exportarAlunosCSV } from "../../utils/exportarCsv";
 import type { Aluno } from "../../types/alunos";
 
-// Configuração das colunas da tabela
-const alunosColumns = [
-  {
-    key: "nome",
-    label: "Nome",
-    sortable: true,
-  },
-  {
-    key: "email",
-    label: "Email",
-    sortable: true,
-  },
-  {
-    key: "telefone",
-    label: "Telefone",
-  },
-  {
-    key: "plano",
-    label: "Plano",
-    sortable: true,
-  },
-  {
-    key: "turmas",
-    label: "Turmas",
-    sortable: true,
-  },
-  {
-    key: "horarios",
-    label: "Horários",
-    sortable: true,
-  },
+// 🎯 TIPOS E INTERFACES
+type StatusType = "Ativo" | "Inativo" | "Suspenso";
+type ToastType = "success" | "error";
+type ModalMode = "create" | "edit";
+
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+// ✅ TIPAGEM CORRETA PARA SearchAndFilters
+interface FilterConfig {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  options: FilterOption[];
+}
+
+// 🎨 CONSTANTES
+const STATUS_COLORS: Record<StatusType, string> = {
+  Ativo: "bg-green-100 text-green-700",
+  Inativo: "bg-gray-100 text-gray-700",
+  Suspenso: "bg-red-100 text-red-700",
+};
+
+// ✅ CORRIGIDO - SEM 'as const' PARA EVITAR CONFLITOS
+const DEFAULT_ALUNO_VALUES = {
+  nome: "",
+  email: "",
+  telefone: "",
+  genero: "Masculino",
+  plano: "",
+  valorMensalidade: 150,
+  status: "Inativo",
+  turmas: "",
+  turmasIds: [],
+  horarios: "",
+  dataMatricula: "",
+  createdAt: "",
+  updatedAt: "",
+};
+
+const FILTER_OPTIONS = {
+  STATUS: [
+    { value: "Ativo", label: "Ativo" },
+    { value: "Inativo", label: "Inativo" },
+    { value: "Suspenso", label: "Suspenso" },
+  ],
+  TURMAS: [
+    { value: "Seg-Qua", label: "Segunda e Quarta" },
+    { value: "Ter-Qui", label: "Terça e Quinta" },
+  ],
+  HORARIOS: [
+    { value: "18:00", label: "18:00" },
+    { value: "19:00", label: "19:00" },
+    { value: "20:00", label: "20:00" },
+    { value: "21:00", label: "21:00" },
+  ],
+};
+
+// 📊 CONFIGURAÇÃO DAS COLUNAS
+const createAlunosColumns = () => [
+  { key: "nome", label: "Nome", sortable: true },
+  { key: "email", label: "Email", sortable: true },
+  { key: "telefone", label: "Telefone" },
+  { key: "plano", label: "Plano", sortable: true },
+  { key: "turmas", label: "Turmas", sortable: true },
+  { key: "horarios", label: "Horários", sortable: true },
   {
     key: "status",
     label: "Status",
     sortable: true,
     render: (value: string) => {
-      const colors = {
-        Ativo: "bg-green-100 text-green-700",
-        Inativo: "bg-gray-100 text-gray-700",
-        Suspenso: "bg-red-100 text-red-700",
-      };
+      const status = (value || "Inativo") as StatusType;
+      const colorClass = STATUS_COLORS[status] || STATUS_COLORS.Inativo;
+
       return (
         <span
-          className={`px-2 py-1 text-xs font-semibold rounded-full ${
-            colors[value as keyof typeof colors] || colors.Inativo
-          }`}
+          className={`px-2 py-1 text-xs font-semibold rounded-full ${colorClass}`}
         >
-          {value || "Inativo"}
+          {status}
         </span>
       );
     },
   },
 ];
 
+// 🎨 COMPONENTE DE ESTATÍSTICA
+interface StatCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: number;
+  iconColor: string;
+}
+
+const StatCard = ({ icon, title, value, iconColor }: StatCardProps) => (
+  <div className="bg-white p-4 rounded-lg shadow">
+    <div className="flex items-center">
+      <div className={`text-2xl ${iconColor} mr-3`}>{icon}</div>
+      <div>
+        <p className="text-sm text-gray-600">{title}</p>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+      </div>
+    </div>
+  </div>
+);
+
+// 🎯 COMPONENTE PRINCIPAL
 export default function GestaoAlunos() {
+  // 📊 ESTADOS PRINCIPAIS
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [csvLoading, setCsvLoading] = useState(false);
 
-  // Estados para busca e filtros
+  // 🔍 ESTADOS DE FILTROS
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [turmasFilter, setTurmasFilter] = useState("");
   const [horariosFilter, setHorariosFilter] = useState("");
 
-  // Estados do Modal
+  // 🎭 ESTADOS DO MODAL
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
 
-  // Estados do Toast
+  // 🔔 ESTADOS DO TOAST
   const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [toastType, setToastType] = useState<ToastType>("success");
   const [showToast, setShowToast] = useState(false);
 
-  // ⚡ REATIVO - recalcula automaticamente quando algo muda
-  const alunosFiltrados = useMemo(() => {
-    return alunos.filter((aluno) => {
-      const filtroNome = aluno.nome
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
-      const filtroStatus = !statusFilter || aluno.status === statusFilter;
-      const filtroTurmas = !turmasFilter || aluno.turmas === turmasFilter;
-      const filtroHorarios =
-        !horariosFilter || aluno.horarios === horariosFilter;
+  // 🔔 FUNÇÕES DO TOAST
+  const showToastMessage = useCallback((message: string, type: ToastType) => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+  }, []);
 
-      return filtroNome && filtroStatus && filtroTurmas && filtroHorarios;
-    });
-  }, [alunos, searchText, statusFilter, turmasFilter, horariosFilter]);
-
-  // Buscar alunos do Firestore
-  const fetchAlunos = async () => {
+  // ✅ CORRIGIDO - REMOVIDO showToastMessage DAS DEPENDÊNCIAS
+  const fetchAlunos = useCallback(async () => {
     try {
       setLoading(true);
       const querySnapshot = await getDocs(collection(db, "Alunos"));
@@ -108,22 +156,11 @@ export default function GestaoAlunos() {
 
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-
         if (data && typeof data === "object") {
           alunosData.push({
             id: doc.id,
-            nome: data.nome || "",
-            email: data.email || "",
-            telefone: data.telefone || "",
-            genero: data.genero || "Masculino",
-            plano: data.plano || "",
-            valorMensalidade: data.valorMensalidade || 150,
-            status: data.status || "Inativo",
-            turmas: data.turmas || "Seg-Qua",
-            horarios: data.horarios || "19:00",
-            dataMatricula: data.dataMatricula || "",
-            createdAt: data.createdAt || "",
-            updatedAt: data.updatedAt || "",
+            ...DEFAULT_ALUNO_VALUES,
+            ...data,
           } as Aluno);
         }
       });
@@ -131,74 +168,123 @@ export default function GestaoAlunos() {
       setAlunos(alunosData);
     } catch (error) {
       console.error("Erro ao buscar alunos:", error);
-      showToastMessage("Erro ao carregar alunos", "error");
+      setToastMessage("Erro ao carregar alunos");
+      setToastType("error");
+      setShowToast(true);
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // ✅ SEM DEPENDÊNCIAS PARA EVITAR LOOPS
 
   useEffect(() => {
     fetchAlunos();
+  }, [fetchAlunos]);
+
+  // ⚡ FILTROS REATIVOS - MEMOIZAÇÃO PARA PERFORMANCE
+  const alunosFiltrados = useMemo(() => {
+    return alunos.filter((aluno) => {
+      const matchesSearch = aluno.nome
+        .toLowerCase()
+        .includes(searchText.toLowerCase());
+      const matchesStatus = !statusFilter || aluno.status === statusFilter;
+      const matchesTurmas = !turmasFilter || aluno.turmas === turmasFilter;
+      const matchesHorarios =
+        !horariosFilter || aluno.horarios === horariosFilter;
+
+      return matchesSearch && matchesStatus && matchesTurmas && matchesHorarios;
+    });
+  }, [alunos, searchText, statusFilter, turmasFilter, horariosFilter]);
+
+  // 📊 ESTATÍSTICAS REATIVAS
+  const stats = useMemo(
+    () => ({
+      total: alunosFiltrados.length,
+      ativos: alunosFiltrados.filter((a) => a.status === "Ativo").length,
+      inativos: alunosFiltrados.filter((a) => a.status === "Inativo").length,
+      suspensos: alunosFiltrados.filter((a) => a.status === "Suspenso").length,
+    }),
+    [alunosFiltrados]
+  );
+
+  // 📋 COLUNAS DA TABELA
+  const alunosColumns = useMemo(() => createAlunosColumns(), []);
+
+  const handleCloseToast = useCallback(() => {
+    setShowToast(false);
   }, []);
 
-  // Função helper para mostrar toast
-  const showToastMessage = (message: string, type: "success" | "error") => {
-    setToastMessage(message);
-    setToastType(type);
-    setShowToast(true);
-  };
-
-  // Funções de callback para o DataTable
-  const handleEdit = (aluno: Aluno) => {
-    setSelectedAluno(aluno);
-    setModalMode("edit");
-    setIsModalOpen(true);
-  };
-
-  // Função para fechar toast
-  const handleCloseToast = () => {
-    setShowToast(false);
-  };
-
-  // Função para abrir modal de criação
-  const handleCreateAluno = () => {
+  // 🎭 FUNÇÕES DO MODAL
+  const handleCreateAluno = useCallback(() => {
     setSelectedAluno(null);
     setModalMode("create");
     setIsModalOpen(true);
-  };
+  }, []);
 
-  // Função para fechar modal
-  const handleCloseModal = () => {
+  const handleEdit = useCallback((aluno: Aluno) => {
+    setSelectedAluno(aluno);
+    setModalMode("edit");
+    setIsModalOpen(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedAluno(null);
-  };
+  }, []);
 
-  // Função de sucesso do modal
-  const handleModalSuccess = () => {
+  const handleModalSuccess = useCallback(() => {
     setIsModalOpen(false);
     setSelectedAluno(null);
     fetchAlunos();
 
     const action = modalMode === "create" ? "cadastrado" : "atualizado";
     showToastMessage(`Aluno ${action} com sucesso!`, "success");
-  };
+  }, [modalMode, fetchAlunos, showToastMessage]);
 
-  const handleExportarCSV = async () => {
+  // 📤 EXPORTAR CSV
+  const handleExportarCSV = useCallback(async () => {
     try {
       setCsvLoading(true);
       showToastMessage("Iniciando exportação CSV...", "success");
-
       await exportarAlunosCSV();
     } catch (erro) {
+      console.error("Erro ao exportar CSV:", erro);
       showToastMessage("Erro ao exportar arquivo", "error");
     } finally {
       setCsvLoading(false);
     }
-  };
+  }, [showToastMessage]);
+
+  // 🔧 CONFIGURAÇÃO DOS FILTROS
+  const filterConfigs: FilterConfig[] = useMemo(
+    () => [
+      {
+        label: "Status",
+        value: statusFilter,
+        onChange: setStatusFilter,
+        placeholder: "Todos os Status",
+        options: FILTER_OPTIONS.STATUS,
+      },
+      {
+        label: "Turmas",
+        value: turmasFilter,
+        onChange: setTurmasFilter,
+        placeholder: "Todas as Turmas",
+        options: FILTER_OPTIONS.TURMAS,
+      },
+      {
+        label: "Horários",
+        value: horariosFilter,
+        onChange: setHorariosFilter,
+        placeholder: "Todos os Horários",
+        options: FILTER_OPTIONS.HORARIOS,
+      },
+    ],
+    [statusFilter, turmasFilter, horariosFilter]
+  );
 
   return (
     <div className="p-6">
-      {/* Cabeçalho */}
+      {/* 🎯 CABEÇALHO */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">
           <FaUser className="text-2xl text-green-600" />
@@ -207,15 +293,15 @@ export default function GestaoAlunos() {
         <div className="flex space-x-3">
           <button
             onClick={handleExportarCSV}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             disabled={alunos.length === 0 || csvLoading}
           >
             <FaDownload className={csvLoading ? "animate-spin" : ""} />
-            <span>Exportar</span>
+            <span>{csvLoading ? "Exportando..." : "Exportar"}</span>
           </button>
           <button
             onClick={handleCreateAluno}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <FaPlus />
             <span>Novo Aluno</span>
@@ -223,101 +309,44 @@ export default function GestaoAlunos() {
         </div>
       </div>
 
-      {/* Estatísticas */}
+      {/* 📊 ESTATÍSTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <FaUser className="text-2xl text-blue-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Total de Alunos</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <FaUser className="text-2xl text-green-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Alunos Ativos</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "ativo").length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <FaUser className="text-2xl text-gray-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Alunos Inativos</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "inativo").length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <FaUser className="text-2xl text-red-600 mr-3" />
-            <div>
-              <p className="text-sm text-gray-600">Alunos Suspensos</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {alunosFiltrados.filter((a) => a.status === "suspenso").length}
-              </p>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          icon={<FaUser />}
+          title="Total de Alunos"
+          value={stats.total}
+          iconColor="text-blue-600"
+        />
+        <StatCard
+          icon={<FaUser />}
+          title="Alunos Ativos"
+          value={stats.ativos}
+          iconColor="text-green-600"
+        />
+        <StatCard
+          icon={<FaUser />}
+          title="Alunos Inativos"
+          value={stats.inativos}
+          iconColor="text-gray-600"
+        />
+        <StatCard
+          icon={<FaUser />}
+          title="Alunos Suspensos"
+          value={stats.suspensos}
+          iconColor="text-red-600"
+        />
       </div>
 
-      {/* Busca e Filtros */}
+      {/* 🔍 BUSCA E FILTROS */}
       <SearchAndFilters
         searchValue={searchText}
         onSearchChange={setSearchText}
         searchPlaceholder="Digite o nome do aluno..."
         searchLabel="Buscar Alunos"
-        filters={[
-          {
-            label: "Status",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            placeholder: "Todos os Status",
-            options: [
-              { value: "Ativo", label: "Ativo" },
-              { value: "Inativo", label: "Inativo" },
-              { value: "Suspenso", label: "Suspenso" },
-            ],
-          },
-          {
-            label: "Turmas",
-            value: turmasFilter,
-            onChange: setTurmasFilter,
-            placeholder: "Todas as Turmas",
-            options: [
-              { value: "Seg-Qua", label: "Segunda e Quarta" },
-              { value: "Ter-Qui", label: "Terça e Quinta" },
-            ],
-          },
-          {
-            label: "Horários",
-            value: horariosFilter,
-            onChange: setHorariosFilter,
-            placeholder: "Todos os Horários",
-            options: [
-              { value: "18:00", label: "18:00" },
-              { value: "19:00", label: "19:00" },
-              { value: "20:00", label: "20:00" },
-              { value: "21:00", label: "21:00" },
-            ],
-          },
-        ]}
+        filters={filterConfigs}
       />
 
-      {/* DataTable */}
+      {/* 📊 TABELA DE DADOS */}
       <DataTable
         data={alunosFiltrados}
         columns={alunosColumns}
@@ -328,16 +357,16 @@ export default function GestaoAlunos() {
         emptyMessage="Nenhum aluno encontrado. Cadastre o primeiro aluno!"
       />
 
-      {/* Modal de Aluno - CREATE e UPDATE */}
+      {/* 🎭 MODAL DE ALUNO */}
       <AlunoModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSuccess={handleModalSuccess}
         mode={modalMode}
-        alunoData={selectedAluno as any}
+        alunoData={selectedAluno}
       />
 
-      {/* Toast de Notificação */}
+      {/* 🔔 TOAST DE NOTIFICAÇÃO */}
       <Toast
         message={toastMessage}
         type={toastType}

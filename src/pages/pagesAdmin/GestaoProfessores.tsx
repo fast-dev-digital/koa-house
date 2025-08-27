@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, doc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaChalkboardTeacher } from "react-icons/fa";
 import DataTable from "../../components/componentsAdmin/DataTable";
@@ -8,20 +8,17 @@ import Toast from "../../components/componentsAdmin/Toast";
 import ProfessorModal from "../../components/componentsAdmin/ProfessorModal";
 import { exportarProfessoresCSV } from "../../utils/exportarCsv";
 import type { Professor } from "../../types/professor";
+import { label } from "framer-motion/client";
 
 export default function GestaoProfessores() {
   const [listProf, setListProf] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(
     null
   );
-  const [professorToDelete, setProfessorToDelete] = useState<Professor | null>(
-    null
-  );
-  const [isModalDeleteOpen, setIsDeleteModalOpen] = useState(false);
+
   // Modal para mensagens Toast
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
@@ -61,6 +58,7 @@ export default function GestaoProfessores() {
       options: [
         { value: "Futevôlei", label: "Futevôlei" },
         { value: "Beach Tennis", label: "Beach Tennis" },
+        { value: "Vôlei", label: "Vôlei" },
       ],
     },
   ];
