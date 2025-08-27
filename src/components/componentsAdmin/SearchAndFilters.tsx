@@ -11,13 +11,11 @@ interface FilterConfig {
 
 // Interface para as props do componente
 interface SearchAndFiltersProps {
-  // 📥 BUSCA
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
   searchLabel?: string;
 
-  // 📥 FILTROS DINÂMICOS
   filters: FilterConfig[];
 }
 
