@@ -64,7 +64,7 @@ export async function criarAlunoComPagamentosArray(
   alunoData: AlunoData
 ): Promise<void> {
   try {
-    if (alunoData.status !== "ativo") {
+    if (alunoData.status !== "Ativo") {
       console.log(`⏸️ Aluno ${alunoData.nome} não está ativo`);
       return;
     }
