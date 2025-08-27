@@ -1,16 +1,24 @@
-// ...existing code...
 export interface Aluno {
-  id?: string;
+  id: string;
+
   nome: string;
   email: string;
   telefone: string;
-  genero: string;
-  dataMatricula: Date;
-  turmas: string;
-  horarios: string;
+  genero?: "Masculino" | "Feminino";
+
   plano: "Mensal" | "Trimestral" | "Semestral";
-  valorMensalidade?: number; // Novo campo
-  status: "ativo" | "inativo" | "suspenso";
+  valorMensalidade: number;
+  status: "Ativo" | "Inativo" | "Suspenso";
+  dataMatricula: string;
+
+  turmas?: string;
+  turmasIds?: string[];
+  horarios?: string;
+
+  role?: "user" | "admin";
+  authCreated?: boolean;
+  authUid?: string;
+
   createdAt?: string;
   updatedAt?: string;
 }
