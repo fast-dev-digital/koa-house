@@ -1,15 +1,11 @@
 import { useState, useEffect } from "react";
+import { buscarTodosAlunos, atualizarAluno } from "../../services/alunoService";
 import {
-  collection,
-  getDocs,
-  query,
-  where,
-  doc,
-  updateDoc,
-  getDoc,
-  writeBatch,
-} from "firebase/firestore";
-import { db } from "../../firebase-config";
+  buscarTodasTurmas,
+  atualizarTurma,
+  type TurmaUpdate,
+} from "../../services/turmaService";
+import type { Aluno } from "../../types/alunos";
 import {
   FaTimes,
   FaUser,
@@ -21,20 +17,6 @@ import {
 import type { Turma } from "../../types/turmas";
 import SearchInput from "./SearchInput";
 import Toast from "./Toast";
-
-interface Aluno {
-  id: string;
-  nome: string;
-  email: string;
-  telefone?: string;
-  turmasIds?: string[];
-  turmaId?: string;
-  genero?: string;
-  status?: string;
-  plano?: string;
-  role?: string;
-  horarios?: string;
-}
 
 interface ManageAlunosModalProps {
   isOpen: boolean;
@@ -50,7 +32,9 @@ export default function ManageAlunosModal({
   turma,
 }: ManageAlunosModalProps) {
   // ✅ ESTADOS CONSOLIDADOS
-  const [activeTab, setActiveTab] = useState<"matriculados" | "disponiveis">("matriculados");
+  const [activeTab, setActiveTab] = useState<"matriculados" | "disponiveis">(
+    "matriculados"
+  );
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunosDisponiveis, setAlunosDisponiveis] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(false);
@@ -76,51 +60,41 @@ export default function ManageAlunosModal({
   // ✅ HELPER - Migração automática
   const migrarTurmaId = (alunoData: any) => ({
     ...alunoData,
-    turmasIds: alunoData.turmasIds || (alunoData.turmaId ? [alunoData.turmaId] : []),
+    turmasIds:
+      alunoData.turmasIds || (alunoData.turmaId ? [alunoData.turmaId] : []),
   });
 
-  // ✅ FUNÇÃO ÚNICA - Carregar todos os dados (UMA SÓ VEZ)
+  // Carregar todos os dados
   const carregarDadosCompletos = async () => {
     if (todosAlunos.length > 0 && todasTurmas.size > 0) return; // Cache já carregado
 
     try {
       setLoading(true);
-      console.log("📡 Carregando dados completos (cache global)...");
+      console.log("📡 Carregando dados completos com SERVICES...");
 
-      // Buscar TODOS os alunos ativos em uma query
-      const [alunosSnapshot, turmasSnapshot] = await Promise.all([
-        getDocs(query(collection(db, "Alunos"), where("status", "==", "Ativo"))),
-        getDocs(collection(db, "turmas"))
+      const [alunosData, turmasData] = await Promise.all([
+        buscarTodosAlunos(), // ✅ SERVICE COM CACHE
+        buscarTodasTurmas(), // ✅ SERVICE COM CACHE
       ]);
 
-      // Processar alunos
-      const alunosData: Aluno[] = [];
-      alunosSnapshot.forEach((doc) => {
-        const alunoMigrado = migrarTurmaId(doc.data());
-        alunosData.push({
-          id: doc.id,
-          nome: alunoMigrado.nome || "",
-          email: alunoMigrado.email || "",
-          telefone: alunoMigrado.telefone || "",
-          turmasIds: alunoMigrado.turmasIds,
-          turmaId: alunoMigrado.turmaId || "",
-          genero: alunoMigrado.genero || "",
-          status: alunoMigrado.status || "",
-          plano: alunoMigrado.plano || "",
-          role: alunoMigrado.role || "",
-          horarios: alunoMigrado.horarios || "",
-        });
-      });
+      const alunosAtivos = alunosData.filter(
+        (aluno) => aluno.status === "Ativo"
+      );
 
-      // Processar turmas
+      const alunosProcessados = alunosAtivos.map((aluno) =>
+        migrarTurmaId(aluno)
+      );
+
       const turmasMap = new Map();
-      turmasSnapshot.forEach((doc) => {
-        turmasMap.set(doc.id, doc.data());
+      turmasData.forEach((turma) => {
+        turmasMap.set(turma.id, turma);
       });
 
-      setTodosAlunos(alunosData);
+      setTodosAlunos(alunosProcessados);
       setTodasTurmas(turmasMap);
-      console.log(`✅ Cache carregado: ${alunosData.length} alunos, ${turmasMap.size} turmas`);
+      console.log(
+        `✅ Cache carregado: ${alunosProcessados.length} alunos ativos, ${turmasMap.size} turmas`
+      );
     } catch (error) {
       console.error("❌ Erro ao carregar dados:", error);
       showToast("Erro ao carregar dados", "error");
@@ -132,9 +106,10 @@ export default function ManageAlunosModal({
   // ✅ FUNÇÃO - Filtrar alunos matriculados (do cache)
   const calcularAlunosMatriculados = () => {
     if (!turma?.id) return [];
-    
-    return todosAlunos.filter(aluno => 
-      aluno.turmasIds?.includes(turma.id!) || aluno.turmaId === turma.id
+
+    return todosAlunos.filter(
+      (aluno) =>
+        aluno.turmasIds?.includes(turma.id!) || aluno.turmasIds === turma.id
     );
   };
 
@@ -142,9 +117,10 @@ export default function ManageAlunosModal({
   const calcularAlunosDisponiveis = () => {
     if (!turma?.id) return [];
 
-    return todosAlunos.filter(aluno => {
+    return todosAlunos.filter((aluno) => {
       // Já está nesta turma?
-      const jaNestaTurma = aluno.turmasIds?.includes(turma.id!) || aluno.turmaId === turma.id;
+      const jaNestaTurma =
+        aluno.turmasIds?.includes(turma.id!) || aluno.turmasIds === turma.id;
       if (jaNestaTurma) return false;
 
       // Filtro por gênero (exceto Beach Tennis, Teens e Vôlei)
@@ -159,7 +135,7 @@ export default function ManageAlunosModal({
 
       // Já tem turma da mesma modalidade?
       const turmasDoAluno = aluno.turmasIds || [];
-      const jaTemModalidade = turmasDoAluno.some(turmaId => {
+      const jaTemModalidade = turmasDoAluno.some((turmaId) => {
         const turmaData = todasTurmas.get(turmaId);
         return turmaData?.modalidade === turma.modalidade;
       });
@@ -168,38 +144,46 @@ export default function ManageAlunosModal({
     });
   };
 
-  // ✅ FUNÇÃO - Remover aluno (otimizada)
+  // ✅ SUBSTITUIR removerAlunoDaTurma - MANTER LÓGICAS DE VALIDAÇÃO
   const removerAlunoDaTurma = async (aluno: Aluno) => {
-    if (!turma?.id || !confirm(`Tem certeza que deseja remover ${aluno.nome} desta turma?`)) return;
+    if (
+      !turma?.id ||
+      !confirm(`Tem certeza que deseja remover ${aluno.nome} desta turma?`)
+    )
+      return;
 
     setLoadingRemover(aluno.id);
     try {
-      const novasTurmas = (aluno.turmasIds || []).filter(id => id !== turma.id);
-      
-      // Batch para otimizar
-      const batch = writeBatch(db);
-      
-      // Atualizar aluno
-      const alunoRef = doc(db, "Alunos", aluno.id);
-      batch.update(alunoRef, {
-        turmasIds: novasTurmas,
-        ...(novasTurmas.length === 0 && { turmaId: "" }),
-      });
+      // ✅ MANTER LÓGICA DE FILTRO
+      const novasTurmas = (aluno.turmasIds || []).filter(
+        (id) => id !== turma.id
+      );
 
-      // Atualizar contador da turma
-      const turmaRef = doc(db, "turmas", turma.id);
-      batch.update(turmaRef, {
-        alunosInscritos: Math.max(0, alunos.length - 1),
-      });
+      // ✅ USAR SERVICES (SEM BATCH MANUAL)
+      await Promise.all([
+        // Atualizar aluno via service
+        atualizarAluno(aluno.id, {
+          turmasIds: novasTurmas,
+          ...(novasTurmas.length === 0 && { turmaId: "" }),
+        }),
+        // Atualizar contador da turma via service
+        atualizarTurma(turma.id, {
+          alunosInscritos: Math.max(0, alunos.length - 1),
+        } as TurmaUpdate),
+      ]);
 
-      await batch.commit();
-
-      // Atualizar cache local
-      setTodosAlunos(prev => prev.map(a => 
-        a.id === aluno.id 
-          ? { ...a, turmasIds: novasTurmas, ...(novasTurmas.length === 0 && { turmaId: "" }) }
-          : a
-      ));
+      // ✅ MANTER LÓGICA DE CACHE LOCAL
+      setTodosAlunos((prev) =>
+        prev.map((a) =>
+          a.id === aluno.id
+            ? {
+                ...a,
+                turmasIds: novasTurmas,
+                ...(novasTurmas.length === 0 && { turmaId: "" }),
+              }
+            : a
+        )
+      );
 
       showToast(`${aluno.nome} foi removido da turma com sucesso!`, "success");
       onSuccess();
@@ -217,50 +201,54 @@ export default function ManageAlunosModal({
 
     const vagasDisponiveis = (turma.capacidade || 0) - alunos.length;
     if (selectedAlunosIds.length > vagasDisponiveis) {
-      showToast(`Turma tem apenas ${vagasDisponiveis} vaga(s) disponível(eis)`, "error");
+      showToast(
+        `Turma tem apenas ${vagasDisponiveis} vaga(s) disponível(eis)`,
+        "error"
+      );
       return;
     }
 
     setLoadingDisponiveis(true);
     try {
-      const batch = writeBatch(db);
-
-      // Atualizar todos os alunos em batch
-      for (const alunoId of selectedAlunosIds) {
-        const aluno = todosAlunos.find(a => a.id === alunoId);
+      // ✅ USAR SERVICES EM VEZ DE BATCH MANUAL
+      const alunosParaAtualizar = selectedAlunosIds.map(async (alunoId) => {
+        const aluno = todosAlunos.find((a) => a.id === alunoId);
         if (aluno) {
           const novasTurmas = [...(aluno.turmasIds || []), turma.id!];
-          const alunoRef = doc(db, "Alunos", alunoId);
-          
-          batch.update(alunoRef, {
+          return atualizarAluno(alunoId, {
             turmasIds: novasTurmas,
-            turmaId: novasTurmas[0] || "",
           });
         }
-      }
-
-      // Atualizar contador da turma
-      const turmaRef = doc(db, "turmas", turma.id);
-      batch.update(turmaRef, {
-        alunosInscritos: alunos.length + selectedAlunosIds.length,
       });
 
-      await batch.commit();
+      // ✅ EXECUTAR TODAS AS ATUALIZAÇÕES EM PARALELO
+      await Promise.all([
+        ...alunosParaAtualizar,
+        // Atualizar contador da turma via service
+        atualizarTurma(turma.id, {
+          alunosInscritos: alunos.length + selectedAlunosIds.length,
+        } as TurmaUpdate),
+      ]);
 
-      // Atualizar cache local
-      setTodosAlunos(prev => prev.map(aluno => {
-        if (selectedAlunosIds.includes(aluno.id)) {
-          const novasTurmas = [...(aluno.turmasIds || []), turma.id!];
-          return {
-            ...aluno,
-            turmasIds: novasTurmas,
-            turmaId: novasTurmas[0] || "",
-          };
-        }
-        return aluno;
-      }));
+      // ✅ ATUALIZAR CACHE LOCAL
+      setTodosAlunos((prev) =>
+        prev.map((aluno) => {
+          if (selectedAlunosIds.includes(aluno.id)) {
+            const novasTurmas = [...(aluno.turmasIds || []), turma.id!];
+            return {
+              ...aluno,
+              turmasIds: novasTurmas,
+              turmaId: novasTurmas[0] || "",
+            };
+          }
+          return aluno;
+        })
+      );
 
-      showToast(`🎉 ${selectedAlunosIds.length} aluno(s) adicionado(s) com sucesso!`, "success");
+      showToast(
+        `🎉 ${selectedAlunosIds.length} aluno(s) adicionado(s) com sucesso!`,
+        "success"
+      );
       setSelectedAlunosIds([]);
       setActiveTab("matriculados");
       onSuccess();
@@ -274,9 +262,9 @@ export default function ManageAlunosModal({
 
   // ✅ FUNÇÃO - Toggle seleção
   const toggleAlunoSelection = (alunoId: string) => {
-    setSelectedAlunosIds(prev =>
+    setSelectedAlunosIds((prev) =>
       prev.includes(alunoId)
-        ? prev.filter(id => id !== alunoId)
+        ? prev.filter((id) => id !== alunoId)
         : [...prev, alunoId]
     );
   };
@@ -284,9 +272,10 @@ export default function ManageAlunosModal({
   // ✅ COMPUTED - Dados filtrados (do cache)
   const alunosMatriculados = calcularAlunosMatriculados();
   const alunosDisponiveisCompletos = calcularAlunosDisponiveis();
-  const alunosDisponiveisFiltrados = alunosDisponiveisCompletos.filter(aluno =>
-    aluno.nome.toLowerCase().includes(searchText.toLowerCase()) ||
-    aluno.email.toLowerCase().includes(searchText.toLowerCase())
+  const alunosDisponiveisFiltrados = alunosDisponiveisCompletos.filter(
+    (aluno) =>
+      aluno.nome.toLowerCase().includes(searchText.toLowerCase()) ||
+      aluno.email.toLowerCase().includes(searchText.toLowerCase())
   );
 
   // ✅ EFFECTS OTIMIZADOS
