@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaUsers } from "react-icons/fa";
 import DataTable from "../../components/componentsAdmin/DataTable";
 import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters";
-
+import {
+  buscarTodasTurmas,
+  obterEstatisticasTurmas,
+} from "../../services/turmaService";
 import Toast from "../../components/componentsAdmin/Toast";
 import TurmasModal from "../../components/componentsAdmin/TurmasModal";
 import type { Turma } from "../../types/turmas";
@@ -120,6 +121,7 @@ export default function GestaoTurmas() {
   // ESTADOS PRINCIPAIS
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [loading, setLoading] = useState(false);
+  const [estatisticas, setEstatisticas] = useState<any>(null);
 
   // ESTADOS DOS MODAIS
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -128,7 +130,7 @@ export default function GestaoTurmas() {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedTurma, setSelectedTurma] = useState<Turma | null>(null);
   const [turmaToView, setTurmaToView] = useState<Turma | null>(null);
-
+  const [refreshKey, setRefreshKey] = useState(0);
   // ESTADOS DE CONTROLE
 
   const [toastMessage, setToastMessage] = useState("");
@@ -140,8 +142,6 @@ export default function GestaoTurmas() {
   const [modalidadeFilter, setModalidadeFilter] = useState("");
   const [professorFilter, setProfessorFilter] = useState("");
   const [generoFilter, setGeneroFilter] = useState("");
-
-  // ✅ ADICIONAR ESTE ESTADO APÓS OS OUTROS ESTADOS DE CONTROLE (linha ~100)
 
   const [csvLoading, setCsvLoading] = useState(false); //  ESTADO FALTANTE ADICIONADO
 
@@ -156,47 +156,19 @@ export default function GestaoTurmas() {
   const fetchTurmas = async () => {
     try {
       setLoading(true);
-      console.log("🔄 Carregando turmas...");
 
-      const querySnapshot = await getDocs(collection(db, "turmas"));
-      const turmasData: Turma[] = [];
+      const turmasData = await buscarTodasTurmas();
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        console.log("📄 Documento raw:", doc.id, data); // Debug dos dados
+      // ✅ FORÇAR NOVA REFERÊNCIA COM SPREAD
+      setTurmas([...turmasData]); // Força React a detectar mudança
 
-        if (data && typeof data === "object") {
-          const turma: Turma = {
-            id: doc.id,
-            nome: String(data.nome || ""),
-            modalidade:
-              (data.modalidade as "Futevôlei" | "Beach Tennis") || "Futevôlei",
-            genero:
-              (data.genero as "Masculino" | "Feminino" | "Teens") ||
-              "Masculino",
-            nivel:
-              (data.nivel as "Estreante" | "Iniciante" | "Intermediário") ||
-              "Estreante",
-            dias: String(data.dias || ""),
-            horario: String(data.horario || ""),
-            professorId: String(data.professorId || ""),
-            professorNome: String(data.professorNome || ""),
-            capacidade: Number(data.capacidade) || 0,
-            alunosInscritos: Number(data.alunosInscritos) || 0,
-            status: (data.status as "Ativa" | "Inativa") || "Ativa", // Campo que estava faltando
-            createdAt: data.createdAt?.toDate?.() || new Date(),
-            updatedAt: data.updatedAt?.toDate?.() || new Date(),
-          };
+      const estatisticasData = await obterEstatisticasTurmas();
+      setEstatisticas({ ...estatisticasData }); // Spread nas estatísticas também
 
-          console.log("✅ Turma processada:", turma); // Debug da turma processada
-          turmasData.push(turma);
-        }
-      });
+      setRefreshKey((prev) => prev + 1);
 
-      setTurmas(turmasData);
-      console.log("✅ Total de turmas carregadas:", turmasData.length);
+      console.log("🔄 Estado atualizado - Turmas:", turmasData.length);
     } catch (erro) {
-      console.error("❌ Erro ao listar turmas:", erro);
       showToastMessage("Erro ao carregar turmas", "error");
     } finally {
       setLoading(false);
@@ -232,7 +204,6 @@ export default function GestaoTurmas() {
 
   // ✅ FUNÇÃO CREATE CORRIGIDA
   const handleCreateTurma = () => {
-    console.log("🎯 Criar nova turma");
     setSelectedTurma(null);
     setModalMode("create");
     setIsModalOpen(true);
@@ -240,7 +211,6 @@ export default function GestaoTurmas() {
 
   // ✅ FUNÇÃO EDIT CORRIGIDA
   const handleEdit = (turma: Turma) => {
-    console.log("✏️ Editar turma:", turma);
     setSelectedTurma(turma);
     setModalMode("edit");
     setIsModalOpen(true);
@@ -248,7 +218,6 @@ export default function GestaoTurmas() {
 
   // ✅ FUNÇÃO VIEW CORRIGIDA
   const handleManageAlunos = (turma: Turma) => {
-    console.log("👥 Gerenciar alunos da turma:", turma);
     setTurmaToView(turma);
     setIsViewModalOpen(true);
   };
@@ -261,6 +230,7 @@ export default function GestaoTurmas() {
 
   // ✅ FUNÇÃO SUCCESS MODAL
   const handleModalSuccess = () => {
+    console.log("🎯 handleModalSuccess EXECUTADO - Modal chamou onSuccess!");
     setIsModalOpen(false);
     setSelectedTurma(null);
     fetchTurmas();
@@ -275,15 +245,10 @@ export default function GestaoTurmas() {
       setCsvLoading(true);
       showToastMessage("Preparando exportação...", "success");
 
-      console.log("📊 Iniciando exportação de turmas...");
-      console.log("📊 Total de turmas:", turmas.length);
-      console.log("📊 Turmas filtradas:", turmasFiltradas.length);
-
       await exportarTurmasCSV();
 
       showToastMessage(`Turma(s) exportada(s) com sucesso!`, "success");
     } catch (error: any) {
-      console.error("❌ Erro na exportação:", error);
       showToastMessage("Erro ao exportar turmas", "error");
     } finally {
       setCsvLoading(false);
@@ -316,57 +281,62 @@ export default function GestaoTurmas() {
         </div>
       </div>
 
-      {/* ESTATÍSTICAS */}
+      {/* ESTATÍSTICAS - VERSÃO COM CACHE */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {/* Total de Turmas Ativas */}
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
-            <FaUsers className="text-2xl text-blue-600 mr-3" />
+            <FaUsers className="text-2xl text-emerald-600 mr-3" />
             <div>
-              <p className="text-sm text-gray-600">Total de Turmas</p>
+              <p className="text-sm text-gray-600">Turmas Ativas</p>
               <p className="text-2xl font-bold text-gray-900">
-                {turmasFiltradas.length}
+                {estatisticas?.turmasAtivas ||
+                  turmasFiltradas.filter((t) => t.status === "Ativa").length}
               </p>
             </div>
           </div>
         </div>
+
+        {/* Futevôlei */}
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <FaUsers className="text-2xl text-green-600 mr-3" />
             <div>
               <p className="text-sm text-gray-600">Futevôlei</p>
               <p className="text-2xl font-bold text-gray-900">
-                {
+                {estatisticas?.modalidades?.["Futevôlei"] ||
                   turmasFiltradas.filter((t) => t.modalidade === "Futevôlei")
-                    .length
-                }
+                    .length}
               </p>
             </div>
           </div>
         </div>
+
+        {/* Beach Tennis */}
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <FaUsers className="text-2xl text-orange-600 mr-3" />
             <div>
               <p className="text-sm text-gray-600">Beach Tennis</p>
               <p className="text-2xl font-bold text-gray-900">
-                {
+                {estatisticas?.modalidades?.["Beach Tennis"] ||
                   turmasFiltradas.filter((t) => t.modalidade === "Beach Tennis")
-                    .length
-                }
+                    .length}
               </p>
             </div>
           </div>
         </div>
+
+        {/* NOVA ESTATÍSTICA - VÔLEI */}
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <FaUsers className="text-2xl text-purple-600 mr-3" />
             <div>
-              <p className="text-sm text-gray-600">Total Alunos</p>
+              <p className="text-sm text-gray-600">Vôlei</p>
               <p className="text-2xl font-bold text-gray-900">
-                {turmasFiltradas.reduce(
-                  (total, turma) => total + (turma.alunosInscritos || 0),
-                  0
-                )}
+                {estatisticas?.modalidades?.["Vôlei"] ||
+                  turmasFiltradas.filter((t) => t.modalidade === "Vôlei")
+                    .length}
               </p>
             </div>
           </div>
@@ -428,6 +398,7 @@ export default function GestaoTurmas() {
 
       {/* TABELA */}
       <DataTable
+        key={refreshKey}
         data={turmasFiltradas}
         columns={colunasTurmas}
         onEdit={handleEdit}
@@ -453,8 +424,8 @@ export default function GestaoTurmas() {
       <Toast
         message={toastMessage}
         type={toastType}
-        isVisible={showToast}
         onClose={() => setShowToast(false)}
+        isVisible={showToast}
       />
     </div>
   );
