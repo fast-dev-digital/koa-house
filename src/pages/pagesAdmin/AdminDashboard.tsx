@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
+import { buscarTodosProfessores } from "../../services/professorService";
+import {
+  buscarTodasTurmas,
+  obterEstatisticasTurmas,
+} from "../../services/turmaService";
 import {
   FaUsers,
   FaChalkboardTeacher,
@@ -50,45 +55,23 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // ✅ USAR CACHE DO ALUNO SERVICE
-        const [alunosData, professoresSnapshot, turmasSnapshot] =
+        const [alunosData, professoresData, turmasData, estatisticas] =
           await Promise.all([
-            buscarTodosAlunos(), // ✅ CACHE AUTOMÁTICO - Query só se necessário
-            getDocs(collection(db, "professores")),
-            getDocs(collection(db, "turmas")),
+            buscarTodosAlunos(), // Cache automático
+            buscarTodosProfessores(), // Cache automático
+            buscarTodasTurmas(), // Cache automático
+            obterEstatisticasTurmas(), // Estatísticas calculadas
           ]);
 
-        // ✅ USAR DADOS DO CACHE
+        // USAR DADOS DOS SERVICES
         setTotalAlunos(alunosData.length);
-        setTotalProfessores(professoresSnapshot.size);
-        setTotalTurmas(turmasSnapshot.size);
+        setTotalProfessores(professoresData.length);
+        setTotalTurmas(turmasData.length);
 
-        // Contar modalidades
-        let beachTennisCount = 0;
-        let voleiCount = 0;
-        let futevoleiCount = 0;
-
-        turmasSnapshot.forEach((doc) => {
-          const turma = doc.data();
-          switch (turma.modalidade) {
-            case "Beach Tennis":
-              beachTennisCount++;
-              break;
-            case "Vôlei":
-              voleiCount++;
-              break;
-            case "Futevôlei":
-              futevoleiCount++;
-              break;
-          }
-        });
-
-        setBeachTennis(beachTennisCount);
-        setVolei(voleiCount);
-        setFutevolei(futevoleiCount);
+        setBeachTennis(estatisticas.modalidades?.["Beach Tennis"] || 0);
+        setVolei(estatisticas.modalidades?.["Vôlei"] || 0);
+        setFutevolei(estatisticas.modalidades?.["Futevôlei"] || 0);
       } catch (error) {
-        console.error("❌ Erro ao buscar dados:", error);
       } finally {
         setLoading(false);
       }
