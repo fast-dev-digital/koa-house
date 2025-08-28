@@ -1,6 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaChalkboardTeacher } from "react-icons/fa";
 import DataTable from "../../components/componentsAdmin/DataTable";
 import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters";
@@ -8,7 +6,11 @@ import Toast from "../../components/componentsAdmin/Toast";
 import ProfessorModal from "../../components/componentsAdmin/ProfessorModal";
 import { exportarProfessoresCSV } from "../../utils/exportarCsv";
 import type { Professor } from "../../types/professor";
-import { label } from "framer-motion/client";
+import {
+  buscarTodosProfessores,
+  obterEstatisticasProfessores,
+  type EstatisticasProfessores,
+} from "../../services/professorService";
 
 export default function GestaoProfessores() {
   const [listProf, setListProf] = useState<Professor[]>([]);
@@ -27,7 +29,8 @@ export default function GestaoProfessores() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [especialidadeFilter, setEspecialidadeFilter] = useState("");
-
+  const [estatisticas, setEstatisticas] =
+    useState<EstatisticasProfessores | null>(null);
   // Estado para exportar CSV
   const [csvLoading, setCsvLoading] = useState(false);
 
@@ -88,26 +91,10 @@ export default function GestaoProfessores() {
   const fetchProfessores = async () => {
     try {
       setLoading(true);
-      const querySnapshot = await getDocs(collection(db, "professores"));
-      const professoresData: Professor[] = [];
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-
-        if (data && typeof data === "object") {
-          professoresData.push({
-            id: doc.id,
-            nome: data.nome || "",
-            email: data.email || "",
-            telefone: data.telefone || "",
-            status: data.status || "inativo",
-            especialidade: data.especialidade || "Futevôlei",
-            turmaIds: data.turmaIds || [],
-          } as Professor);
-        }
-      });
-
+      const professoresData = await buscarTodosProfessores();
       setListProf(professoresData);
+      const estatisticasData = await obterEstatisticasProfessores();
+      setEstatisticas(estatisticasData);
     } catch (error) {
       console.error("Erro ao buscar professores:", error);
       setToastMessage("Erro ao carregar professores");
@@ -189,8 +176,9 @@ export default function GestaoProfessores() {
               <h3 className="text-sm font-medium text-gray-500">
                 Total de Professores
               </h3>
+              {/* Total de Professores */}
               <p className="text-2xl font-bold text-gray-900">
-                {listProf.length}
+                {estatisticas?.total || listProf.length}
               </p>
             </div>
           </div>
@@ -201,8 +189,10 @@ export default function GestaoProfessores() {
             <FaChalkboardTeacher className="text-2xl text-green-500 mr-3" />
             <div>
               <h3 className="text-sm font-medium text-gray-500">Ativos</h3>
+              {/* Professores Ativos */}
               <p className="text-2xl font-bold text-gray-900">
-                {listProf.filter((prof) => prof.status === "Ativo").length}
+                {estatisticas?.ativos ||
+                  listProf.filter((prof) => prof.status === "Ativo").length}
               </p>
             </div>
           </div>
@@ -213,8 +203,10 @@ export default function GestaoProfessores() {
             <FaChalkboardTeacher className="text-2xl text-red-500 mr-3" />
             <div>
               <h3 className="text-sm font-medium text-gray-500">Inativos</h3>
+              {/* Professores Inativos */}
               <p className="text-2xl font-bold text-gray-900">
-                {listProf.filter((prof) => prof.status === "Inativo").length}
+                {estatisticas?.inativos ||
+                  listProf.filter((prof) => prof.status === "Inativo").length}
               </p>
             </div>
           </div>
@@ -227,8 +219,10 @@ export default function GestaoProfessores() {
               <h3 className="text-sm font-medium text-gray-500">
                 Especialidades
               </h3>
+              {/* Especialidades */}
               <p className="text-2xl font-bold text-gray-900">
-                {new Set(listProf.map((prof) => prof.especialidade)).size}
+                {estatisticas?.especialidades ||
+                  new Set(listProf.map((prof) => prof.especialidade)).size}
               </p>
             </div>
           </div>
