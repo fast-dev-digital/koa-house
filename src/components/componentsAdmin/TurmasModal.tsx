@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
+import { buscarProfessoresAtivos } from "../../services/professorService";
 import {
-  collection,
-  addDoc,
-  updateDoc,
-  doc,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "../../firebase-config";
+  criarTurma,
+  atualizarTurma,
+  type TurmaCreate,
+  type TurmaUpdate,
+} from "../../services/turmaService";
 import { FaTimes, FaUsers, FaSave } from "react-icons/fa";
 import type { Turma } from "../../types/turmas";
 
@@ -59,22 +58,12 @@ export default function TurmaModal({
   useEffect(() => {
     const fetchProfessores = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "professores"));
-        const professoresData: Professor[] = [];
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          professoresData.push({
-            id: doc.id,
-            nome: data.nome || "",
-            email: data.email || "",
-          });
-        });
-
+        console.log("📚 Carregando professores com cache...");
+        const professoresData = await buscarProfessoresAtivos();
         setProfessores(professoresData);
-        console.log("📚 Professores carregados:", professoresData.length); // ✅ DEBUG
+        console.log("✅ Professores carregados:", professoresData.length);
       } catch (error) {
-        console.error("Erro ao carregar professores:", error);
+        console.error("❌ Erro ao carregar professores:", error);
       }
     };
 
@@ -157,6 +146,7 @@ export default function TurmaModal({
   };
 
   // 🎯 SUBMIT COM VALORES PADRÃO PARA TESTE
+  // ✅ CORRIGIR A FUNÇÃO handleSubmit - SUBSTITUIR LINHAS 140-165
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -166,40 +156,54 @@ export default function TurmaModal({
 
     setLoading(true);
     try {
-      // ✅ DADOS COM VALORES PADRÃO PARA TESTE
-      const turmaDataToSave = {
-        nome: formData.nome,
-        modalidade: formData.modalidade || "Futevôlei",
-        genero: formData.genero || "Masculino",
-        nivel: formData.nivel || "Estreante",
-        dias: formData.dias || "Não informado",
-        horario: formData.horario || "A definir",
-        professorId: formData.professorId || "",
-        professorNome: formData.professorNome || "Professor não definido",
-        capacidade: formData.capacidade || 10,
-        // ✅ CORREÇÃO: Preservar alunosInscritos ao editar, zerar apenas ao criar
-        alunosInscritos: mode === "edit" ? formData.alunosInscritos || 0 : 0,
-        status: formData.status || "Ativa",
-        createdAt: new Date(), // ✅ CORRETO: new Date() com D maiúsculo
-        updatedAt: new Date(), // ✅ CORRETO: new Date() com D maiúsculo
-      };
-
-      console.log("🎯 Dados que vão para o Firebase:", turmaDataToSave); // ✅ DEBUG
-
       if (mode === "create") {
-        const docRef = await addDoc(collection(db, "turmas"), turmaDataToSave);
-        console.log("✅ Turma criada com ID:", docRef.id); // ✅ DEBUG
+        // ✅ DADOS COM TIPO CORRETO
+        const turmaDataToSave: TurmaCreate = {
+          nome: formData.nome,
+          modalidade: formData.modalidade as
+            | "Futevôlei"
+            | "Beach Tennis"
+            | "Vôlei",
+          genero: formData.genero as "Masculino" | "Feminino" | "Teens",
+          nivel: formData.nivel as "Estreante" | "Iniciante" | "Intermediário",
+          dias: formData.dias || "Não informado",
+          horario: formData.horario || "A definir",
+          professorId: formData.professorId || "",
+          professorNome: formData.professorNome || "Professor não definido",
+          capacidade: formData.capacidade || 10,
+          status: (formData.status as "Ativa" | "Inativa") || "Ativa",
+        };
+
+        const turmaId = await criarTurma(turmaDataToSave);
+        console.log("✅ Turma criada via service - ID:", turmaId);
       } else {
+        // ✅ DADOS PARA ATUALIZAÇÃO
         if (turmaData?.id) {
-          await updateDoc(doc(db, "turmas", turmaData.id), {
-            ...turmaDataToSave,
-            createdAt: turmaData.createdAt, // Manter data de criação original
-          });
-          console.log("✅ Turma atualizada:", turmaData.id); // ✅ DEBUG
+          const updateData: TurmaUpdate = {
+            nome: formData.nome,
+            modalidade: formData.modalidade as
+              | "Futevôlei"
+              | "Beach Tennis"
+              | "Vôlei",
+            genero: formData.genero as "Masculino" | "Feminino" | "Teens",
+            nivel: formData.nivel as
+              | "Estreante"
+              | "Iniciante"
+              | "Intermediário",
+            dias: formData.dias || "Não informado",
+            horario: formData.horario || "A definir",
+            professorId: formData.professorId || "",
+            professorNome: formData.professorNome || "Professor não definido",
+            capacidade: formData.capacidade || 10,
+            status: (formData.status as "Ativa" | "Inativa") || "Ativa",
+          };
+
+          await atualizarTurma(turmaData.id, updateData);
+          console.log("✅ Turma atualizada via service:", turmaData.id);
         }
       }
 
-      console.log("🎉 Sucesso! Chamando onSuccess()"); // ✅ DEBUG
+      console.log("🎉 Sucesso! Chamando onSuccess()");
       onSuccess();
       onClose();
     } catch (error) {
