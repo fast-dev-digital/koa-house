@@ -59,6 +59,48 @@ interface AlunoComPagamentos {
   updatedAt: Date;
 }
 
+interface CacheIntegracao {
+  todosAlunos: AlunoComPagamentos[] | null;
+  alunoIndividual: Map<string, AlunoComPagamentos>;
+  timestampTodos: number;
+  timestampIndividual: Map<string, number>;
+}
+
+const cacheIntegracao: CacheIntegracao = {
+  todosAlunos: null,
+  alunoIndividual: new Map(),
+  timestampTodos: 0,
+  timestampIndividual: new Map(),
+};
+
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutos
+
+//  FUNÇÃO PARA INVALIDAR CACHE
+function invalidarCacheIntegracao(): void {
+  console.log("🧹 Invalidando cache de integração...");
+  cacheIntegracao.todosAlunos = null;
+  cacheIntegracao.timestampTodos = 0;
+  cacheIntegracao.alunoIndividual.clear();
+  cacheIntegracao.timestampIndividual.clear();
+}
+
+//  FUNÇÃO PARA VERIFICAR SE CACHE ESTÁ VÁLIDO
+function cacheValidoTodos(): boolean {
+  const now = Date.now();
+  return (
+    cacheIntegracao.todosAlunos !== null &&
+    now - cacheIntegracao.timestampTodos < CACHE_TTL
+  );
+}
+
+function cacheValidoIndividual(alunoId: string): boolean {
+  const now = Date.now();
+  const timestamp = cacheIntegracao.timestampIndividual.get(alunoId) || 0;
+  return (
+    cacheIntegracao.alunoIndividual.has(alunoId) && now - timestamp < CACHE_TTL
+  );
+}
+
 // Criar aluno na nova estrutura com primeiro pagamento
 export async function criarAlunoComPagamentosArray(
   alunoData: AlunoData
@@ -133,10 +175,18 @@ export async function criarAlunoComPagamentosArray(
 }
 
 // ✅ FUNÇÃO 5 - Buscar aluno específico com pagamentos
+// ✅ SUBSTITUIR A FUNÇÃO COMPLETA (LINHA 125):
 export async function buscarAlunoComPagamentos(
   alunoId: string
 ): Promise<AlunoComPagamentos | null> {
   try {
+    // ✅ VERIFICAR CACHE INDIVIDUAL PRIMEIRO
+    if (cacheValidoIndividual(alunoId)) {
+      console.log(`🔄 Usando cache para aluno ${alunoId}`);
+      return cacheIntegracao.alunoIndividual.get(alunoId) || null;
+    }
+
+    console.log(`📡 Buscando aluno ${alunoId} do Firebase...`);
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
       where("alunoId", "==", alunoId)
@@ -151,7 +201,7 @@ export async function buscarAlunoComPagamentos(
     const docSnapshot = alunoSnapshot.docs[0];
     const data = docSnapshot.data();
 
-    return {
+    const aluno: AlunoComPagamentos = {
       id: docSnapshot.id,
       alunoId: data.alunoId,
       nome: data.nome,
@@ -171,23 +221,37 @@ export async function buscarAlunoComPagamentos(
       createdAt: data.createdAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
     };
+
+    // ✅ CACHEAR RESULTADO
+    cacheIntegracao.alunoIndividual.set(alunoId, aluno);
+    cacheIntegracao.timestampIndividual.set(alunoId, Date.now());
+
+    console.log(`✅ Aluno ${data.nome} carregado e cacheado`);
+    return aluno;
   } catch (error) {
     console.error("❌ Erro ao buscar aluno:", error);
     return null;
   }
 }
-
 // ✅ FUNÇÃO 6 - Listar todos alunos com pagamentos
+// ✅ SUBSTITUIR A FUNÇÃO COMPLETA (LINHA 169):
 export async function listarAlunosComPagamentos(): Promise<
   AlunoComPagamentos[]
 > {
   try {
+    // VERIFICAR CACHE PRIMEIRO
+    if (cacheValidoTodos()) {
+      console.log("🔄 Usando cache para listar todos os alunos com pagamentos");
+      return cacheIntegracao.todosAlunos!;
+    }
+
+    console.log("📡 Buscando todos os alunos com pagamentos do Firebase...");
     const snapshot = await getDocs(collection(db, "alunosPagamentos"));
     const alunos: AlunoComPagamentos[] = [];
 
     snapshot.forEach((docSnapshot) => {
       const data = docSnapshot.data();
-      alunos.push({
+      const aluno: AlunoComPagamentos = {
         id: docSnapshot.id,
         alunoId: data.alunoId,
         nome: data.nome,
@@ -206,9 +270,20 @@ export async function listarAlunosComPagamentos(): Promise<
         proximoVencimento: data.proximoVencimento?.toDate(),
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
-      });
+      };
+
+      alunos.push(aluno);
+
+      // ✅ CACHEAR TAMBÉM INDIVIDUALMENTE
+      cacheIntegracao.alunoIndividual.set(data.alunoId, aluno);
+      cacheIntegracao.timestampIndividual.set(data.alunoId, Date.now());
     });
 
+    // ✅ CACHEAR RESULTADO
+    cacheIntegracao.todosAlunos = alunos;
+    cacheIntegracao.timestampTodos = Date.now();
+
+    console.log(`✅ ${alunos.length} alunos carregados e cacheados`);
     return alunos;
   } catch (error) {
     console.error("❌ Erro ao listar alunos:", error);
