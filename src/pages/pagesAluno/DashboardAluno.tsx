@@ -308,14 +308,6 @@ export default function DashboardAluno() {
                 <h2 className="text-lg font-semibold text-gray-900">
                   Minhas Turmas
                 </h2>
-                {turmas.length > 0 && (
-                  <Link
-                    to="/aluno/turmas"
-                    className="text-green-600 hover:text-green-700 text-sm font-medium"
-                  >
-                    Ver todas →
-                  </Link>
-                )}
               </div>
 
               {/* Renderização dinâmica das turmas */}
