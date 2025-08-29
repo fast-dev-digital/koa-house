@@ -58,16 +58,6 @@ const FILTER_OPTIONS = {
     { value: "Inativo", label: "Inativo" },
     { value: "Suspenso", label: "Suspenso" },
   ],
-  TURMAS: [
-    { value: "Seg-Qua", label: "Segunda e Quarta" },
-    { value: "Ter-Qui", label: "Terça e Quinta" },
-  ],
-  HORARIOS: [
-    { value: "18:00", label: "18:00" },
-    { value: "19:00", label: "19:00" },
-    { value: "20:00", label: "20:00" },
-    { value: "21:00", label: "21:00" },
-  ],
 };
 
 // 📊 CONFIGURAÇÃO DAS COLUNAS
@@ -76,8 +66,6 @@ const createAlunosColumns = () => [
   { key: "email", label: "Email", sortable: true },
   { key: "telefone", label: "Telefone" },
   { key: "plano", label: "Plano", sortable: true },
-  { key: "turmas", label: "Turmas", sortable: true },
-  { key: "horarios", label: "Horários", sortable: true },
   {
     key: "status",
     label: "Status",
@@ -263,20 +251,6 @@ export default function GestaoAlunos() {
         onChange: setStatusFilter,
         placeholder: "Todos os Status",
         options: FILTER_OPTIONS.STATUS,
-      },
-      {
-        label: "Turmas",
-        value: turmasFilter,
-        onChange: setTurmasFilter,
-        placeholder: "Todas as Turmas",
-        options: FILTER_OPTIONS.TURMAS,
-      },
-      {
-        label: "Horários",
-        value: horariosFilter,
-        onChange: setHorariosFilter,
-        placeholder: "Todos os Horários",
-        options: FILTER_OPTIONS.HORARIOS,
       },
     ],
     [statusFilter, turmasFilter, horariosFilter]
