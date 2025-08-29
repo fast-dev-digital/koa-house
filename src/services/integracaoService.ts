@@ -696,12 +696,15 @@ export async function fecharMesComArray(): Promise<{
         }
 
         // ✅ VERIFICAR se tinha pendente antes de arquivar
-        const tinhaPendente = pagamentosDoMesParaProcessar.some(
-          (p: any) => p.status === "Pendente"
-        );
+        const tinhaQualquerPagamento = pagamentosDoMesParaProcessar.length > 0;
 
         console.log(
-          `   🔄 ${alunoData.nome} - Tinha pendente: ${tinhaPendente}`
+          `   🔄 ${alunoData.nome} - Pagamentos para processar: ${pagamentosDoMesParaProcessar.length}`
+        );
+        console.log(
+          `   📊 Status dos pagamentos: [${pagamentosDoMesParaProcessar
+            .map((p: any) => p.status)
+            .join(", ")}]`
         );
 
         // ✅ CRIAR ARRAY DE PAGAMENTOS ATUALIZADO
@@ -739,7 +742,7 @@ export async function fecharMesComArray(): Promise<{
           }) || [];
 
         // ✅ GERAR PRÓXIMO PAGAMENTO APENAS SE TINHA PENDENTE
-        if (tinhaPendente) {
+        if (tinhaQualquerPagamento) {
           // Encontrar último pagamento (pode ser o recém-arquivado)
           const ultimoPagamento =
             pagamentosAtualizados[pagamentosAtualizados.length - 1];
@@ -835,17 +838,6 @@ export async function fecharMesComArray(): Promise<{
         // Continua processando outros alunos mesmo se um der erro
       }
     }
-
-    console.log(`🎉 Fechamento do mês ${mesParaFechar} concluído:`);
-    console.log(`   • ${alunosProcessados} alunos processados`);
-    console.log(`   • ${pagamentosArquivados} pagamentos arquivados`);
-    console.log(`   • ${novosPagamentosGerados} novos pagamentos gerados`);
-    console.log(
-      `   • ${alunosComPagamentosJaArquivados} alunos já tinham pagamentos arquivados`
-    );
-    console.log(
-      `   • ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês`
-    );
 
     // ✅ MENSAGEM MAIS CLARA
     let mensagem = "";
