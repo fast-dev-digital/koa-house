@@ -22,7 +22,7 @@ import type { AlunoLogado, TurmaDashboard } from "../../types/dashboard";
 // Componentes
 import ResumoCard from "../../components/componentsAluno/ResumoCard";
 import TurmaCard from "../../components/componentsAluno/TurmaCard";
-import StatusPagamento from "../../components/componentsAluno/StatusPagamento";
+import HistoricoModal from "../../components/HistoricoModal";
 
 export default function DashboardAluno() {
   const [nome, setNome] = useState<string>("");
@@ -31,6 +31,8 @@ export default function DashboardAluno() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showHistorico, setShowHistorico] = useState(false);
+
   const navigate = useNavigate();
 
   // Componente do botão de logout reutilizável
@@ -278,19 +280,6 @@ export default function DashboardAluno() {
             color="blue"
           />
 
-          {/* Card 2: Status Pagamento */}
-          <ResumoCard
-            icon={<FaCreditCard className="text-green-600" />}
-            title="Pagamentos"
-            value={alunoData?.statusPagamento || "Em dia"}
-            subtitle={
-              alunoData?.proximoVencimento
-                ? `Próximo: ${alunoData.proximoVencimento}`
-                : "Próximo venc: 15/08"
-            }
-            color="green"
-          />
-
           {/* Card 3: Múltiplas Turmas - SÓ APARECE SE TIVER 2+ TURMAS */}
           {turmas.length >= 2 && (
             <ResumoCard
@@ -363,8 +352,8 @@ export default function DashboardAluno() {
                   {turmas.length > 0 && (
                     <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                       <p className="text-sm text-blue-700">
-                        💡 <strong>Dica:</strong> Acesse "Ver Histórico" para
-                        acompanhar seus pagamentos e frequência.
+                        <strong>Dica:</strong> Acesse "Ver Histórico" para
+                        acompanhar seus pagamentos
                       </p>
                     </div>
                   )}
@@ -380,17 +369,13 @@ export default function DashboardAluno() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Status Financeiro
               </h3>
-              <StatusPagamento
-                status={alunoData?.statusPagamento || "em-dia"}
-                proximoVencimento={alunoData?.proximoVencimento || "15/08/2025"}
-                valor={alunoData?.valorMensalidade || "R$ 250,00"}
-              />
-              <Link
-                to="/aluno/pagamentos"
+              <button
                 className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg text-center block transition-colors"
+                onClick={() => setShowHistorico(true)}
+                disabled={!alunoData}
               >
                 Ver Histórico
-              </Link>
+              </button>
             </div>
 
             {/* Acesso Rápido */}
@@ -399,24 +384,6 @@ export default function DashboardAluno() {
                 Acesso Rápido
               </h3>
               <div className="space-y-3">
-                {turmas.length > 0 && (
-                  <Link
-                    to="/aluno/turmas"
-                    className="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    <FaBookOpen className="mr-3 text-gray-400" />
-                    Minhas Turmas
-                  </Link>
-                )}
-
-                <Link
-                  to="/aluno/pagamentos"
-                  className="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  <FaCreditCard className="mr-3 text-gray-400" />
-                  Meus Pagamentos
-                </Link>
-
                 <button className="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors w-full text-left">
                   <FaWhatsapp className="mr-3 text-green-500" />
                   Suporte WhatsApp
@@ -428,6 +395,15 @@ export default function DashboardAluno() {
           </div>
         </div>
       </div>
+      {/* Modal do Histórico */}
+      {alunoData && (
+        <HistoricoModal
+          isOpen={showHistorico}
+          onClose={() => setShowHistorico(false)}
+          alunoId={alunoData.id}
+          userType="aluno"
+        />
+      )}
     </div>
   );
 }
