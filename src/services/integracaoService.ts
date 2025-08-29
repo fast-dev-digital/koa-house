@@ -168,6 +168,7 @@ export async function criarAlunoComPagamentosArray(
     });
 
     console.log(`✅ ${alunoData.nome} criado na nova estrutura`);
+    invalidarCacheIntegracao();
   } catch (error) {
     console.error("❌ Erro ao criar aluno na nova estrutura:", error);
     throw error;
@@ -175,7 +176,7 @@ export async function criarAlunoComPagamentosArray(
 }
 
 // ✅ FUNÇÃO 5 - Buscar aluno específico com pagamentos
-// ✅ SUBSTITUIR A FUNÇÃO COMPLETA (LINHA 125):
+
 export async function buscarAlunoComPagamentos(
   alunoId: string
 ): Promise<AlunoComPagamentos | null> {
@@ -319,7 +320,7 @@ export async function adicionarProximoPagamentoArray(
     }
 
     // Verificar se aluno está ativo
-    if (alunoComPagamentos.status !== "ativo") {
+    if (alunoComPagamentos.status !== "Ativo") {
       console.log(`⏸️ Aluno ${alunoComPagamentos.nome} não está ativo`);
       return;
     }
@@ -436,6 +437,8 @@ export async function adicionarProximoPagamentoArray(
     console.log(
       `✅ Próximo pagamento adicionado para ${alunoComPagamentos.nome}`
     );
+    invalidarCacheIntegracao();
+    console.log("invalidar cache funcionando");
   } catch (error) {
     console.error("❌ Erro ao adicionar próximo pagamento:", error);
     throw error;
@@ -583,6 +586,7 @@ export async function marcarPagamentoPagoArray(
     console.log(
       `✅ Pagamento marcado como pago para ${alunoComPagamentos.nome}`
     );
+    invalidarCacheIntegracao();
   } catch (error) {
     console.error("❌ Erro ao marcar pagamento como pago:", error);
     throw error;
@@ -602,7 +606,7 @@ export async function fecharMesComArray(): Promise<{
 
     // Buscar todos os alunos ativos
     const alunosSnapshot = await getDocs(
-      query(collection(db, "alunosPagamentos"), where("status", "==", "ativo"))
+      query(collection(db, "alunosPagamentos"), where("status", "==", "Ativo"))
     );
 
     if (alunosSnapshot.empty) {
@@ -850,7 +854,8 @@ export async function fecharMesComArray(): Promise<{
     } else if (pagamentosArquivados === 0 && alunosSemPagamentosDoMes > 0) {
       mensagem = `Nenhum pagamento encontrado para o mês ${mesParaFechar}. ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês.`;
     }
-
+    invalidarCacheIntegracao();
+    console.log("🧹 Cache invalidado após fechar mês");
     return {
       alunosProcessados,
       pagamentosArquivados,
