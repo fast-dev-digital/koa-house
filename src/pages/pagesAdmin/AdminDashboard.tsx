@@ -51,54 +51,6 @@ export default function AdminDashboard() {
     return () => unsubscribe();
   }, []);
 
-  // Função para buscar pagamentos recentes da nova estrutura
-  const fetchPagamentosRecentes = async () => {
-    try {
-      setLoadingPagamentos(true);
-      const alunosComPagamentos = await listarAlunosComPagamentos();
-      
-      // Converter para formato da tabela e pegar apenas os mais recentes
-      const pagamentosFormatados: Pagamento[] = [];
-      let totalPendentes = 0;
-      
-      alunosComPagamentos.forEach((aluno) => {
-        aluno.pagamentos.forEach((pagamento) => {
-          if (pagamento.status !== "Arquivado") {
-            pagamentosFormatados.push({
-              id: `${aluno.alunoId}_${pagamento.mesReferencia}`,
-              alunoId: aluno.alunoId,
-              alunoNome: aluno.nome,
-              planoTipo: aluno.plano || "Mensal",
-              mesReferencia: pagamento.mesReferencia,
-              valor: pagamento.valor,
-              dataVencimento: pagamento.dataVencimento,
-              status: pagamento.status,
-              dataPagamento: pagamento.dataPagamento,
-              createdAt: aluno.createdAt,
-              updatedAt: aluno.updatedAt,
-            });
-            
-            if (pagamento.status === "Pendente") {
-              totalPendentes++;
-            }
-          }
-        });
-      });
-      
-      // Ordenar por data de vencimento e pegar os 5 mais recentes
-      const pagamentosOrdenados = pagamentosFormatados
-        .sort((a, b) => new Date(b.dataVencimento).getTime() - new Date(a.dataVencimento).getTime())
-        .slice(0, 5);
-      
-      setPagamentosRecentes(pagamentosOrdenados);
-      setPagamentosPendentes(totalPendentes);
-    } catch (error) {
-      console.error("Erro ao buscar pagamentos:", error);
-    } finally {
-      setLoadingPagamentos(false);
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
