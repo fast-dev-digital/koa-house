@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
-import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
-import { db } from "../../firebase-config";
+import {
+  criarProfessor,
+  atualizarProfessor,
+  type ProfessorCreate,
+  type ProfessorUpdate,
+} from "../../services/professorService";
 import { FaTimes, FaChalkboardTeacher, FaSave } from "react-icons/fa";
 import type { Professor } from "../../types/professor";
 
@@ -57,32 +61,51 @@ export default function ProfessorModal({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ NOVA FUNÇÃO COM SERVICES
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (mode === "create") {
-        // Criar novo professor
-        await addDoc(collection(db, "professores"), {
-          ...formData,
-          turmaIds: [], // Inicializar array vazio
-          createdAt: new Date(),
-        });
+        // ✅ CRIAR VIA SERVICE
+        const professorDataToSave: ProfessorCreate = {
+          nome: formData.nome,
+          email: formData.email,
+          telefone: formData.telefone,
+          especialidade: formData.especialidade as
+            | "Futevôlei"
+            | "Beach Tennis"
+            | "Vôlei",
+          status: formData.status as "Ativo" | "Inativo",
+        };
+
+        const professorId = await criarProfessor(professorDataToSave);
+        console.log("✅ Professor criado via service - ID:", professorId);
       } else {
-        // Atualizar professor existente
+        // ✅ ATUALIZAR VIA SERVICE
         if (!professorData?.id)
           throw new Error("ID do professor não encontrado");
 
-        await updateDoc(doc(db, "professores", professorData.id), {
-          ...formData,
-          updatedAt: new Date(),
-        });
+        const updateData: ProfessorUpdate = {
+          nome: formData.nome,
+          telefone: formData.telefone,
+          especialidade: formData.especialidade as
+            | "Futevôlei"
+            | "Beach Tennis"
+            | "Vôlei",
+          status: formData.status as "Ativo" | "Inativo",
+        };
+
+        await atualizarProfessor(professorData.id, updateData);
+        console.log("✅ Professor atualizado via service:", professorData.id);
       }
 
+      console.log("🎉 Sucesso! Chamando onSuccess()");
       onSuccess();
+      onClose();
     } catch (error) {
-      console.error("Erro ao salvar professor:", error);
+      console.error("❌ Erro ao salvar professor:", error);
       alert("Erro ao salvar professor!");
     } finally {
       setLoading(false);
@@ -183,6 +206,7 @@ export default function ProfessorModal({
             >
               <option value="Futevôlei">Futevôlei</option>
               <option value="Beach Tennis">Beach Tennis</option>
+              <option value="Vôlei">Vôlei</option>
             </select>
           </div>
 

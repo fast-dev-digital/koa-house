@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaEdit, FaTrash, FaUsers } from "react-icons/fa";
 
 interface Column {
@@ -42,7 +42,7 @@ export default function DataTable({
     onView: !!onView,
   });
 
-  const [currentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -77,6 +77,9 @@ export default function DataTable({
       setSelectedItems([]);
     }
   };
+  useEffect(() => {
+    setCurrentPage(1); // Reset para página 1 quando dados mudam
+  }, [data.length]);
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -209,9 +212,7 @@ export default function DataTable({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("👁️ Botão Visualizar clicado!");
-                              console.log("👁️ Item:", item);
-                              console.log("👁️ onView function:", onView);
+
                               onView(item);
                             }}
                             className="text-blue-600 hover:text-blue-900 p-1 rounded transition-colors hover:bg-blue-50"
@@ -225,9 +226,7 @@ export default function DataTable({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("✏️ Botão Editar clicado!");
-                              console.log("✏️ Item:", item);
-                              console.log("✏️ onEdit function:", onEdit);
+
                               onEdit(item);
                             }}
                             className="text-yellow-600 hover:text-yellow-900 p-1 rounded transition-colors hover:bg-yellow-50"
@@ -241,12 +240,7 @@ export default function DataTable({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("🗑️ Botão Deletar clicado!");
-                              console.log("🗑️ Item:", item);
-                              console.log("🗑️ Item ID:", item.id);
-                              console.log("🗑️ Item nome:", item.nome);
-                              console.log("🗑️ onDelete function:", onDelete);
-                              console.log("🗑️ Chamando onDelete...");
+
                               onDelete(item);
                             }}
                             className="text-red-600 hover:text-red-900 p-1 rounded transition-colors hover:bg-red-50"
@@ -270,8 +264,30 @@ export default function DataTable({
           Mostrando {startIndex + 1} a {Math.min(endIndex, data.length)} de{" "}
           {data.length} resultados
         </div>
-        <div className="text-xs text-gray-700">
-          Página {currentPage} de {totalPages}
+
+        {/* ✅ NAVEGAÇÃO ENTRE PÁGINAS */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ← Anterior
+          </button>
+
+          <span className="text-xs text-gray-700">
+            Página {currentPage} de {totalPages}
+          </span>
+
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+            }
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Próxima →
+          </button>
         </div>
       </div>
     </div>

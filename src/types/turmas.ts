@@ -1,7 +1,7 @@
 export interface Turma {
   id?: string;
   nome: string;
-  modalidade: "Futevôlei" | "Beach Tennis";
+  modalidade: "Futevôlei" | "Beach Tennis" | "Vôlei";
   genero: "Masculino" | "Feminino" | "Teens";
   nivel: "Estreante" | "Iniciante" | "Intermediário";
   dias: string;

@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
+import { buscarTodosAlunos, atualizarAluno } from "../../services/alunoService";
 import {
-  collection,
-  getDocs,
-  query,
-  where,
-  doc,
-  updateDoc,
-  getDoc,
-} from "firebase/firestore";
-import { db } from "../../firebase-config";
+  buscarTodasTurmas,
+  atualizarTurma,
+  type TurmaUpdate,
+} from "../../services/turmaService";
+import type { Aluno } from "../../types/alunos";
 import {
   FaTimes,
   FaUser,
@@ -16,26 +13,10 @@ import {
   FaPhone,
   FaTrash,
   FaPlus,
-} from "react-icons/fa"; // ✅ Adicionado FaTrash
+} from "react-icons/fa";
 import type { Turma } from "../../types/turmas";
 import SearchInput from "./SearchInput";
 import Toast from "./Toast";
-
-interface Aluno {
-  id: string;
-  nome: string;
-  email: string;
-  telefone?: string;
-  // ✅ SISTEMA ATUAL - Array de turmaIds (múltiplas turmas)
-  turmasIds?: string[]; // Array de turmaIds para relacionamento
-  // ⚠️ LEGADO - turmaId mantido apenas para dados antigos
-  turmaId?: string; // DEPRECATED: usar turmasIds[]
-  genero?: string;
-  status?: string;
-  plano?: string;
-  role?: string;
-  horarios?: string;
-}
 
 interface ManageAlunosModalProps {
   isOpen: boolean;
@@ -50,49 +31,7 @@ export default function ManageAlunosModal({
   onSuccess,
   turma,
 }: ManageAlunosModalProps) {
-  // ✅ FUNÇÕES AUXILIARES PARA MÚLTIPLAS TURMAS
-  const migrarTurmaIdParaArray = (alunoData: any) => {
-    // Migração automática: turmaId → turmasIds[]
-    if (alunoData.turmaId && !alunoData.turmasIds) {
-      return {
-        ...alunoData,
-        turmasIds: [alunoData.turmaId],
-      };
-    }
-    return alunoData;
-  };
-
-  const alunoEstaNaTurma = (aluno: Aluno, turmaId: string) => {
-    // Verificar se aluno está em uma turma específica
-    const turmasArray =
-      aluno.turmasIds || (aluno.turmaId ? [aluno.turmaId] : []);
-    return turmasArray.includes(turmaId);
-  };
-
-  const alunoTemModalidade = async (aluno: Aluno, modalidade: string) => {
-    // Verificar se aluno já está em turma da mesma modalidade
-    if (!aluno.turmasIds?.length && !aluno.turmaId) return false;
-
-    const turmasArray =
-      aluno.turmasIds || (aluno.turmaId ? [aluno.turmaId] : []);
-
-    // Buscar modalidades das turmas do aluno
-    const turmasQuery = query(
-      collection(db, "turmas"),
-      where("__name__", "in", turmasArray)
-    );
-
-    try {
-      const turmasSnapshot = await getDocs(turmasQuery);
-      return turmasSnapshot.docs.some(
-        (doc) => doc.data().modalidade === modalidade
-      );
-    } catch (error) {
-      console.error("Erro ao verificar modalidades:", error);
-      return false;
-    }
-  };
-
+  // ✅ ESTADOS CONSOLIDADOS
   const [activeTab, setActiveTab] = useState<"matriculados" | "disponiveis">(
     "matriculados"
   );
@@ -100,66 +39,154 @@ export default function ManageAlunosModal({
   const [alunosDisponiveis, setAlunosDisponiveis] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingDisponiveis, setLoadingDisponiveis] = useState(false);
-  const [loadingRemover, setLoadingRemover] = useState<string | null>(null); // ✅ Novo estado
+  const [loadingRemover, setLoadingRemover] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [selectedAlunosIds, setSelectedAlunosIds] = useState<string[]>([]);
-
-  // Toast states
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [isToastVisible, setIsToastVisible] = useState(false);
 
+  // ✅ CACHE GLOBAL - Uma única query para todos os dados
+  const [todosAlunos, setTodosAlunos] = useState<Aluno[]>([]);
+  const [todasTurmas, setTodasTurmas] = useState<Map<string, any>>(new Map());
+
+  // ✅ HELPER - Toast
   const showToast = (message: string, type: "success" | "error") => {
     setToastMessage(message);
     setToastType(type);
     setIsToastVisible(true);
   };
 
-  // FUNÇÃO PARA REMOVER ALUNO DA TURMA
-  const removerAlunoDaTurma = async (aluno: Aluno) => {
-    if (!turma?.id || !aluno.id) return;
+  // ✅ HELPER - Migração automática
+  const migrarTurmaId = (alunoData: any) => ({
+    ...alunoData,
+    turmasIds:
+      alunoData.turmasIds || (alunoData.turmaId ? [alunoData.turmaId] : []),
+  });
 
-    const confirmMessage = `Tem certeza que deseja remover ${aluno.nome} desta turma?`;
-    if (!confirm(confirmMessage)) return;
+  // Carregar todos os dados
+  const carregarDadosCompletos = async () => {
+    if (todosAlunos.length > 0 && todasTurmas.size > 0) return; // Cache já carregado
+
+    try {
+      setLoading(true);
+      console.log("📡 Carregando dados completos com SERVICES...");
+
+      const [alunosData, turmasData] = await Promise.all([
+        buscarTodosAlunos(), // ✅ SERVICE COM CACHE
+        buscarTodasTurmas(), // ✅ SERVICE COM CACHE
+      ]);
+
+      const alunosAtivos = alunosData.filter(
+        (aluno) => aluno.status === "Ativo"
+      );
+
+      const alunosProcessados = alunosAtivos.map((aluno) =>
+        migrarTurmaId(aluno)
+      );
+
+      const turmasMap = new Map();
+      turmasData.forEach((turma) => {
+        turmasMap.set(turma.id, turma);
+      });
+
+      setTodosAlunos(alunosProcessados);
+      setTodasTurmas(turmasMap);
+      console.log(
+        `✅ Cache carregado: ${alunosProcessados.length} alunos ativos, ${turmasMap.size} turmas`
+      );
+    } catch (error) {
+      console.error("❌ Erro ao carregar dados:", error);
+      showToast("Erro ao carregar dados", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ FUNÇÃO - Filtrar alunos matriculados (do cache)
+  const calcularAlunosMatriculados = () => {
+    if (!turma?.id) return [];
+
+    return todosAlunos.filter(
+      (aluno) =>
+        aluno.turmasIds?.includes(turma.id!) || aluno.turmasIds === turma.id
+    );
+  };
+
+  // ✅ FUNÇÃO - Filtrar alunos disponíveis (do cache)
+  const calcularAlunosDisponiveis = () => {
+    if (!turma?.id) return [];
+
+    return todosAlunos.filter((aluno) => {
+      // Já está nesta turma?
+      const jaNestaTurma =
+        aluno.turmasIds?.includes(turma.id!) || aluno.turmasIds === turma.id;
+      if (jaNestaTurma) return false;
+
+      // Filtro por gênero (exceto Beach Tennis, Teens e Vôlei)
+      if (
+        turma.modalidade !== "Beach Tennis" &&
+        turma.genero !== "Teens" &&
+        turma.modalidade !== "Vôlei" &&
+        aluno.genero !== turma.genero
+      ) {
+        return false;
+      }
+
+      // Já tem turma da mesma modalidade?
+      const turmasDoAluno = aluno.turmasIds || [];
+      const jaTemModalidade = turmasDoAluno.some((turmaId) => {
+        const turmaData = todasTurmas.get(turmaId);
+        return turmaData?.modalidade === turma.modalidade;
+      });
+
+      return !jaTemModalidade;
+    });
+  };
+
+  // ✅ SUBSTITUIR removerAlunoDaTurma - MANTER LÓGICAS DE VALIDAÇÃO
+  const removerAlunoDaTurma = async (aluno: Aluno) => {
+    if (
+      !turma?.id ||
+      !confirm(`Tem certeza que deseja remover ${aluno.nome} desta turma?`)
+    )
+      return;
 
     setLoadingRemover(aluno.id);
     try {
-      console.log(`Removendo aluno ${aluno.nome} da turma ${turma.nome}`);
-
-      // ✅ NOVA LÓGICA - Remover da array de turmas
-      const turmasArray =
-        aluno.turmasIds || (aluno.turmaId ? [aluno.turmaId] : []);
-      const novasTurmas = turmasArray.filter((id: string) => id !== turma.id);
-
-      // 1. Atualizar array de turmas do aluno
-      const alunoRef = doc(db, "Alunos", aluno.id);
-      await updateDoc(alunoRef, {
-        turmasIds: novasTurmas,
-        // ❌ DEPRECATED - Limpar turmaId se array ficar vazio
-        ...(novasTurmas.length === 0 && { turmaId: "" }),
-      });
-
-      // 2. Decrementar contador da turma
-      const novoContador = Math.max(0, alunos.length - 1);
-      const turmaRef = doc(db, "turmas", turma.id);
-      await updateDoc(turmaRef, {
-        alunosInscritos: novoContador,
-      });
-
-      console.log(
-        `✅ Aluno removido e contador atualizado: ${turma.alunosInscritos} → ${novoContador}`
+      // ✅ MANTER LÓGICA DE FILTRO
+      const novasTurmas = (aluno.turmasIds || []).filter(
+        (id) => id !== turma.id
       );
 
-      // 3. Atualizar estado local
-      setAlunos((alunosMatriculados) =>
-        alunosMatriculados.filter((a) => a.id !== aluno.id)
-      );
+      // ✅ USAR SERVICES (SEM BATCH MANUAL)
+      await Promise.all([
+        // Atualizar aluno via service
+        atualizarAluno(aluno.id, {
+          turmasIds: novasTurmas,
+          ...(novasTurmas.length === 0 && { turmaId: "" }),
+        }),
+        // Atualizar contador da turma via service
+        atualizarTurma(turma.id, {
+          alunosInscritos: Math.max(0, alunos.length - 1),
+        } as TurmaUpdate),
+      ]);
 
-      // 4. Recarregar dados
-      await fetchAlunosDisponiveis();
-      onSuccess(); //  Notificar parent para recarregar
+      // ✅ MANTER LÓGICA DE CACHE LOCAL
+      setTodosAlunos((prev) =>
+        prev.map((a) =>
+          a.id === aluno.id
+            ? {
+                ...a,
+                turmasIds: novasTurmas,
+                ...(novasTurmas.length === 0 && { turmaId: "" }),
+              }
+            : a
+        )
+      );
 
       showToast(`${aluno.nome} foi removido da turma com sucesso!`, "success");
+      onSuccess();
     } catch (error) {
       console.error("❌ Erro ao remover aluno:", error);
       showToast("Erro ao remover aluno da turma", "error");
@@ -168,183 +195,14 @@ export default function ManageAlunosModal({
     }
   };
 
-  // Buscar alunos matriculados na turma
-  const fetchAlunos = async () => {
-    if (!turma?.id) return;
-
-    setLoading(true);
-    try {
-      console.log("🔍 Buscando alunos matriculados na turma:", turma.nome);
-
-      // ✅ NOVA LÓGICA - Buscar por array de turmas OU turmaId (compatibilidade)
-      const alunosQuery = collection(db, "Alunos");
-      const querySnapshot = await getDocs(alunosQuery);
-
-      const alunosData: Aluno[] = [];
-      querySnapshot.forEach((doc) => {
-        const docData = doc.data();
-
-        // ✅ MIGRAÇÃO AUTOMÁTICA
-        const alunoMigrado = migrarTurmaIdParaArray(docData);
-
-        // Verificar se está na turma atual
-        const turmasArray =
-          alunoMigrado.turmasIds ||
-          (alunoMigrado.turmaId ? [alunoMigrado.turmaId] : []);
-        const estaNaTurma = turmasArray.includes(turma.id);
-
-        if (estaNaTurma) {
-          console.log("👤 Aluno matriculado encontrado:", doc.id, alunoMigrado);
-
-          alunosData.push({
-            id: doc.id,
-            nome: alunoMigrado.nome || "",
-            email: alunoMigrado.email || "",
-            telefone: alunoMigrado.telefone || "",
-            turmasIds: alunoMigrado.turmasIds || [],
-            turmaId: alunoMigrado.turmaId || "", // Compatibilidade
-            genero: alunoMigrado.genero || "",
-            status: alunoMigrado.status || "",
-            plano: alunoMigrado.plano || "",
-            role: alunoMigrado.role || "",
-            horarios: alunoMigrado.horarios || "",
-          });
-        }
-      });
-
-      setAlunos(alunosData);
-      console.log(`✅ ${alunosData.length} alunos matriculados encontrados`);
-    } catch (error) {
-      console.error("❌ Erro ao carregar alunos matriculados:", error);
-      showToast("Erro ao carregar alunos matriculados", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Buscar alunos disponíveis para matrícula
-  const fetchAlunosDisponiveis = async () => {
-    if (!turma?.id || typeof turma.id !== "string") return;
-
-    setLoadingDisponiveis(true);
-    try {
-      console.log("🔍 Buscando alunos disponíveis para turma:", turma.nome);
-
-      const alunosQuery = query(
-        collection(db, "Alunos"),
-        where("status", "==", "ativo")
-      );
-
-      const querySnapshot = await getDocs(alunosQuery);
-      const todosAlunos: Aluno[] = [];
-
-      // ✅ STEP 1: Buscar todas as turmas para verificar modalidades
-      const todasTurmasSnapshot = await getDocs(collection(db, "turmas"));
-      const turmasMap = new Map();
-      todasTurmasSnapshot.forEach((doc) => {
-        turmasMap.set(doc.id, doc.data());
-      });
-
-      querySnapshot.forEach((doc) => {
-        const docData = doc.data();
-
-        // ✅ MIGRAÇÃO AUTOMÁTICA
-        const alunoMigrado = migrarTurmaIdParaArray(docData);
-
-        console.log("👤 Aluno ativo encontrado:", doc.id, {
-          nome: alunoMigrado.nome,
-          genero: alunoMigrado.genero,
-          turmasIds: alunoMigrado.turmasIds,
-          turmaId: alunoMigrado.turmaId, // compatibilidade
-          status: alunoMigrado.status,
-        });
-
-        todosAlunos.push({
-          id: doc.id,
-          nome: alunoMigrado.nome || "",
-          email: alunoMigrado.email || "",
-          telefone: alunoMigrado.telefone || "",
-          genero: alunoMigrado.genero || "",
-          status: alunoMigrado.status || "",
-          turmasIds: alunoMigrado.turmasIds || [],
-          turmaId: alunoMigrado.turmaId || "", // compatibilidade
-          plano: alunoMigrado.plano || "",
-          role: alunoMigrado.role || "",
-          horarios: alunoMigrado.horarios || "",
-        });
-      });
-
-      console.log(`📊 Total de alunos ativos: ${todosAlunos.length}`);
-
-      // ✅ STEP 2: Filtrar por gênero (EXCETO Beach Tennis E Teens)
-      let alunosPorGenero = todosAlunos;
-      if (turma.modalidade !== "Beach Tennis" && turma.genero !== "Teens") {
-        alunosPorGenero = todosAlunos.filter((aluno) => {
-          const generoMatch = aluno.genero === turma.genero;
-          console.log(
-            `🔍 ${aluno.nome}: genero=${aluno.genero}, turmaGenero=${turma.genero}, match=${generoMatch}`
-          );
-          return generoMatch;
-        });
-        console.log(
-          `👥 Alunos do gênero ${turma.genero}: ${alunosPorGenero.length}`
-        );
-      } else {
-        console.log("🏖️ Beach Tennis ou Teens aceita todos os gêneros");
-      }
-
-      // ✅ STEP 3: NOVA REGRA - Filtrar por modalidade
-      const disponíveis = alunosPorGenero.filter((aluno) => {
-        // Verificar se já está nesta turma específica
-        const turmasArray =
-          aluno.turmasIds || (aluno.turmaId ? [aluno.turmaId] : []);
-        const jaNestaTurma = turmasArray.includes(turma.id!);
-
-        if (jaNestaTurma) {
-          console.log(`❌ ${aluno.nome}: já está nesta turma`);
-          return false;
-        }
-
-        // ✅ NOVA REGRA: Verificar se já tem turma da mesma modalidade
-        const jaTemModalidade = turmasArray.some((turmaId: string) => {
-          const turmaData = turmasMap.get(turmaId);
-          return turmaData?.modalidade === turma.modalidade;
-        });
-
-        if (jaTemModalidade) {
-          console.log(`❌ ${aluno.nome}: já tem turma de ${turma.modalidade}`);
-          return false;
-        }
-
-        console.log(`✅ ${aluno.nome}: disponível para ${turma.modalidade}`);
-        return true;
-      });
-
-      setAlunosDisponiveis(disponíveis);
-      console.log(
-        `✅ RESULTADO FINAL: ${disponíveis.length} alunos disponíveis`
-      );
-      console.log(
-        "📋 Alunos disponíveis:",
-        disponíveis.map((a) => a.nome)
-      );
-    } catch (error) {
-      console.error("❌ Erro ao buscar alunos disponíveis:", error);
-      showToast("Erro ao buscar alunos disponíveis", "error");
-    } finally {
-      setLoadingDisponiveis(false);
-    }
-  };
-
-  // Adicionar alunos selecionados na turma
+  // ✅ FUNÇÃO - Adicionar alunos (otimizada com batch)
   const adicionarAlunosNaTurma = async () => {
     if (!turma?.id || selectedAlunosIds.length === 0) return;
 
-    // Verificar capacidade da turma
     const vagasDisponiveis = (turma.capacidade || 0) - alunos.length;
     if (selectedAlunosIds.length > vagasDisponiveis) {
       showToast(
-        ` Turma tem apenas ${vagasDisponiveis} vaga(s) disponível(eis)`,
+        `Turma tem apenas ${vagasDisponiveis} vaga(s) disponível(eis)`,
         "error"
       );
       return;
@@ -352,51 +210,46 @@ export default function ManageAlunosModal({
 
     setLoadingDisponiveis(true);
     try {
-      console.log(
-        ` Adicionando ${selectedAlunosIds.length} alunos na turma ${turma.nome}`
-      );
-
-      // ✅ NOVA LÓGICA - Atualizar array de turmas de cada aluno
-      const updatePromises = selectedAlunosIds.map(async (alunoId) => {
-        const alunoRef = doc(db, "Alunos", alunoId);
-
-        // Buscar dados atuais do aluno
-        const alunoDoc = await getDoc(alunoRef);
-        if (alunoDoc.exists()) {
-          const alunoData = alunoDoc.data();
-          const alunoMigrado = migrarTurmaIdParaArray(alunoData);
-
-          const turmasArray =
-            alunoMigrado.turmasIds ||
-            (alunoMigrado.turmaId ? [alunoMigrado.turmaId] : []);
-          const novasTurmas = [...turmasArray, turma.id!];
-
-          await updateDoc(alunoRef, {
+      // ✅ USAR SERVICES EM VEZ DE BATCH MANUAL
+      const alunosParaAtualizar = selectedAlunosIds.map(async (alunoId) => {
+        const aluno = todosAlunos.find((a) => a.id === alunoId);
+        if (aluno) {
+          const novasTurmas = [...(aluno.turmasIds || []), turma.id!];
+          return atualizarAluno(alunoId, {
             turmasIds: novasTurmas,
-            // ✅ Manter turmaId para compatibilidade (primeira turma)
-            turmaId: novasTurmas[0] || "",
           });
-
-          console.log(`✅ Aluno ${alunoId} matriculado na turma ${turma.id}`);
         }
       });
 
-      await Promise.all(updatePromises);
+      // ✅ EXECUTAR TODAS AS ATUALIZAÇÕES EM PARALELO
+      await Promise.all([
+        ...alunosParaAtualizar,
+        // Atualizar contador da turma via service
+        atualizarTurma(turma.id, {
+          alunosInscritos: alunos.length + selectedAlunosIds.length,
+        } as TurmaUpdate),
+      ]);
 
-      // Atualizar contador na turma
-      const turmaRef = doc(db, "turmas", turma.id);
-      await updateDoc(turmaRef, {
-        alunosInscritos: alunos.length + selectedAlunosIds.length,
-      });
+      // ✅ ATUALIZAR CACHE LOCAL
+      setTodosAlunos((prev) =>
+        prev.map((aluno) => {
+          if (selectedAlunosIds.includes(aluno.id)) {
+            const novasTurmas = [...(aluno.turmasIds || []), turma.id!];
+            return {
+              ...aluno,
+              turmasIds: novasTurmas,
+              turmaId: novasTurmas[0] || "",
+            };
+          }
+          return aluno;
+        })
+      );
 
       showToast(
         `🎉 ${selectedAlunosIds.length} aluno(s) adicionado(s) com sucesso!`,
         "success"
       );
-
       setSelectedAlunosIds([]);
-      await fetchAlunos();
-      await fetchAlunosDisponiveis();
       setActiveTab("matriculados");
       onSuccess();
     } catch (error) {
@@ -407,14 +260,7 @@ export default function ManageAlunosModal({
     }
   };
 
-  // Filtrar alunos disponíveis por busca
-  const alunosDisponiveisFiltrados = alunosDisponiveis.filter(
-    (aluno) =>
-      aluno.nome.toLowerCase().includes(searchText.toLowerCase()) ||
-      aluno.email.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  // Toggle seleção de aluno
+  // ✅ FUNÇÃO - Toggle seleção
   const toggleAlunoSelection = (alunoId: string) => {
     setSelectedAlunosIds((prev) =>
       prev.includes(alunoId)
@@ -423,16 +269,30 @@ export default function ManageAlunosModal({
     );
   };
 
-  // Efeitos
+  // ✅ COMPUTED - Dados filtrados (do cache)
+  const alunosMatriculados = calcularAlunosMatriculados();
+  const alunosDisponiveisCompletos = calcularAlunosDisponiveis();
+  const alunosDisponiveisFiltrados = alunosDisponiveisCompletos.filter(
+    (aluno) =>
+      aluno.nome.toLowerCase().includes(searchText.toLowerCase()) ||
+      aluno.email.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  // ✅ EFFECTS OTIMIZADOS
   useEffect(() => {
     if (isOpen && turma) {
-      fetchAlunos();
-      fetchAlunosDisponiveis();
+      carregarDadosCompletos();
       setActiveTab("matriculados");
       setSearchText("");
       setSelectedAlunosIds([]);
     }
   }, [isOpen, turma]);
+
+  // ✅ EFFECT - Atualizar estados quando cache mudar
+  useEffect(() => {
+    setAlunos(alunosMatriculados);
+    setAlunosDisponiveis(alunosDisponiveisCompletos);
+  }, [todosAlunos, turma?.id]);
 
   if (!isOpen || !turma) return null;
 
@@ -544,7 +404,6 @@ export default function ManageAlunosModal({
                           </div>
                         </div>
 
-                        {/* ✅ BOTÃO REMOVER */}
                         <button
                           onClick={() => removerAlunoDaTurma(aluno)}
                           disabled={loadingRemover === aluno.id}
@@ -570,7 +429,6 @@ export default function ManageAlunosModal({
             </div>
           ) : (
             <div>
-              {/* Busca e ações */}
               <div className="flex items-center justify-between mb-4">
                 <SearchInput
                   value={searchText}
@@ -590,7 +448,6 @@ export default function ManageAlunosModal({
                 )}
               </div>
 
-              {/* Lista de alunos disponíveis */}
               {loadingDisponiveis ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -671,7 +528,6 @@ export default function ManageAlunosModal({
           )}
         </div>
 
-        {/* Footer com informações */}
         <div className="border-t p-4 bg-gray-50">
           <div className="flex items-center justify-between text-sm text-gray-600">
             <div>
@@ -685,7 +541,6 @@ export default function ManageAlunosModal({
         </div>
       </div>
 
-      {/* Toast */}
       <Toast
         message={toastMessage}
         type={toastType}

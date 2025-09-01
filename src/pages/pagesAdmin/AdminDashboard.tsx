@@ -1,33 +1,53 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { auth, db } from "../../firebase-config";
-import type { Pagamento } from "../../types/pagamentos";
-import { listarAlunosComPagamentos } from "../../services/integracaoService";
+import { db, auth } from "../../firebase-config";
+import { buscarTodosProfessores } from "../../services/professorService";
+import {
+  buscarTodasTurmas,
+  obterEstatisticasTurmas,
+} from "../../services/turmaService";
+import {
+  FaUsers,
+  FaChalkboardTeacher,
+  FaSchool,
+  FaCalendarAlt,
+  FaTableTennis,
+  FaVolleyballBall,
+  FaFutbol,
+} from "react-icons/fa";
+
+// ✅ ADICIONAR CACHE DO ALUNO SERVICE
+import { buscarTodosAlunos } from "../../services/alunoService";
 
 export default function AdminDashboard() {
   const [nome, setNome] = useState<string>("");
   const [totalAlunos, setTotalAlunos] = useState<number>(0);
   const [totalProfessores, setTotalProfessores] = useState<number>(0);
   const [totalTurmas, setTotalTurmas] = useState<number>(0);
-  const [pagamentosPendentes, setPagamentosPendentes] = useState<number>(0);
-  const [quadrasReservadas, setQuadrasReservadas] = useState<number>(0);
-  const [pagamentosRecentes, setPagamentosRecentes] = useState<Pagamento[]>([]);
-  const [loadingPagamentos, setLoadingPagamentos] = useState<boolean>(false);
+
+  // ✅ DADOS SIMPLES POR MODALIDADE
+  const [beachTennis, setBeachTennis] = useState<number>(0);
+  const [volei, setVolei] = useState<number>(0);
+  const [futevolei, setFutevolei] = useState<number>(0);
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Busca nome do admin
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const docRef = collection(db, "admins");
-        const docs = await getDocs(docRef);
-        docs.forEach((doc) => {
-          if (doc.id === user.uid) {
-            setNome(doc.data().nome || "");
+        // ✅ OTIMIZAR QUERY DO ADMIN (busca direta por ID)
+        try {
+          const adminDoc = await getDoc(doc(db, "admins", user.uid));
+          if (adminDoc.exists()) {
+            setNome(adminDoc.data()?.nome || "Admin");
           }
-        });
+        } catch (error) {
+          console.error("❌ Erro ao buscar admin:", error);
+        }
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -80,130 +100,172 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    // Busca total de alunos
-    getDocs(collection(db, "Alunos")).then((snapshot) => {
-      setTotalAlunos(snapshot.size);
-    });
-    // Busca total de professores
-    getDocs(collection(db, "professores")).then((snapshot) => {
-      setTotalProfessores(snapshot.size);
-    });
-    // Busca total de turmas
-    getDocs(collection(db, "turmas")).then((snapshot) => {
-      setTotalTurmas(snapshot.size);
-    });
-    // Busca quadras reservadas hoje (exemplo: dataReserva === hoje)
-    const hoje = new Date();
-    const dataHoje = hoje.toISOString().slice(0, 10);
-    getDocs(
-      query(collection(db, "reservas"), where("dataReserva", "==", dataHoje))
-    ).then((snapshot) => {
-      setQuadrasReservadas(snapshot.size);
-    });
-    
-    // Buscar pagamentos recentes
-    fetchPagamentosRecentes();
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [alunosData, professoresData, turmasData, estatisticas] =
+          await Promise.all([
+            buscarTodosAlunos(), // Cache automático
+            buscarTodosProfessores(), // Cache automático
+            buscarTodasTurmas(), // Cache automático
+            obterEstatisticasTurmas(), // Estatísticas calculadas
+          ]);
+
+        // USAR DADOS DOS SERVICES
+        setTotalAlunos(alunosData.length);
+        setTotalProfessores(professoresData.length);
+        setTotalTurmas(turmasData.length);
+
+        setBeachTennis(estatisticas.modalidades?.["Beach Tennis"] || 0);
+        setVolei(estatisticas.modalidades?.["Vôlei"] || 0);
+        setFutevolei(estatisticas.modalidades?.["Futevôlei"] || 0);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex bg-gray-50 min-h-screen">
       <main className="flex-1 p-8">
-        <h1 className="text-2xl font-bold mb-4 text-center">
-          Bem-vindo{nome ? `, ${nome}` : ""}!
-        </h1>
-        <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
-        <div className="grid grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            <span className="text-gray-500">Total Alunos</span>
-            <span className="text-2xl font-bold">{totalAlunos}</span>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Bem-vindo, {nome}!
+          </h1>
+        </div>
+
+        {/* Cards principais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <FaUsers className="text-3xl text-blue-600 mr-4" />
+              <div>
+                <p className="text-sm text-gray-600">Total de Alunos</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalAlunos}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            <span className="text-gray-500">Professores ativos</span>
-            <span className="text-2xl font-bold">{totalProfessores}</span>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <FaChalkboardTeacher className="text-3xl text-purple-600 mr-4" />
+              <div>
+                <p className="text-sm text-gray-600">Professores</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalProfessores}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            <span className="text-gray-500">Turmas ativas</span>
-            <span className="text-2xl font-bold">{totalTurmas}</span>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <FaSchool className="text-3xl text-indigo-600 mr-4" />
+              <div>
+                <p className="text-sm text-gray-600">Turmas Ativas</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalTurmas}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            <span className="text-gray-500">Pagamentos Pendentes</span>
-            <span className="text-2xl font-bold">{pagamentosPendentes}</span>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <FaCalendarAlt className="text-3xl text-green-600 mr-4" />
+              <div>
+                <p className="text-sm text-gray-600">Modalidades</p>
+                <p className="text-2xl font-bold text-gray-900">3</p>
+              </div>
+            </div>
           </div>
         </div>
-        {/* Tabela dinâmica de pagamentos recentes */}
+
+        {/* Cards por modalidade */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FaTableTennis className="text-orange-600 text-xl" />
+              </div>
+              <p className="text-sm text-gray-600">Beach Tennis</p>
+              <p className="text-xl font-bold text-orange-600">
+                {beachTennis} turmas
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FaVolleyballBall className="text-purple-600 text-xl" />
+              </div>
+              <p className="text-sm text-gray-600">Vôlei</p>
+              <p className="text-xl font-bold text-purple-600">
+                {volei} turmas
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FaFutbol className="text-blue-600 text-xl" />
+              </div>
+              <p className="text-sm text-gray-600">Futevôlei</p>
+              <p className="text-xl font-bold text-blue-600">
+                {futevolei} turmas
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Resumo */}
         <section className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Pagamentos Recentes</h3>
-          {loadingPagamentos ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">Carregando pagamentos...</span>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <FaCalendarAlt className="mr-2 text-blue-600" />
+              Resumo Geral
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            <div>
+              <p className="text-2xl font-bold text-gray-900">
+                {totalAlunos + totalProfessores}
+              </p>
+              <p className="text-sm text-gray-600">Total de Pessoas</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left">
-                <thead>
-                  <tr>
-                    <th className="py-2 px-4">Nome</th>
-                    <th className="py-2 px-4">Plano</th>
-                    <th className="py-2 px-4">Mês Referência</th>
-                    <th className="py-2 px-4">Vencimento</th>
-                    <th className="py-2 px-4">Valor</th>
-                    <th className="py-2 px-4">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagamentosRecentes.length > 0 ? (
-                    pagamentosRecentes.map((pagamento) => {
-                      const getStatusColor = (status: string) => {
-                        switch (status) {
-                          case "Pago":
-                            return "bg-green-100 text-green-700";
-                          case "Pendente":
-                            return "bg-yellow-100 text-yellow-700";
-                          case "Atrasado":
-                            return "bg-red-100 text-red-700";
-                          default:
-                            return "bg-gray-100 text-gray-700";
-                        }
-                      };
-                      
-                      const formatarData = (data: Date) => {
-                        return new Date(data).toLocaleDateString("pt-BR");
-                      };
-                      
-                      const formatarValor = (valor: number) => {
-                        return new Intl.NumberFormat("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        }).format(valor);
-                      };
-                      
-                      return (
-                        <tr key={pagamento.id}>
-                          <td className="py-2 px-4">{pagamento.alunoNome}</td>
-                          <td className="py-2 px-4">{pagamento.planoTipo}</td>
-                          <td className="py-2 px-4">{pagamento.mesReferencia}</td>
-                          <td className="py-2 px-4">{formatarData(pagamento.dataVencimento)}</td>
-                          <td className="py-2 px-4">{formatarValor(pagamento.valor)}</td>
-                          <td className="py-2 px-4">
-                            <span className={`${getStatusColor(pagamento.status)} px-3 py-1 rounded-full text-xs`}>
-                              {pagamento.status}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="py-8 px-4 text-center text-gray-500">
-                        Nenhum pagamento encontrado
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+
+            <div>
+              <p className="text-2xl font-bold text-gray-900">
+                {totalTurmas > 0
+                  ? Math.round((totalAlunos / totalTurmas) * 10) / 10
+                  : 0}
+              </p>
+              <p className="text-sm text-gray-600">Alunos por Turma (média)</p>
             </div>
-          )}
+
+            <div>
+              <p className="text-2xl font-bold text-gray-900">
+                {totalTurmas + totalProfessores}
+              </p>
+              <p className="text-sm text-gray-600">Recursos Ativos</p>
+            </div>
+          </div>
         </section>
       </main>
     </div>

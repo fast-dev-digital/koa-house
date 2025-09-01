@@ -59,12 +59,54 @@ interface AlunoComPagamentos {
   updatedAt: Date;
 }
 
+interface CacheIntegracao {
+  todosAlunos: AlunoComPagamentos[] | null;
+  alunoIndividual: Map<string, AlunoComPagamentos>;
+  timestampTodos: number;
+  timestampIndividual: Map<string, number>;
+}
+
+const cacheIntegracao: CacheIntegracao = {
+  todosAlunos: null,
+  alunoIndividual: new Map(),
+  timestampTodos: 0,
+  timestampIndividual: new Map(),
+};
+
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutos
+
+//  FUNÇÃO PARA INVALIDAR CACHE
+function invalidarCacheIntegracao(): void {
+  console.log("🧹 Invalidando cache de integração...");
+  cacheIntegracao.todosAlunos = null;
+  cacheIntegracao.timestampTodos = 0;
+  cacheIntegracao.alunoIndividual.clear();
+  cacheIntegracao.timestampIndividual.clear();
+}
+
+//  FUNÇÃO PARA VERIFICAR SE CACHE ESTÁ VÁLIDO
+function cacheValidoTodos(): boolean {
+  const now = Date.now();
+  return (
+    cacheIntegracao.todosAlunos !== null &&
+    now - cacheIntegracao.timestampTodos < CACHE_TTL
+  );
+}
+
+function cacheValidoIndividual(alunoId: string): boolean {
+  const now = Date.now();
+  const timestamp = cacheIntegracao.timestampIndividual.get(alunoId) || 0;
+  return (
+    cacheIntegracao.alunoIndividual.has(alunoId) && now - timestamp < CACHE_TTL
+  );
+}
+
 // Criar aluno na nova estrutura com primeiro pagamento
 export async function criarAlunoComPagamentosArray(
   alunoData: AlunoData
 ): Promise<void> {
   try {
-    if (alunoData.status !== "ativo") {
+    if (alunoData.status !== "Ativo") {
       console.log(`⏸️ Aluno ${alunoData.nome} não está ativo`);
       return;
     }
@@ -126,6 +168,7 @@ export async function criarAlunoComPagamentosArray(
     });
 
     console.log(`✅ ${alunoData.nome} criado na nova estrutura`);
+    invalidarCacheIntegracao();
   } catch (error) {
     console.error("❌ Erro ao criar aluno na nova estrutura:", error);
     throw error;
@@ -133,10 +176,18 @@ export async function criarAlunoComPagamentosArray(
 }
 
 // ✅ FUNÇÃO 5 - Buscar aluno específico com pagamentos
+
 export async function buscarAlunoComPagamentos(
   alunoId: string
 ): Promise<AlunoComPagamentos | null> {
   try {
+    // ✅ VERIFICAR CACHE INDIVIDUAL PRIMEIRO
+    if (cacheValidoIndividual(alunoId)) {
+      console.log(`🔄 Usando cache para aluno ${alunoId}`);
+      return cacheIntegracao.alunoIndividual.get(alunoId) || null;
+    }
+
+    console.log(`📡 Buscando aluno ${alunoId} do Firebase...`);
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
       where("alunoId", "==", alunoId)
@@ -151,7 +202,7 @@ export async function buscarAlunoComPagamentos(
     const docSnapshot = alunoSnapshot.docs[0];
     const data = docSnapshot.data();
 
-    return {
+    const aluno: AlunoComPagamentos = {
       id: docSnapshot.id,
       alunoId: data.alunoId,
       nome: data.nome,
@@ -171,23 +222,37 @@ export async function buscarAlunoComPagamentos(
       createdAt: data.createdAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
     };
+
+    // ✅ CACHEAR RESULTADO
+    cacheIntegracao.alunoIndividual.set(alunoId, aluno);
+    cacheIntegracao.timestampIndividual.set(alunoId, Date.now());
+
+    console.log(`✅ Aluno ${data.nome} carregado e cacheado`);
+    return aluno;
   } catch (error) {
     console.error("❌ Erro ao buscar aluno:", error);
     return null;
   }
 }
-
 // ✅ FUNÇÃO 6 - Listar todos alunos com pagamentos
+// ✅ SUBSTITUIR A FUNÇÃO COMPLETA (LINHA 169):
 export async function listarAlunosComPagamentos(): Promise<
   AlunoComPagamentos[]
 > {
   try {
+    // VERIFICAR CACHE PRIMEIRO
+    if (cacheValidoTodos()) {
+      console.log("🔄 Usando cache para listar todos os alunos com pagamentos");
+      return cacheIntegracao.todosAlunos!;
+    }
+
+    console.log("📡 Buscando todos os alunos com pagamentos do Firebase...");
     const snapshot = await getDocs(collection(db, "alunosPagamentos"));
     const alunos: AlunoComPagamentos[] = [];
 
     snapshot.forEach((docSnapshot) => {
       const data = docSnapshot.data();
-      alunos.push({
+      const aluno: AlunoComPagamentos = {
         id: docSnapshot.id,
         alunoId: data.alunoId,
         nome: data.nome,
@@ -206,9 +271,20 @@ export async function listarAlunosComPagamentos(): Promise<
         proximoVencimento: data.proximoVencimento?.toDate(),
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
-      });
+      };
+
+      alunos.push(aluno);
+
+      // ✅ CACHEAR TAMBÉM INDIVIDUALMENTE
+      cacheIntegracao.alunoIndividual.set(data.alunoId, aluno);
+      cacheIntegracao.timestampIndividual.set(data.alunoId, Date.now());
     });
 
+    // ✅ CACHEAR RESULTADO
+    cacheIntegracao.todosAlunos = alunos;
+    cacheIntegracao.timestampTodos = Date.now();
+
+    console.log(`✅ ${alunos.length} alunos carregados e cacheados`);
     return alunos;
   } catch (error) {
     console.error("❌ Erro ao listar alunos:", error);
@@ -244,7 +320,7 @@ export async function adicionarProximoPagamentoArray(
     }
 
     // Verificar se aluno está ativo
-    if (alunoComPagamentos.status !== "ativo") {
+    if (alunoComPagamentos.status !== "Ativo") {
       console.log(`⏸️ Aluno ${alunoComPagamentos.nome} não está ativo`);
       return;
     }
@@ -361,6 +437,8 @@ export async function adicionarProximoPagamentoArray(
     console.log(
       `✅ Próximo pagamento adicionado para ${alunoComPagamentos.nome}`
     );
+    invalidarCacheIntegracao();
+    console.log("invalidar cache funcionando");
   } catch (error) {
     console.error("❌ Erro ao adicionar próximo pagamento:", error);
     throw error;
@@ -508,6 +586,7 @@ export async function marcarPagamentoPagoArray(
     console.log(
       `✅ Pagamento marcado como pago para ${alunoComPagamentos.nome}`
     );
+    invalidarCacheIntegracao();
   } catch (error) {
     console.error("❌ Erro ao marcar pagamento como pago:", error);
     throw error;
@@ -527,7 +606,7 @@ export async function fecharMesComArray(): Promise<{
 
     // Buscar todos os alunos ativos
     const alunosSnapshot = await getDocs(
-      query(collection(db, "alunosPagamentos"), where("status", "==", "ativo"))
+      query(collection(db, "alunosPagamentos"), where("status", "==", "Ativo"))
     );
 
     if (alunosSnapshot.empty) {
@@ -617,12 +696,15 @@ export async function fecharMesComArray(): Promise<{
         }
 
         // ✅ VERIFICAR se tinha pendente antes de arquivar
-        const tinhaPendente = pagamentosDoMesParaProcessar.some(
-          (p: any) => p.status === "Pendente"
-        );
+        const tinhaQualquerPagamento = pagamentosDoMesParaProcessar.length > 0;
 
         console.log(
-          `   🔄 ${alunoData.nome} - Tinha pendente: ${tinhaPendente}`
+          `   🔄 ${alunoData.nome} - Pagamentos para processar: ${pagamentosDoMesParaProcessar.length}`
+        );
+        console.log(
+          `   📊 Status dos pagamentos: [${pagamentosDoMesParaProcessar
+            .map((p: any) => p.status)
+            .join(", ")}]`
         );
 
         // ✅ CRIAR ARRAY DE PAGAMENTOS ATUALIZADO
@@ -660,7 +742,7 @@ export async function fecharMesComArray(): Promise<{
           }) || [];
 
         // ✅ GERAR PRÓXIMO PAGAMENTO APENAS SE TINHA PENDENTE
-        if (tinhaPendente) {
+        if (tinhaQualquerPagamento) {
           // Encontrar último pagamento (pode ser o recém-arquivado)
           const ultimoPagamento =
             pagamentosAtualizados[pagamentosAtualizados.length - 1];
@@ -757,17 +839,6 @@ export async function fecharMesComArray(): Promise<{
       }
     }
 
-    console.log(`🎉 Fechamento do mês ${mesParaFechar} concluído:`);
-    console.log(`   • ${alunosProcessados} alunos processados`);
-    console.log(`   • ${pagamentosArquivados} pagamentos arquivados`);
-    console.log(`   • ${novosPagamentosGerados} novos pagamentos gerados`);
-    console.log(
-      `   • ${alunosComPagamentosJaArquivados} alunos já tinham pagamentos arquivados`
-    );
-    console.log(
-      `   • ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês`
-    );
-
     // ✅ MENSAGEM MAIS CLARA
     let mensagem = "";
     if (pagamentosArquivados === 0 && alunosComPagamentosJaArquivados > 0) {
@@ -775,7 +846,8 @@ export async function fecharMesComArray(): Promise<{
     } else if (pagamentosArquivados === 0 && alunosSemPagamentosDoMes > 0) {
       mensagem = `Nenhum pagamento encontrado para o mês ${mesParaFechar}. ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês.`;
     }
-
+    invalidarCacheIntegracao();
+    console.log("🧹 Cache invalidado após fechar mês");
     return {
       alunosProcessados,
       pagamentosArquivados,
