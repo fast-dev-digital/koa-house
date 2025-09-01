@@ -696,7 +696,9 @@ export async function fecharMesComArray(): Promise<{
         }
 
         // ✅ VERIFICAR se tinha pendente antes de arquivar
-        const tinhaQualquerPagamento = pagamentosDoMesParaProcessar.length > 0;
+        const tinhaQualquerPagamento = pagamentosDoMesParaProcessar.some(
+          (p: any) => p.status === "Pendente"
+        );
 
         console.log(
           `   🔄 ${alunoData.nome} - Pagamentos para processar: ${pagamentosDoMesParaProcessar.length}`
