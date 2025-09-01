@@ -1,69 +1,84 @@
-# React + TypeScript + Vite
+# Arena Brazuka
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema web para gestão de alunos, pagamentos, torneios e eventos esportivos.
 
-Currently, two official plugins are available:
+## 📦 Estrutura do Projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **src/components/**: Componentes reutilizáveis (modais, cards, navbar, etc)
+- **src/componentsAdmin/**: Componentes específicos para área administrativa
+- **src/componentsAluno/**: Componentes específicos para área do aluno
+- **src/pages/**: Páginas principais do sistema
+- **src/pagesAdmin/**: Páginas exclusivas para administradores
+- **src/pagesAluno/**: Páginas exclusivas para alunos
+- **src/services/**: Serviços para integração com Firebase/Firestore
+- **src/contexts/**: Contextos globais (ex: autenticação)
+- **src/types/**: Tipos e interfaces TypeScript
+- **src/utils/**: Funções utilitárias
 
-## Expanding the ESLint configuration
+## 🚀 Como rodar o projeto
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. **Instale as dependências**
+   ```bash
+   npm install
+   ```
+2. **Configure o Firebase**
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+   - Crie o arquivo `src/firebase-config.ts` com suas credenciais do Firebase.
+   - Ajuste as regras do Firestore conforme necessidade de segurança e acesso.
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+3. **Inicie o servidor**
+   ```bash
+   npm run dev
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🛠️ Principais Tecnologias
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- React + TypeScript
+- Firebase Authentication & Firestore
+- Tailwind CSS
+- React Router
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🔒 Segurança
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Rotas protegidas para admin e aluno
+- Regras do Firestore devem ser revisadas para produção
+- Autenticação centralizada via `AuthContext`
+- Dados sensíveis protegidos por permissões e validações
+
+## 📚 Funcionalidades
+
+- Cadastro e login de alunos e administradores
+- Gestão de pagamentos, turmas e professores
+- Cadastro e inscrição em torneios esportivos
+- Histórico de pagamentos e atividades do aluno
+- Área administrativa para controle geral
+- Exportação de dados em CSV
+- Integração com WhatsApp para comunicação rápida
+- Modais para confirmação, edição e visualização de dados
+
+## 📱 Responsividade
+
+- Layout responsivo para desktop e mobile
+- Componentes adaptados para diferentes tamanhos de tela
+
+## 📝 Requisitos e necessidades
+
+- **Necessário ter conta no Firebase** (Firestore e Authentication)
+- **Configurar credenciais no arquivo** `src/firebase-config.ts`
+- **Ajustar regras do Firestore** para garantir segurança dos dados
+- **Ter Node.js instalado** para rodar o projeto localmente
+- **Personalizar assets e textos** conforme identidade visual da Arena Brazuka
+
+## 👨‍💻 Contribuição
+
+1. Fork este repositório
+2. Crie uma branch: `git checkout -b minha-feature`
+3. Faça suas alterações e envie um PR
+
+## 📄 Licença
+
+Este projeto é privado e de uso exclusivo da Arena Brazuka.
+
+---
+
+**Preencha com detalhes específicos do seu projeto, como instruções de deploy, configurações extras, contatos e roadmap de funcionalidades.**
