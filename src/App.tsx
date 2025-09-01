@@ -21,7 +21,7 @@ import PrimeiroAcesso from "./pages/pagesAdmin/PrimeiroAcesso";
 
 // Imports Aluno
 import DashboardAluno from "./pages/pagesAluno/DashboardAluno";
-import MeusPagamentos from "./pages/pagesAluno/MeusPagamentos";
+import CadastrarTorneio from "./pages/pagesAluno/CadastrarTorneio";
 import GestaoTurmas from "./pages/pagesAdmin/GestaoTurmas";
 import GestaoProfessores from "./pages/pagesAdmin/GestaoProfessores";
 import GestaoPagamentos from "./pages/pagesAdmin/GestaoPagamentos";
@@ -65,10 +65,10 @@ function App() {
           />
 
           <Route
-            path="/aluno/pagamentos"
+            path="/cadastrar-torneio"
             element={
               <ProtectedRoute requiredRole="user">
-                <MeusPagamentos />
+                <CadastrarTorneio />
               </ProtectedRoute>
             }
           />

@@ -1,10 +1,5 @@
 import { Link } from "react-router-dom";
-import {
-  FaCreditCard,
-  FaWhatsapp,
-  FaBookOpen,
-  FaSignOutAlt,
-} from "react-icons/fa";
+import { FaTrophy, FaWhatsapp, FaBookOpen, FaSignOutAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
@@ -244,6 +239,13 @@ export default function DashboardAluno() {
               </p>
             </div>
             <div className="flex space-x-3">
+              <Link
+                to="/cadastrar-torneio"
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm"
+              >
+                <FaTrophy />
+                Cadastrar Torneio
+              </Link>
               <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm">
                 <FaWhatsapp />
                 Contato
