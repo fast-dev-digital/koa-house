@@ -25,6 +25,8 @@ import CadastrarTorneio from "./pages/pagesAluno/CadastrarTorneio";
 import GestaoTurmas from "./pages/pagesAdmin/GestaoTurmas";
 import GestaoProfessores from "./pages/pagesAdmin/GestaoProfessores";
 import GestaoPagamentos from "./pages/pagesAdmin/GestaoPagamentos";
+import TermosDeServico from "./pages/TermosDeServico";
+import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade";
 
 function App() {
   return (
@@ -49,6 +51,8 @@ function App() {
             <Route path="redefinir-senha" element={<RedefinirSenha />} />
             <Route path="esqueci-senha" element={<EsqueciSenha />} />
             <Route path="/primeiro-acesso" element={<PrimeiroAcesso />} />
+            <Route path="termos-de-servico" element={<TermosDeServico />} />
+            <Route path="politica-de-privacidade" element={<PoliticaDePrivacidade />} />
           </Route>
 
           {/* Rota de redefinição FORA do Layout */}

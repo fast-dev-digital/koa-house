@@ -202,6 +202,31 @@ function PaginaLogin() {
                 </motion.div>
               )}
 
+              {/* Mensagem de Termos de Serviço e Política de Privacidade */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.45, duration: 0.5 }}
+                className="mb-4 text-center"
+              >
+                <p className="text-xs text-gray-600">
+                  Ao fazer login você aceita os{' '}
+                  <Link 
+                    to="/termos-de-servico" 
+                    className="text-green-600 hover:text-green-800 underline transition-colors duration-300"
+                  >
+                    Termos de Serviço
+                  </Link>
+                  {' '}e{' '}
+                  <Link 
+                    to="/politica-de-privacidade" 
+                    className="text-green-600 hover:text-green-800 underline transition-colors duration-300"
+                  >
+                    Política de Privacidade
+                  </Link>
+                </p>
+              </motion.div>
+
               <motion.button
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
