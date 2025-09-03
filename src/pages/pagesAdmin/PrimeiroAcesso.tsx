@@ -55,7 +55,7 @@ export default function PrimeiroAcesso() {
     setErro("");
 
     try {
-      console.log(" Verificando email:", emailToCheck);
+      
 
       const alunoQuery = query(
         collection(db, "Alunos"),
@@ -75,7 +75,7 @@ export default function PrimeiroAcesso() {
       const aluno = alunoSnapshot.docs[0];
       const dadosAluno = aluno.data();
 
-      console.log("✅ Aluno encontrado:", dadosAluno);
+      
 
       if (dadosAluno.authCreated === true) {
         setErro(
@@ -135,7 +135,7 @@ export default function PrimeiroAcesso() {
     setLoading(true);
 
     try {
-      console.log(" Criando conta no Firebase Auth para:", email);
+      
 
       // ✅ CRIAR CONTA NO FIREBASE AUTH
       const userCredential = await createUserWithEmailAndPassword(
@@ -144,7 +144,7 @@ export default function PrimeiroAcesso() {
         senha
       );
 
-      console.log(" Conta criada com UID:", userCredential.user.uid);
+      
 
       // ✅ ATUALIZAR FIRESTORE
       await updateDoc(doc(db, "Alunos", alunoData.id), {
@@ -154,7 +154,7 @@ export default function PrimeiroAcesso() {
         updatedAt: new Date().toISOString(),
       });
 
-      console.log("✅ Firestore atualizado");
+      ("✅ Firestore atualizado");
 
       setSucesso(` Conta ativada com sucesso!
       Bem-vindo(a), ${alunoData.nome}!

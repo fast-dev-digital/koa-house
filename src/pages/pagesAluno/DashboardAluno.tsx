@@ -117,7 +117,7 @@ export default function DashboardAluno() {
           Array.isArray(alunoInfo.turmasIds) &&
           alunoInfo.turmasIds.length > 0
         ) {
-          console.log("TurmasIds encontradas:", alunoInfo.turmasIds); // DEBUG
+          ("TurmasIds encontradas:", alunoInfo.turmasIds); // DEBUG
 
           // Buscar cada turma no Firestore
           for (const turmaId of alunoInfo.turmasIds) {

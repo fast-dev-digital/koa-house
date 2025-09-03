@@ -17,7 +17,7 @@ const firebaseConfig = {
 // Debug: Verificar se as configurações estão sendo carregadas
 
 // Inicializa o aplicativo Firebase com as configurações
-const app = initializeApp(firebaseConfig);
+ const app = initializeApp(firebaseConfig);
 ('✅ Firebase inicializado com sucesso!');
 
 // Exporta os serviços que vamos usar no resto do projeto (Autenticação e Banco de Dados)

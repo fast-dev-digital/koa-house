@@ -167,7 +167,7 @@ export default function GestaoTurmas() {
 
       setRefreshKey((prev) => prev + 1);
 
-      console.log("🔄 Estado atualizado - Turmas:", turmasData.length);
+      
     } catch (erro) {
       showToastMessage("Erro ao carregar turmas", "error");
     } finally {
@@ -230,7 +230,7 @@ export default function GestaoTurmas() {
 
   // ✅ FUNÇÃO SUCCESS MODAL
   const handleModalSuccess = () => {
-    console.log("🎯 handleModalSuccess EXECUTADO - Modal chamou onSuccess!");
+    ("🎯 handleModalSuccess EXECUTADO - Modal chamou onSuccess!");
     setIsModalOpen(false);
     setSelectedTurma(null);
     fetchTurmas();

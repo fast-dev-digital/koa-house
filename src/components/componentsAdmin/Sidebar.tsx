@@ -125,7 +125,7 @@ export default function Sidebar({ className = "" }: SidebarProps) {
       sessionStorage.clear();
 
       // Mostrar mensagem de sucesso
-      console.log("✅ Logout realizado com sucesso!");
+      ("✅ Logout realizado com sucesso!");
 
       // Redirecionar para página de HomePage
       navigate("/");

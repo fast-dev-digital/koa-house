@@ -70,7 +70,7 @@ export default function ManageAlunosModal({
 
     try {
       setLoading(true);
-      console.log("📡 Carregando dados completos com SERVICES...");
+      ("📡 Carregando dados completos com SERVICES...");
 
       const [alunosData, turmasData] = await Promise.all([
         buscarTodosAlunos(), // ✅ SERVICE COM CACHE
@@ -92,7 +92,7 @@ export default function ManageAlunosModal({
 
       setTodosAlunos(alunosProcessados);
       setTodasTurmas(turmasMap);
-      console.log(
+      (
         `✅ Cache carregado: ${alunosProcessados.length} alunos ativos, ${turmasMap.size} turmas`
       );
     } catch (error) {

@@ -54,7 +54,7 @@ export default function HistoricoModal({
 
       // ✅ SE NÃO ENCONTRAR NA NOVA ESTRUTURA, TENTAR A ANTIGA
       if (!response) {
-        console.log("🔄 Tentando estrutura antiga...");
+        ("🔄 Tentando estrutura antiga...");
         if (userType === "admin") {
           response = await buscarHistoricoParaAdmin(alunoId);
         } else {

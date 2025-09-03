@@ -45,19 +45,19 @@ function isCacheValid(): boolean {
 function invalidateCache(): void {
   professoresCache = null;
   cacheTimestamp = null;
-  console.log("🧹 Cache de professores invalidado");
+  ("🧹 Cache de professores invalidado");
 }
 
 // ✅ FUNÇÃO PRINCIPAL
 export async function buscarTodosProfessores(): Promise<Professor[]> {
   // Cache primeiro
   if (isCacheValid() && professoresCache) {
-    console.log("🎯 Professores carregados do cache");
+    ("🎯 Professores carregados do cache");
     return professoresCache;
   }
 
   try {
-    console.log("📡 Buscando professores no Firebase...");
+    ("📡 Buscando professores no Firebase...");
     const professoresQuery = query(
       collection(db, "professores"),
       orderBy("nome")
@@ -84,7 +84,7 @@ export async function buscarTodosProfessores(): Promise<Professor[]> {
     professoresCache = professores;
     cacheTimestamp = Date.now();
 
-    console.log(`✅ ${professores.length} professores carregados e cacheados`);
+    (`✅ ${professores.length} professores carregados e cacheados`);
     return professores;
   } catch (error) {
     console.error("❌ Erro ao buscar professores:", error);
@@ -102,7 +102,7 @@ export async function criarProfessor(
   professorData: ProfessorCreate
 ): Promise<string> {
   try {
-    console.log("📝 Criando professor:", professorData.nome);
+    
 
     const docRef = await addDoc(collection(db, "professores"), {
       ...professorData,
@@ -110,7 +110,7 @@ export async function criarProfessor(
       createdAt: new Date(),
     });
 
-    console.log("✅ Professor criado com ID:", docRef.id);
+    
 
     // ✅ INVALIDAR CACHE AUTOMATICAMENTE
     invalidateCache();
@@ -128,14 +128,14 @@ export async function atualizarProfessor(
   updateData: ProfessorUpdate
 ): Promise<void> {
   try {
-    console.log("📝 Atualizando professor:", id);
+    
 
     await updateDoc(doc(db, "professores", id), {
       ...updateData,
       updatedAt: new Date(),
     });
 
-    console.log("✅ Professor atualizado:", id);
+    
 
     // ✅ INVALIDAR CACHE AUTOMATICAMENTE
     invalidateCache();
@@ -147,7 +147,7 @@ export async function atualizarProfessor(
 
 export async function obterEstatisticasProfessores(): Promise<EstatisticasProfessores> {
   try {
-    console.log("📊 Calculando estatísticas de professores...");
+    ("📊 Calculando estatísticas de professores...");
 
     const professores = await buscarTodosProfessores();
 
@@ -166,7 +166,7 @@ export async function obterEstatisticasProfessores(): Promise<EstatisticasProfes
         (estatisticas.porEspecialidade[esp] || 0) + 1;
     });
 
-    console.log("✅ Estatísticas calculadas:", estatisticas);
+    
     return estatisticas;
   } catch (error) {
     console.error("❌ Erro ao calcular estatísticas:", error);

@@ -17,28 +17,28 @@ const LoginProtectedRoute = ({ children }: LoginProtectedRouteProps) => {
   useEffect(() => {
     // Se ainda está carregando, não fazer nada
     if (loading) {
-      console.log('⏳ LoginProtectedRoute - Carregando dados do usuário...');
+      ('⏳ LoginProtectedRoute - Carregando dados do usuário...');
       return;
     }
 
     // Se há usuário logado e dados carregados
     if (user && userData) {
-      console.log('🔄 LoginProtectedRoute - Usuário já logado detectado:', userData.role);
+      ('🔄 LoginProtectedRoute - Usuário já logado detectado:', userData.role);
       
       // Redirecionar baseado no role
       if (userData.role === 'admin') {
-        console.log('👑 Redirecionando admin para dashboard...');
+        ('👑 Redirecionando admin para dashboard...');
         navigate('/admin-dashboard', { replace: true });
       } else if (userData.role === 'user') {
-        console.log('👤 Redirecionando aluno para dashboard...');
+        ('👤 Redirecionando aluno para dashboard...');
         navigate('/aluno', { replace: true });
       } else {
-        console.log('❓ Role desconhecido:', userData.role);
+        ('❓ Role desconhecido:', userData.role);
         // Para roles desconhecidos, redirecionar para home
         navigate('/', { replace: true });
       }
     } else {
-      console.log('✅ LoginProtectedRoute - Usuário não logado, permitindo acesso à página de login');
+      ('✅ LoginProtectedRoute - Usuário não logado, permitindo acesso à página de login');
     }
   }, [user, userData, loading, navigate]);
 

@@ -350,14 +350,14 @@ export default function AlunoModal({
           {/* MENSAGEM DE SUCESSO */}
           {successMessage && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-2">
-              <p className="text-green-600 text-xs">✅ {successMessage}</p>
+              <p className="text-green-600 text-xs"> {successMessage}</p>
             </div>
           )}
 
           {/* MENSAGEM DE ERRO */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-2">
-              <p className="text-red-600 text-xs">❌ {error}</p>
+              <p className="text-red-600 text-xs"> {error}</p>
             </div>
           )}
 

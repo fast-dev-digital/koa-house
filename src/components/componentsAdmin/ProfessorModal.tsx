@@ -81,7 +81,7 @@ export default function ProfessorModal({
         };
 
         const professorId = await criarProfessor(professorDataToSave);
-        console.log("✅ Professor criado via service - ID:", professorId);
+        ("✅ Professor criado via service - ID:", professorId);
       } else {
         // ✅ ATUALIZAR VIA SERVICE
         if (!professorData?.id)
@@ -98,10 +98,10 @@ export default function ProfessorModal({
         };
 
         await atualizarProfessor(professorData.id, updateData);
-        console.log("✅ Professor atualizado via service:", professorData.id);
+        ("✅ Professor atualizado via service:", professorData.id);
       }
 
-      console.log("🎉 Sucesso! Chamando onSuccess()");
+      ("🎉 Sucesso! Chamando onSuccess()");
       onSuccess();
       onClose();
     } catch (error) {

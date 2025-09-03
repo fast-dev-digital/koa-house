@@ -36,7 +36,7 @@ export default function DataTable({
   itemsPerPage = 20,
 }: DataTableProps) {
   // ✅ DEBUG DAS PROPS
-  console.log("🎯 DataTable props:", {
+  ("🎯 DataTable props:", {
     onEdit: !!onEdit,
     onDelete: !!onDelete,
     onView: !!onView,

@@ -5,33 +5,26 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  query,
-  where,
 } from "firebase/firestore";
 import { db } from "../firebase-config";
 import type { Aluno } from "../types/alunos";
 
 // 📦 SISTEMA DE CACHE GLOBAL
-let cacheAlunos: Aluno[] | null = null; // 💾 Armazena alunos na memória
-let ultimaBusca: number = 0; // ⏰ Timestamp da última busca
-const TEMPO_CACHE = 5 * 60 * 1000; // 🕐 5 minutos em milissegundos
+let cacheAlunos: Aluno[] | null = null;
+let ultimaBusca: number = 0;
+const TEMPO_CACHE = 5 * 60 * 1000;
 
-// 🎓 EXPLICAÇÃO: Essas variáveis ficam fora da classe para serem globais
-// Assim, independente de quantas vezes chamemos as funções,
-// o cache persiste durante toda a sessão do usuário
-
-// 🔥 FUNÇÃO 1: BUSCAR TODOS OS ALUNOS (COM CACHE INTELIGENTE)
 export async function buscarTodosAlunos(): Promise<Aluno[]> {
   const agora = Date.now(); // ⏰ Pega timestamp atual
 
   // ✅ VERIFICA SE CACHE É VÁLIDO (existe + não expirou)
   if (cacheAlunos && agora - ultimaBusca < TEMPO_CACHE) {
-    console.log("📦 Cache válido! Retornando alunos salvos (RÁPIDO)");
-    return cacheAlunos; // 🚀 RETORNO INSTANTÂNEO!
+    ("📦 Cache válido! Retornando alunos salvos (RÁPIDO)");
+    return cacheAlunos;
   }
 
   // 🔥 CACHE EXPIROU OU NÃO EXISTE - BUSCAR NO FIREBASE
-  console.log("🔥 Buscando alunos no Firebase... (pode demorar)");
+  ("🔥 Buscando alunos no Firebase... (pode demorar)");
 
   try {
     // 🗂️ REFERÊNCIA À COLEÇÃO "Alunos" no Firebase
@@ -54,9 +47,7 @@ export async function buscarTodosAlunos(): Promise<Aluno[]> {
     cacheAlunos = alunos;
     ultimaBusca = agora;
 
-    console.log(
-      `✅ ${alunos.length} alunos carregados e cachados com sucesso!`
-    );
+    `✅ ${alunos.length} alunos carregados e cachados com sucesso!`;
     return alunos;
   } catch (error) {
     console.error("❌ Erro ao buscar alunos no Firebase:", error);
@@ -64,29 +55,25 @@ export async function buscarTodosAlunos(): Promise<Aluno[]> {
   }
 }
 
-// 🔍 FUNÇÃO 2: BUSCAR ALUNO POR EMAIL (USA CACHE)
+//  FUNÇÃO 2: BUSCAR ALUNO POR EMAIL (USA CACHE)
 export function buscarAlunoPorEmail(email: string): Aluno | null {
   // 🎓 EXPLICAÇÃO: Esta função é SÍNCRONA (sem await)
-  // porque usa apenas o cache em memória, não acessa Firebase
+  // porque usa apenas o cache em memória, não acesa Firebase
 
   if (!cacheAlunos) {
     console.warn("⚠️ Cache vazio! Execute buscarTodosAlunos() primeiro");
     return null;
   }
 
-  // 🔍 BUSCA NO ARRAY EM MEMÓRIA (SUPER RÁPIDO)
+  // BUSCA NO ARRAY EM MEMÓRIA (SUPER RÁPIDO)
   const alunoEncontrado = cacheAlunos.find(
     (aluno) => aluno.email.toLowerCase() === email.toLowerCase()
   );
 
-  // 🎓 EXPLICAÇÃO DO .find():
-  // Percorre o array e retorna o PRIMEIRO elemento que satisfaz a condição
-  // Se não encontrar nada, retorna undefined
-
   if (alunoEncontrado) {
-    console.log(`👤 Aluno encontrado no cache: ${alunoEncontrado.nome}`);
+    `👤 Aluno encontrado no cache: ${alunoEncontrado.nome}`;
   } else {
-    console.log(`🔍 Aluno com email "${email}" não encontrado`);
+    `🔍 Aluno com email "${email}" não encontrado`;
   }
 
   return alunoEncontrado || null;
@@ -96,12 +83,8 @@ export function buscarAlunoPorEmail(email: string): Aluno | null {
 export async function criarAluno(
   dadosAluno: Omit<Aluno, "id">
 ): Promise<string> {
-  // 🎓 EXPLICAÇÃO DO Omit<Aluno, "id">:
-  // "Pegue o tipo Aluno mas REMOVA o campo 'id'"
-  // Isso porque o Firebase gera o ID automaticamente
-
   try {
-    console.log("➕ Criando novo aluno...");
+    ("➕ Criando novo aluno...");
 
     // 📝 ADICIONA TIMESTAMPS AUTOMÁTICOS
     const alunoCompleto = {
@@ -115,9 +98,9 @@ export async function criarAluno(
 
     // 🧹 INVALIDA O CACHE (força nova busca na próxima vez)
     limparCache();
-    console.log("🧹 Cache invalidado - próxima busca será atualizada");
+    ("🧹 Cache invalidado - próxima busca será atualizada");
 
-    console.log(`✅ Aluno criado com ID: ${docRef.id}`);
+    `✅ Aluno criado com ID: ${docRef.id}`;
     return docRef.id;
   } catch (error) {
     console.error("❌ Erro ao criar aluno:", error);
@@ -135,12 +118,12 @@ export async function atualizarAluno(
   // Assim podemos atualizar só nome, ou só email, etc.
 
   try {
-    console.log(`✏️ Atualizando aluno ID: ${id}`);
+    `✏️ Atualizando aluno ID: ${id}`;
 
-    // 📄 REFERÊNCIA AO DOCUMENTO ESPECÍFICO
+    //  REFERÊNCIA AO DOCUMENTO ESPECÍFICO
     const docRef = doc(db, "Alunos", id);
 
-    // 📝 ADICIONA TIMESTAMP DE ATUALIZAÇÃO
+    //  ADICIONA TIMESTAMP DE ATUALIZAÇÃO
     const dadosCompletos = {
       ...dadosAtualizacao, // 📋 Campos a atualizar
       updatedAt: new Date().toISOString(), // ⏰ Marca quando foi atualizado
@@ -151,34 +134,34 @@ export async function atualizarAluno(
 
     // 🧹 INVALIDA CACHE
     limparCache();
-    console.log("✅ Aluno atualizado e cache invalidado");
+    ("✅ Aluno atualizado e cache invalidado");
   } catch (error) {
     console.error("❌ Erro ao atualizar aluno:", error);
     throw new Error(`Falha ao atualizar aluno: ${error}`);
   }
 }
 
-// 🗑️ FUNÇÃO 5: DELETAR ALUNO
+//  FUNÇÃO 5: DELETAR ALUNO
 export async function deletarAluno(id: string): Promise<void> {
   try {
-    console.log(`🗑️ Deletando aluno ID: ${id}`);
+    `🗑️ Deletando aluno ID: ${id}`;
 
-    // 📄 REFERÊNCIA AO DOCUMENTO
+    // REFERÊNCIA AO DOCUMENTO
     const docRef = doc(db, "Alunos", id);
 
-    // 🔥 REMOVE DO FIREBASE
+    // REMOVE DO FIREBASE
     await deleteDoc(docRef);
 
-    // 🧹 INVALIDA CACHE
+    //  INVALIDA CACHE
     limparCache();
-    console.log("✅ Aluno deletado e cache invalidado");
+    ("✅ Aluno deletado e cache invalidado");
   } catch (error) {
     console.error("❌ Erro ao deletar aluno:", error);
     throw new Error(`Falha ao deletar aluno: ${error}`);
   }
 }
 
-// 🔍 FUNÇÃO 6: BUSCAR ALUNOS POR TURMA (USA CACHE)
+//  FUNÇÃO 6: BUSCAR ALUNOS POR TURMA (USA CACHE)
 export function buscarAlunosPorTurma(turma: string): Aluno[] {
   if (!cacheAlunos) {
     console.warn("⚠️ Cache vazio! Execute buscarTodosAlunos() primeiro");
@@ -192,9 +175,7 @@ export function buscarAlunosPorTurma(turma: string): Aluno[] {
   // Percorre o array e retorna um NOVO ARRAY com elementos que satisfazem a condição
   // Diferente do .find() que retorna apenas 1 elemento
 
-  console.log(
-    `👥 Encontrados ${alunosDaTurma.length} alunos na turma "${turma}"`
-  );
+  `👥 Encontrados ${alunosDaTurma.length} alunos na turma "${turma}"`;
   return alunosDaTurma;
 }
 
@@ -207,7 +188,7 @@ export function buscarAlunosAtivos(): Aluno[] {
 
   const alunosAtivos = cacheAlunos.filter((aluno) => aluno.status === "Ativo");
 
-  console.log(`✅ ${alunosAtivos.length} alunos ativos encontrados`);
+  `✅ ${alunosAtivos.length} alunos ativos encontrados`;
   return alunosAtivos;
 }
 
@@ -219,7 +200,7 @@ function limparCache(): void {
   cacheAlunos = null; // 🗑️ Remove dados da memória
   ultimaBusca = 0; // ⏰ Zera timestamp
 
-  console.log("🧹 Cache limpo - próxima busca será no Firebase");
+  ("🧹 Cache limpo - próxima busca será no Firebase");
 }
 
 // 📊 FUNÇÃO 8: ESTATÍSTICAS RÁPIDAS (USA CACHE)
@@ -229,7 +210,6 @@ export function obterEstatisticasAlunos() {
       total: 0,
       ativos: 0,
       inativos: 0,
-      suspensos: 0,
     };
   }
 
@@ -238,16 +218,14 @@ export function obterEstatisticasAlunos() {
     total: cacheAlunos.length,
     ativos: cacheAlunos.filter((a) => a.status === "Ativo").length,
     inativos: cacheAlunos.filter((a) => a.status === "Inativo").length,
-    suspensos: cacheAlunos.filter((a) => a.status === "Suspenso").length,
   };
 
-  console.log("📊 Estatísticas calculadas:", stats);
   return stats;
 }
 
 // 🔄 FUNÇÃO 9: FORÇAR REFRESH DO CACHE
 export async function recarregarCache(): Promise<Aluno[]> {
-  console.log("🔄 Forçando atualização do cache...");
+  ("🔄 Forçando atualização do cache...");
 
   // 🧹 LIMPA CACHE ATUAL
   limparCache();
@@ -263,7 +241,7 @@ export function cacheEstaValido(): boolean {
   const agora = Date.now();
   const cacheValido = agora - ultimaBusca < TEMPO_CACHE;
 
-  console.log(`🔍 Cache ${cacheValido ? "VÁLIDO" : "EXPIRADO"}`);
+  `🔍 Cache ${cacheValido ? "VÁLIDO" : "EXPIRADO"}`;
   return cacheValido;
 }
 

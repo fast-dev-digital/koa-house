@@ -74,7 +74,7 @@ function isCacheValid(): boolean {
 function invalidateCache(): void {
   turmasCache = null;
   cacheTimestamp = null;
-  console.log("🧹 Cache de turmas invalidado");
+  ("🧹 Cache de turmas invalidado");
 }
 
 // BUSCAR TODAS AS TURMAS
@@ -83,12 +83,12 @@ function invalidateCache(): void {
 export async function buscarTodasTurmas(): Promise<Turma[]> {
   // ✅ Verificar cache primeiro
   if (isCacheValid() && turmasCache) {
-    console.log("🎯 Turmas carregadas do cache");
+    ("🎯 Turmas carregadas do cache");
     return turmasCache;
   }
 
   try {
-    console.log("📡 Buscando turmas no Firebase...");
+    ("📡 Buscando turmas no Firebase...");
     const turmasQuery = query(collection(db, "turmas"));
 
     const snapshot = await getDocs(turmasQuery);
@@ -118,7 +118,7 @@ export async function buscarTodasTurmas(): Promise<Turma[]> {
     turmasCache = turmas;
     cacheTimestamp = Date.now();
 
-    console.log(`✅ ${turmas.length} turmas carregadas e cacheadas`);
+    (`✅ ${turmas.length} turmas carregadas e cacheadas`);
     return turmas;
   } catch (error) {
     throw new Error("Erro ao carregar turmas");
@@ -133,7 +133,7 @@ export async function buscarTodasTurmas(): Promise<Turma[]> {
 export async function buscarTurmasAtivas(): Promise<Turma[]> {
   const todasTurmas = await buscarTodasTurmas();
   const turmasAtivas = todasTurmas.filter((turma) => turma.status === "Ativa");
-  console.log(`✅ ${turmasAtivas.length} turmas ativas encontradas`);
+  (`✅ ${turmasAtivas.length} turmas ativas encontradas`);
   return turmasAtivas;
 }
 
@@ -147,7 +147,7 @@ export async function buscarTurmasPorModalidade(
   const turmasModalidade = todasTurmas.filter(
     (turma) => turma.modalidade === modalidade
   );
-  console.log(
+  (
     `✅ ${turmasModalidade.length} turmas de ${modalidade} encontradas`
   );
   return turmasModalidade;
@@ -168,12 +168,12 @@ export async function buscarTurmaPorId(id: string): Promise<Turma | null> {
     const turmaEncontrada = todasTurmas.find((turma) => turma.id === id);
 
     if (turmaEncontrada) {
-      console.log(`✅ Turma ${id} encontrada no cache`);
+      (`✅ Turma ${id} encontrada no cache`);
       return turmaEncontrada;
     }
 
     // ✅ Se não encontrou no cache, buscar diretamente
-    console.log(`📡 Buscando turma ${id} diretamente no Firebase...`);
+    (`📡 Buscando turma ${id} diretamente no Firebase...`);
     const turmaDoc = await getDoc(doc(db, "turmas", id));
 
     if (!turmaDoc.exists()) {
@@ -199,7 +199,7 @@ export async function buscarTurmaPorId(id: string): Promise<Turma | null> {
       updatedAt: data.updatedAt?.toDate() || new Date(),
     };
 
-    console.log(`✅ Turma ${id} carregada diretamente`);
+    (`✅ Turma ${id} carregada diretamente`);
     return turma;
   } catch (error) {
     console.error(`❌ Erro ao buscar turma ${id}:`, error);
@@ -215,7 +215,7 @@ export async function buscarTurmasDisponiveis(): Promise<Turma[]> {
   const turmasDisponiveis = turmasAtivas.filter(
     (turma) => turma.alunosInscritos < turma.capacidade
   );
-  console.log(`✅ ${turmasDisponiveis.length} turmas disponíveis encontradas`);
+  (`✅ ${turmasDisponiveis.length} turmas disponíveis encontradas`);
   return turmasDisponiveis;
 }
 
@@ -229,7 +229,7 @@ export async function buscarTurmasPorProfessor(
   const turmasProfessor = todasTurmas.filter(
     (turma) => turma.professorId === professorId
   );
-  console.log(`✅ ${turmasProfessor.length} turmas do professor encontradas`);
+  (`✅ ${turmasProfessor.length} turmas do professor encontradas`);
   return turmasProfessor;
 }
 
@@ -241,7 +241,7 @@ export async function buscarTurmasPorProfessor(
 // ✅ CORRIGIR A FUNÇÃO criarTurma - ADICIONAR LOGS E FORÇAR RELOAD
 export async function criarTurma(turmaData: TurmaCreate): Promise<string> {
   try {
-    console.log("📝 Criando nova turma:", turmaData.nome);
+    
 
     const novaTurma = {
       ...turmaData,
@@ -254,14 +254,14 @@ export async function criarTurma(turmaData: TurmaCreate): Promise<string> {
     const docRef = await addDoc(collection(db, "turmas"), novaTurma);
 
     // ✅ INVALIDAR CACHE COM LOG
-    console.log("🧹 Invalidando cache após criar turma...");
+    ("🧹 Invalidando cache após criar turma...");
     invalidateCache();
 
     // ✅ FORÇAR RELOAD IMEDIATO DO CACHE
-    console.log("🔄 Forçando reload do cache...");
+    ("🔄 Forçando reload do cache...");
     await buscarTodasTurmas(); // Força reload imediato
 
-    console.log(`✅ Turma criada com ID: ${docRef.id}`);
+    (`✅ Turma criada com ID: ${docRef.id}`);
     return docRef.id;
   } catch (error) {
     console.error("❌ Erro ao criar turma:", error);
@@ -277,7 +277,7 @@ export async function atualizarTurma(
   dados: TurmaUpdate
 ): Promise<void> {
   try {
-    console.log(`📝 Atualizando turma ${id}`);
+    (`📝 Atualizando turma ${id}`);
 
     const dadosAtualizacao = {
       ...dados,
@@ -290,7 +290,7 @@ export async function atualizarTurma(
     invalidateCache();
 
     await buscarTodasTurmas();
-    console.log(`✅ Turma ${id} atualizada`);
+    (`✅ Turma ${id} atualizada`);
   } catch (error) {
     console.error(`❌ Erro ao atualizar turma ${id}:`, error);
     throw new Error("Erro ao atualizar turma");
@@ -302,14 +302,14 @@ export async function atualizarTurma(
  */
 export async function removerTurma(id: string): Promise<void> {
   try {
-    console.log(`🗑️ Removendo turma ${id}`);
+    (`🗑️ Removendo turma ${id}`);
 
     await deleteDoc(doc(db, "turmas", id));
 
     // ✅ Invalidar cache
     invalidateCache();
 
-    console.log(`✅ Turma ${id} removida`);
+    (`✅ Turma ${id} removida`);
   } catch (error) {
     console.error(`❌ Erro ao remover turma ${id}:`, error);
     throw new Error("Erro ao remover turma");
@@ -324,7 +324,7 @@ export async function atualizarContadorAlunos(
   novoContador: number
 ): Promise<void> {
   try {
-    console.log(
+    (
       `📊 Atualizando contador da turma ${turmaId} para ${novoContador}`
     );
 
@@ -336,7 +336,7 @@ export async function atualizarContadorAlunos(
     // ✅ Invalidar cache
     invalidateCache();
 
-    console.log(
+    (
       `✅ Contador da turma ${turmaId} atualizado para ${novoContador}`
     );
   } catch (error) {
@@ -394,7 +394,7 @@ export async function decrementarContadorAlunos(
  */
 export async function obterEstatisticasTurmas(): Promise<EstatisticasTurmas> {
   try {
-    console.log("📊 Calculando estatísticas das turmas...");
+    ("📊 Calculando estatísticas das turmas...");
     const todasTurmas = await buscarTodasTurmas();
 
     const turmasAtivas = todasTurmas.filter((t) => t.status === "Ativa");
@@ -441,7 +441,7 @@ export async function obterEstatisticasTurmas(): Promise<EstatisticasTurmas> {
       turmasMaisPopulares,
     };
 
-    console.log("✅ Estatísticas de turmas calculadas");
+    ("✅ Estatísticas de turmas calculadas");
     return estatisticas;
   } catch (error) {
     console.error("❌ Erro ao obter estatísticas de turmas:", error);
@@ -479,7 +479,7 @@ export async function temVagasDisponiveis(turmaId: string): Promise<boolean> {
  */
 export function limparCacheTurmas(): void {
   invalidateCache();
-  console.log("🧹 Cache de turmas limpo manualmente");
+  ("🧹 Cache de turmas limpo manualmente");
 }
 
 // ✅ EXPORTS (SÓ AS NOVAS INTERFACES)

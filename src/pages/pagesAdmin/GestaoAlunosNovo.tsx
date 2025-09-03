@@ -56,7 +56,6 @@ const FILTER_OPTIONS = {
   STATUS: [
     { value: "Ativo", label: "Ativo" },
     { value: "Inativo", label: "Inativo" },
-    { value: "Suspenso", label: "Suspenso" },
   ],
 };
 
@@ -302,12 +301,6 @@ export default function GestaoAlunos() {
           title="Alunos Inativos"
           value={stats.inativos}
           iconColor="text-gray-600"
-        />
-        <StatCard
-          icon={<FaUser />}
-          title="Alunos Suspensos"
-          value={stats.suspensos}
-          iconColor="text-red-600"
         />
       </div>
 

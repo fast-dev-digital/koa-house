@@ -42,12 +42,10 @@ interface Professor {
 // ✅ FUNÇÃO PARA EXPORTAR ALUNOS (MANTIDA COMPATÍVEL)
 export const exportarAlunosCSV = async () => {
   try {
-    console.log("🔄 Iniciando exportação dos alunos...");
 
     const alunosRef = collection(db, "Alunos");
     const snapshot = await getDocs(alunosRef);
 
-    console.log(`📊 Encontrados ${snapshot.size} alunos`);
 
     if (snapshot.empty) {
       alert("⚠️ Nenhum aluno encontrado para exportar!");
@@ -66,7 +64,6 @@ export const exportarAlunosCSV = async () => {
     const nomeArquivo = gerarNomeArquivoComData("alunos");
     baixarCSV(csvContent, nomeArquivo);
 
-    console.log("✅ Exportação de alunos concluída!");
     return true;
   } catch (error) {
     console.error("❌ Erro ao exportar alunos:", error);
@@ -78,12 +75,10 @@ export const exportarAlunosCSV = async () => {
 // ✅ NOVA FUNÇÃO PARA EXPORTAR TURMAS
 export const exportarTurmasCSV = async () => {
   try {
-    console.log("🔄 Iniciando exportação das turmas...");
 
     const turmasRef = collection(db, "turmas");
     const snapshot = await getDocs(turmasRef);
 
-    console.log(`📊 Encontradas ${snapshot.size} turmas`);
 
     if (snapshot.empty) {
       alert("⚠️ Nenhuma turma encontrada para exportar!");
@@ -102,7 +97,6 @@ export const exportarTurmasCSV = async () => {
     const nomeArquivo = gerarNomeArquivoComData("turmas");
     baixarCSV(csvContent, nomeArquivo);
 
-    console.log("✅ Exportação de turmas concluída!");
     return true;
   } catch (error) {
     console.error("❌ Erro ao exportar turmas:", error);
@@ -122,7 +116,6 @@ export const exportarTurmasComFiltros = (
   }
 ) => {
   try {
-    console.log("🔄 Exportando turmas com filtros aplicados...");
 
     let turmasFiltradas = [...turmas];
 
@@ -156,7 +149,6 @@ export const exportarTurmasComFiltros = (
       });
     }
 
-    console.log(`📊 ${turmasFiltradas.length} turmas após filtros`);
 
     if (turmasFiltradas.length === 0) {
       alert("⚠️ Nenhuma turma encontrada com os filtros aplicados!");
@@ -167,7 +159,6 @@ export const exportarTurmasComFiltros = (
     const nomeArquivo = gerarNomeArquivoComData("turmas_filtradas");
     baixarCSV(csvContent, nomeArquivo);
 
-    console.log("✅ Exportação de turmas filtradas concluída!");
     return {
       sucesso: true,
       nomeArquivo,
@@ -291,12 +282,10 @@ const converterTurmasParaCSV = (turmas: Turma[]): string => {
 // ✅ NOVA FUNÇÃO PARA EXPORTAR PROFESSORES (SEGUINDO O PADRÃO DOS ALUNOS)
 export const exportarProfessoresCSV = async () => {
   try {
-    console.log("🔄 Iniciando exportação dos professores...");
 
     const professoresRef = collection(db, "professores");
     const snapshot = await getDocs(professoresRef);
 
-    console.log(`📊 Encontrados ${snapshot.size} professores`);
 
     if (snapshot.empty) {
       alert("⚠️ Nenhum professor encontrado para exportar!");
@@ -315,7 +304,6 @@ export const exportarProfessoresCSV = async () => {
     const nomeArquivo = gerarNomeArquivoComData("professores");
     baixarCSV(csvContent, nomeArquivo);
 
-    console.log("✅ Exportação de professores concluída!");
     return true;
   } catch (error) {
     console.error("❌ Erro ao exportar professores:", error);
@@ -334,7 +322,6 @@ export const exportarProfessoresComFiltros = (
   }
 ) => {
   try {
-    console.log("🔄 Exportando professores com filtros aplicados...");
 
     let professoresFiltrados = [...professores];
 
@@ -361,7 +348,6 @@ export const exportarProfessoresComFiltros = (
       });
     }
 
-    console.log(`📊 ${professoresFiltrados.length} professores após filtros`);
 
     if (professoresFiltrados.length === 0) {
       alert("⚠️ Nenhum professor encontrado com os filtros aplicados!");
@@ -372,7 +358,6 @@ export const exportarProfessoresComFiltros = (
     const nomeArquivo = gerarNomeArquivoComData("professores_filtrados");
     baixarCSV(csvContent, nomeArquivo);
 
-    console.log("✅ Exportação de professores filtrados concluída!");
     return {
       sucesso: true,
       nomeArquivo,
@@ -489,12 +474,10 @@ export const gerarNomeArquivoComData = (prefixo: string = "dados"): string => {
 
 export const exportarPagamentosCSV = async () => {
   try {
-    console.log("🔄 Iniciando exportação dos pagamentos...");
 
     const pagamentosRef = collection(db, "pagamentos");
     const snapshot = await getDocs(pagamentosRef);
 
-    console.log(`📊 Encontrados ${snapshot.size} pagamentos`);
 
     if (snapshot.empty) {
       alert("⚠️ Nenhum pagamento encontrado para exportar!");
@@ -513,7 +496,6 @@ export const exportarPagamentosCSV = async () => {
     const nomeArquivo = gerarNomeArquivoComData("pagamentos");
     baixarCSV(csvContent, nomeArquivo);
 
-    console.log("✅ Exportação de pagamentos concluída!");
     return true;
   } catch (error) {
     console.error("❌ Erro ao exportar pagamentos:", error);
@@ -532,7 +514,6 @@ export const exportarPagamentosComFiltros = (
   }
 ) => {
   try {
-    console.log("🔄 Exportando pagamentos com filtros aplicados...");
 
     let pagamentosFiltrados = [...pagamentos];
 
@@ -558,7 +539,7 @@ export const exportarPagamentosComFiltros = (
       });
     }
 
-    console.log(`📊 ${pagamentosFiltrados.length} pagamentos após filtros`);
+    (`📊 ${pagamentosFiltrados.length} pagamentos após filtros`);
 
     if (pagamentosFiltrados.length === 0) {
       alert("⚠️ Nenhum pagamento encontrado com os filtros aplicados!");
@@ -569,7 +550,7 @@ export const exportarPagamentosComFiltros = (
     const nomeArquivo = gerarNomeArquivoComData("pagamentos_filtrados");
     baixarCSV(csvContent, nomeArquivo);
 
-    console.log("✅ Exportação de pagamentos filtrados concluída!");
+    ("✅ Exportação de pagamentos filtrados concluída!");
     return {
       sucesso: true,
       nomeArquivo,

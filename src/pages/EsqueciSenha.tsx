@@ -23,7 +23,7 @@ const EsqueciSenha = () => {
     }
 
     try {
-      console.log("🔍 Verificando email no sistema:", email);
+      ("🔍 Verificando email no sistema:", email);
 
       // Verificar se o email existe como admin
       const adminQuery = query(
@@ -41,7 +41,7 @@ const EsqueciSenha = () => {
 
       // Se não existe nem como admin nem como aluno
       if (adminSnapshot.empty && alunoSnapshot.empty) {
-        console.log("❌ Email não encontrado no sistema");
+        ("❌ Email não encontrado no sistema");
         setErro(
           "Email não encontrado no sistema. Verifique se está correto ou contate o administrador."
         );
@@ -52,16 +52,16 @@ const EsqueciSenha = () => {
       const isAdmin = !adminSnapshot.empty;
       const isAluno = !alunoSnapshot.empty;
 
-      console.log("✅ Email encontrado no sistema:", { isAdmin, isAluno });
+      ("✅ Email encontrado no sistema:", { isAdmin, isAluno });
 
       // ✅ SE É ALUNO, VERIFICAR SE JÁ TEM CONTA NO AUTH
       if (isAluno) {
         const alunoData = alunoSnapshot.docs[0].data();
-        console.log("🔍 Dados do aluno:", alunoData);
+        ("🔍 Dados do aluno:", alunoData);
 
         // ✅ SE É PRIMEIRO ACESSO (não tem authCreated ou authCreated = false)
         if (!alunoData.authCreated) {
-          console.log("🎯 Primeiro acesso detectado - redirecionando...");
+          ("🎯 Primeiro acesso detectado - redirecionando...");
 
           setMensagem(` Detectamos que este é seu primeiro acesso!
           Como aluno, você precisa ativar sua conta primeiro.
@@ -76,7 +76,7 @@ const EsqueciSenha = () => {
         }
       }
 
-      console.log("📤 Enviando redefinição de senha...");
+      ("📤 Enviando redefinição de senha...");
 
       //  CONTINUAR FLUXO NORMAL PARA ADMINS E ALUNOS JÁ ATIVADOS
       const actionCodeSettings = {
