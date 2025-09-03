@@ -12,7 +12,7 @@ function Footer() {
             <Link to="/" className="flex items-center justify-center md:justify-start space-x-2">
               <img src="/logo-brazuka.png" alt="Logo Arena Brazuka" className="h-16 w-auto" />
             </Link>
-            <h3 className="text-lg font-bold text-white mt-2 mb-1">Arena Brazuka</h3>
+            <h3 className="text-lg font-bold text-white mt-2 mb-1">Koa House</h3>
             <p className="text-xs leading-tight">O melhor do esporte na areia, feito para você e seus amigos.</p>
           </div>  
 
@@ -41,7 +41,7 @@ function Footer() {
             </div>
             <h4 className="font-semibold text-white mb-2 pt-6">Contato</h4>
             <ul>
-              <li className='mb-2 text-xs'>Email: arenabrazuka@gmail.com</li>
+              <li className='mb-2 text-xs'>Email: koahouse@gmail.com</li>
               <li className='mb-2 text-xs'>Telefone: (19) 98192-4006</li>
               <li className='mb-2 text-xs'>R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180</li>
             </ul>
@@ -51,7 +51,7 @@ function Footer() {
 
         {/* Linha de Copyright */}
         <div className="border-t border-gray-700 mt-4 pt-3 text-center text-xs">
-          <p>&copy; 2025 Arena Brazuka. Todos os direitos reservados.</p>
+          <p>&copy; 2025 Koa House. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

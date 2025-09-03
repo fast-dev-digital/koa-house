@@ -182,7 +182,7 @@ export default function Sidebar({ className = "" }: SidebarProps) {
               <img src="/logo-brazuka.png" alt="Logo" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Arena Brazuka</h1>
+              <h1 className="text-xl font-bold text-gray-900">Koa House</h1>
               <p className="text-sm text-gray-600">Painel Admin</p>
             </div>
           </div>

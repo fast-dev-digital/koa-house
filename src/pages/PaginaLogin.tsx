@@ -151,7 +151,7 @@ function PaginaLogin() {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="text-center mb-8"
             >
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">Bem vindo à Arena Brazuka!</h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">Bem vindo à Koa House!</h1>
               <p className="text-gray-600 font-medium">Faça login para continuar</p>
             </motion.div>
 
