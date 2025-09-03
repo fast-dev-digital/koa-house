@@ -179,9 +179,9 @@ function HomePage() {
                         className="text-6xl md:text-8xl font-black text-white mb-6 leading-tight"
                         variants={itemVariants}
                     >
-                        ARENA
+                        KOA
                         <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                            BRAZUKA
+                            HOUSE
                         </span>
                     </motion.h1>
                     
@@ -262,7 +262,7 @@ function HomePage() {
                         animate={featuresInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
-                        Por que escolher a Arena Brazuka?
+                        Por que escolher a Koa House?
                     </motion.h2>
                     
                     <motion.div 
@@ -442,7 +442,7 @@ function HomePage() {
                         whileInView={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.8, delay: 0.2 }}
                     >
-                        Entre em contato conosco e descubra como a Arena Brazuka pode transformar sua experiência no esporte!
+                        Entre em contato conosco e descubra como a Arena Koa House pode transformar sua experiência no esporte!
                     </motion.p>
                     
                     <motion.a

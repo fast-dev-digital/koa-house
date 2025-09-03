@@ -10,7 +10,7 @@ function SobreNos() {
                 <div className="max-w-6xl mx-auto px-4 md:px-8 pt-24 pb-16">
                     <div className="text-center">
                         <h1 className="text-4xl md:text-5xl font-black mb-4">
-                            Sobre a Arena Brazuka
+                            Sobre a Koa House
                         </h1>
                         <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
                             Mais do que uma quadra, somos uma comunidade apaixonada pelo futevôlei
@@ -49,7 +49,7 @@ function SobreNos() {
                                     Nossa Energia
                                 </h3>
                                 <p className="text-gray-600 leading-relaxed">
-                                    Na Brazuka, o sol brilha forte, mas nossa energia vai além. Acreditamos no poder 
+                                    Na Koa House, o sol brilha forte, mas nossa energia vai além. Acreditamos no poder 
                                     do esporte para transformar dias, hábitos e vidas.
                                 </p>
                             </div>
@@ -61,7 +61,7 @@ function SobreNos() {
                             </h3>
                             <p className="text-gray-600 leading-relaxed mb-6">
                                 Aqui é mais do que uma quadra. É mais do que um espaço esportivo. 
-                                Aqui é a Arena Brazuka — o point onde o futevôlei encontra a vibe da comunidade.
+                                Aqui é a Koa House — o point onde o futevôlei encontra a vibe da comunidade.
                             </p>
                             <p className="text-gray-600 leading-relaxed mb-6">
                                 Montamos um ambiente onde você pode jogar, relaxar, socializar e, claro, 
@@ -145,11 +145,11 @@ function SobreNos() {
                 {/* Call to Action */}
                 <div className="text-center bg-gradient-to-r from-emerald-900 to-amber-800 rounded-2xl p-12 text-white">
                     <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                        Faça Parte da Família Brazuka
+                        Faça Parte da Família Koa
                     </h2>
                     <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
                         Se você busca mais do que só um espaço para jogar, se você quer fazer parte de uma 
-                        família apaixonada pelo futevôlei, seja bem-vindo à Brazuka.
+                        família apaixonada pelo futevôlei, seja bem-vindo à Koa House.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <a 
