@@ -21,7 +21,6 @@ import PrimeiroAcesso from "./pages/pagesAdmin/PrimeiroAcesso";
 
 // Imports Aluno
 import DashboardAluno from "./pages/pagesAluno/DashboardAluno";
-import CadastrarTorneio from "./pages/pagesAluno/CadastrarTorneio";
 import GestaoTurmas from "./pages/pagesAdmin/GestaoTurmas";
 import GestaoProfessores from "./pages/pagesAdmin/GestaoProfessores";
 import GestaoPagamentos from "./pages/pagesAdmin/GestaoPagamentos";
@@ -68,14 +67,7 @@ function App() {
             }
           />
 
-          <Route
-            path="/cadastrar-torneio"
-            element={
-              <ProtectedRoute requiredRole="user">
-                <CadastrarTorneio />
-              </ProtectedRoute>
-            }
-          />
+          {/* Rota de pagamentos do aluno removida temporariamente */}
 
           {/* Rotas admin usando AdminLayout + Outlet */}
           <Route
