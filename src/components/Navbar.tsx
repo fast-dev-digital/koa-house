@@ -34,7 +34,7 @@ function Navbar() {
           {/* Coluna Esquerda: Logo */}
           <div className="w-1/4"> {/* Definimos um espaço para o logo */}
             <Link to="/" className="flex items-center space-x-2 md:space-x-3">
-              <img src="/logo-brazuka.png" alt="Logo Arena Brazuka" className="h-10 md:h-[68px] w-auto" />
+              <img src="/logo-brazuka.png" alt="Logo Arena Brazuka" className="h-8 md:h-[50px] w-auto" />
             </Link>
           </div>
 
