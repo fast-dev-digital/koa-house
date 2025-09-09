@@ -17,3 +17,7 @@
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+body {
+  font-family: 'Poppins', sans-serif; /* Adicione esta linha */
+}

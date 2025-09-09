@@ -11,6 +11,9 @@ import modalTeste from '../assets/interno-img.png';
 import bgHawaiiDesk from '../assets/bg-hawaii-desk.png';
 import bgHawaiiMobile from '../assets/bg-hawaii-mobile.png';
 
+// Teste novo bg
+import bgKoaSand from '../assets/koa-sand-pscreen.png';
+
 function HomePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { scrollYProgress } = useScroll();
@@ -108,11 +111,11 @@ function HomePage() {
             {/* Hero Section Moderna */}
             <motion.section 
                 ref={heroRef}
-                className="relative min-h-screen flex items-center justify-center"
+                className="relative min-h-screen flex items-end justify-center pb-24"
                 style={{ 
                     y, 
                     opacity,
-                    backgroundImage: `url(${bgHawaiiDesk})`,
+                    backgroundImage: `url(${bgKoaSand})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat'
@@ -175,7 +178,7 @@ function HomePage() {
                     initial="hidden"
                     animate={heroInView ? "visible" : "hidden"}
                 >
-                    <motion.h1 
+                    {/*<motion.h1 
                         className="text-6xl md:text-8xl font-black text-white mb-6 leading-tight"
                         variants={itemVariants}
                     >
@@ -183,7 +186,7 @@ function HomePage() {
                         <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
                             HOUSE
                         </span>
-                    </motion.h1>
+                    </motion.h1>*/}
                     
                     <motion.p 
                         className="text-xl md:text-2xl text-emerald-100 mb-8 max-w-3xl mx-auto leading-relaxed"
@@ -233,7 +236,7 @@ function HomePage() {
                 ref={featuresRef}
                 className="py-20 relative"
                 style={{
-                    backgroundImage: `url(${bgHawaiiDesk})`,
+                    backgroundImage: `url(${bgKoaSand})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
@@ -315,7 +318,7 @@ function HomePage() {
                 ref={plansRef}
                 className="py-20 relative"
                 style={{
-                    backgroundImage: `url(${bgHawaiiDesk})`,
+                    backgroundImage: `url(${bgKoaSand})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
@@ -376,7 +379,7 @@ function HomePage() {
                 ref={eventsRef}
                 className="py-20 relative"
                 style={{
-                    backgroundImage: `url(${bgHawaiiDesk})`,
+                    backgroundImage: `url(${bgKoaSand})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
