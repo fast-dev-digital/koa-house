@@ -102,7 +102,7 @@ function InfoSection({ title, description, buttonText, imageUrl, imageAlt, linkT
               href={linkTo}
               target={linkTo.startsWith("http") ? "_blank" : "_self"}
               rel={linkTo.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="inline-block bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-2 px-3 md:py-3 md:px-4 rounded-lg shadow-lg hover:shadow-xl text-xs md:text-sm leading-tight text-center md:w-auto transition-all duration-300 transform hover:scale-105"
+              className="inline-block bg-gradient-to-r from-koa-beige to-amber-800 hover:from-koa-beige hover:to-amber-700 text-white font-bold py-2 px-3 md:py-3 md:px-4 rounded-lg shadow-lg hover:shadow-xl text-xs md:text-sm leading-tight text-center md:w-auto transition-all duration-300 transform hover:scale-105"
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
               initial={{ opacity: 0, y: 20 }}

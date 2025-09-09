@@ -74,7 +74,7 @@ function Navbar() {
               <motion.button 
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
+                className="bg-gradient-to-r from-koa-beige to-koa-brown hover:from-koa-brown hover:to-koa-brown text-white font-bold py-2.5 px-5 rounded-lg text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
               >
                 ÁREA DO ALUNO
               </motion.button>
@@ -83,7 +83,7 @@ function Navbar() {
               <motion.button 
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className={`border-2 border-yellow-500 backdrop-blur-sm text-yellow-600 py-2.5 px-4 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-bold text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 ${
+                className={`border-2 border-koa-brown backdrop-blur-sm text-koa-brown py-2.5 px-4 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-bold text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 ${
                   scrolled ? 'bg-transparent' : 'bg-transparent'
                 }`}
               >

@@ -133,44 +133,7 @@ function HomePage() {
                 />
                 
                 {/* Overlay for better text readability */}
-                <div className="absolute inset-0 bg-black bg-opacity-30" />
-                
-                {/* Floating Elements */}
-                <motion.div 
-                    className="absolute top-20 left-10 w-20 h-20 bg-yellow-400 rounded-full opacity-20"
-                    animate={{
-                        y: [-10, 10, -10],
-                        transition: {
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }
-                    }}
-                />
-                <motion.div 
-                    className="absolute top-40 right-20 w-16 h-16 bg-emerald-400 rounded-full opacity-20"
-                    animate={{
-                        y: [-10, 10, -10],
-                        transition: {
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: 1
-                        }
-                    }}
-                />
-                <motion.div 
-                    className="absolute bottom-40 left-20 w-12 h-12 bg-orange-400 rounded-full opacity-20"
-                    animate={{
-                        y: [-10, 10, -10],
-                        transition: {
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: 2
-                        }
-                    }}
-                />
+                <div className="absolute inset-0 bg-koa-dark/40" />
                 
                 <motion.div 
                     className="text-center z-10 px-4 max-w-6xl mx-auto"
@@ -235,13 +198,6 @@ function HomePage() {
             <motion.section 
                 ref={featuresRef}
                 className="py-20 relative"
-                style={{
-                    backgroundImage: `url(${bgKoaSand})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundAttachment: 'fixed'
-                }}
                 initial={{ opacity: 0 }}
                 animate={featuresInView ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.6 }}
@@ -260,12 +216,13 @@ function HomePage() {
                  <div className="absolute inset-0 bg-white bg-opacity-85" />
                  <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
-                        className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
+                        className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-koa-beige to-amber-700 bg-clip-text text-transparent"
                         initial={{ y: 30, opacity: 0 }}
                         animate={featuresInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         Por que escolher a Koa House?
+                        <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-amber-500 mx-auto mt-2 rounded-full"></div>
                     </motion.h2>
                     
                     <motion.div 
@@ -317,13 +274,6 @@ function HomePage() {
             <motion.section 
                 ref={plansRef}
                 className="py-20 relative"
-                style={{
-                    backgroundImage: `url(${bgKoaSand})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundAttachment: 'fixed'
-                }}
                 initial={{ opacity: 0 }}
                 animate={plansInView ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.6 }}
@@ -339,15 +289,16 @@ function HomePage() {
                     }}
                 />
                 {/* Overlay for better readability */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/80 via-amber-800/80 to-orange-600/80" />
+                 <div className="absolute inset-0 bg-white" />
                  <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
-                        className="text-5xl font-black text-center text-white mb-16"
+                        className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-koa-beige to-amber-700 bg-clip-text text-transparent"
                         initial={{ y: 30, opacity: 0 }}
                         animate={plansInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         Planos em Destaque
+                        <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-amber-500 mx-auto mt-2 rounded-full"></div>
                     </motion.h2>
                     
                     <motion.div 
@@ -378,13 +329,6 @@ function HomePage() {
             <motion.section 
                 ref={eventsRef}
                 className="py-20 relative"
-                style={{
-                    backgroundImage: `url(${bgKoaSand})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundAttachment: 'fixed'
-                }}
                 initial={{ opacity: 0 }}
                 animate={eventsInView ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.6 }}
@@ -400,15 +344,16 @@ function HomePage() {
                     }}
                 />
                 {/* Overlay for better readability */}
-                 <div className="absolute inset-0 bg-emerald-50/90" />
+                 {/*<div className="absolute inset-0 bg-emerald-50/90" />*/}
                  <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
-                        className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-emerald-800 to-amber-700 bg-clip-text text-transparent"
+                        className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-koa-beige to-amber-700 bg-clip-text text-transparent"
                         initial={{ y: 30, opacity: 0 }}
                         animate={eventsInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         Próximos Eventos
+                        <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-amber-500 mx-auto mt-2 rounded-full"></div>
                     </motion.h2>
                     
                     <motion.div 

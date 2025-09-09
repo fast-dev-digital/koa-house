@@ -45,7 +45,7 @@ function Professores() {
             {/* Hero Section com gradiente */}
             <motion.div 
                 ref={headerRef}
-                className="relative bg-gradient-to-r from-emerald-900 to-amber-800 text-white py-16 px-4 md:px-10 overflow-hidden"
+                className="relative bg-gradient-to-r from-koa-beige to-amber-800 text-white py-16 px-4 md:px-10 overflow-hidden"
                 variants={headerVariants}
                 initial="hidden"
                 animate={isHeaderInView ? "visible" : "hidden"}

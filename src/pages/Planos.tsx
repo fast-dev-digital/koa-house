@@ -33,7 +33,7 @@ function PlanosPage() {
               onClick={() => setFiltro(categoria as 'Futevôlei' | 'Beach Tennis')}
               className={`py-2 px-6 rounded font-semibold transition-colors duration-300 ${
                 filtro === categoria
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >

@@ -16,11 +16,11 @@ const CheckIcon = () => (
 
 function PricingCard({ plano, mode = 'planos' }: PricingCardProps) {
     // Classes condicionais baseadas na prop 'destacado'
-    const cardClasses = plano.destacado ? 'border-green-500 border-2' : 'border-gray-200 border';
-    const headerClasses = plano.destacado ? 'bg-green-500 text-white' : 'hidden';
+    const cardClasses = plano.destacado ? 'border-koa-beige border-2' : 'border-gray-200 border';
+    const headerClasses = plano.destacado ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white' : 'hidden';
     const buttonClasses = plano.destacado
-        ? 'bg-green-500 hover:bg-green-600 text-white'
-        : 'bg-white hover:bg-green-500 text-green-500 hover:text-white border border-green-500';
+        ? 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white'
+        : 'bg-white hover:bg-koa-beige text-koa-green hover:text-white border border-koa-green';
 
     const renderButton = () => {
       if (mode === 'home') {
