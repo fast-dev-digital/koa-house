@@ -51,7 +51,7 @@ export async function buscarHistoricoAluno(
   options: HistoricoOptions
 ): Promise<HistoricoResponse> {
   try {
-    (`📋 Buscando histórico para aluno: ${options.alunoId}`);
+    `📋 Buscando histórico para aluno: ${options.alunoId}`;
 
     // 1️⃣ BUSCAR DADOS DO ALUNO
     const alunoDoc = await getDoc(doc(db, "Alunos", options.alunoId));
@@ -142,7 +142,7 @@ export async function buscarHistoricoAluno(
       });
     }
 
-    (`✅ Encontrados ${pagamentos.length} pagamentos`);
+    `✅ Encontrados ${pagamentos.length} pagamentos`;
 
     // 5️⃣ CALCULAR ESTATÍSTICAS
     const estatisticas = calcularEstatisticas(pagamentos);
@@ -159,7 +159,7 @@ export async function buscarHistoricoAluno(
 }
 
 // ✅ FUNÇÃO AUXILIAR - Calcular estatísticas
-function calcularEstatisticas(pagamentos: Pagamento[]) {
+export function calcularEstatisticas(pagamentos: Pagamento[]) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
@@ -321,9 +321,7 @@ export async function buscarHistoricoAlunoNovo(
   alunoId: string
 ): Promise<HistoricoResponse | null> {
   try {
-    (
-      `📚 Buscando histórico na nova estrutura para aluno: ${alunoId}`
-    );
+    `📚 Buscando histórico na nova estrutura para aluno: ${alunoId}`;
 
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
@@ -339,8 +337,6 @@ export async function buscarHistoricoAlunoNovo(
 
     const docSnapshot = alunoSnapshot.docs[0];
     const alunoData = docSnapshot.data();
-
-    
 
     // ✅ PROCESSAR pagamentos com conversão segura de datas
     const pagamentosProcessados: Pagamento[] = (alunoData.pagamentos || []).map(
@@ -393,9 +389,7 @@ export async function buscarHistoricoAlunoNovo(
       estatisticas: calcularEstatisticas(pagamentosProcessados),
     };
 
-    (
-      `✅ Histórico processado na nova estrutura: ${resultado.pagamentos.length} itens`
-    );
+    `✅ Histórico processado na nova estrutura: ${resultado.pagamentos.length} itens`;
     return resultado;
   } catch (error) {
     console.error("❌ Erro ao buscar histórico na nova estrutura:", error);

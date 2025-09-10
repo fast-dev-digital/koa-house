@@ -10,8 +10,8 @@ import { db } from "../firebase-config";
 import type { Aluno } from "../types/alunos";
 
 // 📦 SISTEMA DE CACHE GLOBAL
-let cacheAlunos: Aluno[] | null = null;
-let ultimaBusca: number = 0;
+export let cacheAlunos: Aluno[] | null = null;
+export let ultimaBusca: number = 0;
 const TEMPO_CACHE = 5 * 60 * 1000;
 
 export async function buscarTodosAlunos(): Promise<Aluno[]> {
@@ -252,3 +252,13 @@ export const buscarAlunoPorEmail_OLD = buscarAlunoPorEmail;
 
 // EXPORTS DE COMPATIBILIDADE (para não quebrar seu código atual)
 export { buscarTodosAlunos as buscarTodosAlunos_CACHED };
+
+// ...existing code...
+
+// Funções para testes unitários
+export function __setCacheAlunos(alunos: Aluno[] | null) {
+  cacheAlunos = alunos;
+}
+export function __setUltimaBusca(ts: number) {
+  ultimaBusca = ts;
+}

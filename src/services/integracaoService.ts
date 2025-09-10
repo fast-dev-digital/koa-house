@@ -76,7 +76,7 @@ const cacheIntegracao: CacheIntegracao = {
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutos
 
 //  FUNÇÃO PARA INVALIDAR CACHE
-function invalidarCacheIntegracao(): void {
+ export function invalidarCacheIntegracao(): void {
   ("🧹 Invalidando cache de integração...");
   cacheIntegracao.todosAlunos = null;
   cacheIntegracao.timestampTodos = 0;
