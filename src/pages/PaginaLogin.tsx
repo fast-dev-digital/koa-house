@@ -7,6 +7,9 @@ import { motion } from 'framer-motion';
 import BackgroundImage from '../assets/bg-hawaii-desk.png';
 import BackgroundImageMobile from '../assets/bg-hawaii-mobile.png';
 
+import NewBackgroundSand from '../assets/koa-sand-bgdesk-notext.png';
+import NewBackgroundSand1 from '../assets/koa-sand-bgdesk-notext.png';
+
 function PaginaLogin() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');

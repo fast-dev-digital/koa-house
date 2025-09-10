@@ -74,7 +74,7 @@ function Navbar() {
               <motion.button 
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-koa-beige to-koa-brown hover:from-koa-brown hover:to-koa-brown text-white font-bold py-2.5 px-5 rounded-lg text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
+                className="bg-koa-brown hover:from-koa-brown hover:to-koa-brown text-white font-bold py-2.5 px-5 rounded-lg text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
               >
                 ÁREA DO ALUNO
               </motion.button>
@@ -107,7 +107,7 @@ function Navbar() {
                     <motion.button 
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold py-2 px-4 rounded-lg text-xs shadow-lg transition-all duration-300"
+                        className="bg-koa-brown text-white font-bold py-2 px-4 rounded-lg text-xs shadow-lg transition-all duration-300"
                     >
                         ÁREA DO ALUNO
                     </motion.button>
@@ -167,7 +167,7 @@ function Navbar() {
                     <motion.button 
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="border-2 border-yellow-500 bg-white/80 backdrop-blur-sm text-yellow-600 py-3 px-6 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-medium shadow-md hover:shadow-lg transition-all duration-300 w-full focus:outline-none focus:bg-yellow-50 focus:border-yellow-600 active:bg-yellow-100"
+                        className="border-2 border-koa-brown bg-white/80 backdrop-blur-sm text-koa-brown py-3 px-6 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-medium shadow-md hover:shadow-lg transition-all duration-300 w-full focus:outline-none focus:bg-yellow-50 focus:border-yellow-600 active:bg-yellow-100"
                     >
                         ACESSO RESTRITO
                     </motion.button>

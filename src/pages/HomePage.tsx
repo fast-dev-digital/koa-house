@@ -13,6 +13,7 @@ import bgHawaiiMobile from '../assets/bg-hawaii-mobile.png';
 
 // Teste novo bg
 import bgKoaSand from '../assets/koa-sand-pscreen.png';
+import bgKoaSandMobile from '../assets/koa-sand-mobile-text-true1.png';
 
 function HomePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -125,7 +126,7 @@ function HomePage() {
                 <div 
                     className="absolute inset-0 md:hidden"
                     style={{
-                        backgroundImage: `url(${bgHawaiiMobile})`,
+                        backgroundImage: `url(${bgKoaSandMobile})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat'
@@ -205,12 +206,7 @@ function HomePage() {
                 {/* Mobile Background */}
                 <div 
                     className="absolute inset-0 md:hidden"
-                    style={{
-                        backgroundImage: `url(${bgHawaiiMobile})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat'
-                    }}
+                    
                 />
                 {/* Overlay for better readability */}
                  <div className="absolute inset-0 bg-white bg-opacity-85" />
@@ -274,6 +270,12 @@ function HomePage() {
             <motion.section 
                 ref={plansRef}
                 className="py-20 relative"
+                style={{
+                        backgroundImage: `url(${bgHawaiiMobile})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                    }}
                 initial={{ opacity: 0 }}
                 animate={plansInView ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.6 }}
@@ -289,16 +291,16 @@ function HomePage() {
                     }}
                 />
                 {/* Overlay for better readability */}
-                 <div className="absolute inset-0 bg-white" />
+                 <div className="absolute inset-0 bg-koa-sand opacity-80" />
                  <div className="container mx-auto px-4 relative z-10">
                     <motion.h2 
-                        className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-koa-beige to-amber-700 bg-clip-text text-transparent"
+                        className="text-5xl font-black text-center mb-16 bg-white bg-clip-text text-transparent"
                         initial={{ y: 30, opacity: 0 }}
                         animate={plansInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
                         Planos em Destaque
-                        <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-amber-500 mx-auto mt-2 rounded-full"></div>
+                        <div className="w-24 h-1 bg-white mx-auto mt-2 rounded-full"></div>
                     </motion.h2>
                     
                     <motion.div 
@@ -336,12 +338,6 @@ function HomePage() {
                 {/* Mobile Background */}
                 <div 
                     className="absolute inset-0 md:hidden"
-                    style={{
-                        backgroundImage: `url(${bgHawaiiMobile})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat'
-                    }}
                 />
                 {/* Overlay for better readability */}
                  {/*<div className="absolute inset-0 bg-emerald-50/90" />*/}
@@ -368,12 +364,12 @@ function HomePage() {
 
             {/* CTA Section */}
             <motion.section 
-                className="py-20 bg-gradient-to-r from-emerald-900 to-amber-800 relative overflow-hidden"
+                className="py-20 bg-koa-dark relative overflow-hidden"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 1 }}
             >
-                <div className="absolute inset-0 bg-black/20" />
+                {/*<div className="absolute inset-0 bg-black/20" />*/}
                 <div className="container mx-auto px-4 text-center relative z-10">
                     <motion.h2 
                         className="text-5xl font-black text-white mb-6"
