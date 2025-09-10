@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 interface LoginProtectedRouteProps {
   children: React.ReactNode;
@@ -17,28 +17,25 @@ const LoginProtectedRoute = ({ children }: LoginProtectedRouteProps) => {
   useEffect(() => {
     // Se ainda está carregando, não fazer nada
     if (loading) {
-      ('⏳ LoginProtectedRoute - Carregando dados do usuário...');
+      ("⏳ LoginProtectedRoute - Carregando dados do usuário...");
       return;
     }
 
     // Se há usuário logado e dados carregados
     if (user && userData) {
-      ('🔄 LoginProtectedRoute - Usuário já logado detectado:', userData.role);
-      
       // Redirecionar baseado no role
-      if (userData.role === 'admin') {
-        ('👑 Redirecionando admin para dashboard...');
-        navigate('/admin-dashboard', { replace: true });
-      } else if (userData.role === 'user') {
-        ('👤 Redirecionando aluno para dashboard...');
-        navigate('/aluno', { replace: true });
+      if (userData.role === "admin") {
+        ("👑 Redirecionando admin para dashboard...");
+        navigate("/admin-dashboard", { replace: true });
+      } else if (userData.role === "user") {
+        ("👤 Redirecionando aluno para dashboard...");
+        navigate("/aluno", { replace: true });
       } else {
-        ('❓ Role desconhecido:', userData.role);
         // Para roles desconhecidos, redirecionar para home
-        navigate('/', { replace: true });
+        navigate("/", { replace: true });
       }
     } else {
-      ('✅ LoginProtectedRoute - Usuário não logado, permitindo acesso à página de login');
+      ("✅ LoginProtectedRoute - Usuário não logado, permitindo acesso à página de login");
     }
   }, [user, userData, loading, navigate]);
 

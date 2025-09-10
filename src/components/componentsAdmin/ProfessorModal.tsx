@@ -79,9 +79,6 @@ export default function ProfessorModal({
             | "Vôlei",
           status: formData.status as "Ativo" | "Inativo",
         };
-
-        const professorId = await criarProfessor(professorDataToSave);
-        ("✅ Professor criado via service - ID:", professorId);
       } else {
         // ✅ ATUALIZAR VIA SERVICE
         if (!professorData?.id)
@@ -98,7 +95,6 @@ export default function ProfessorModal({
         };
 
         await atualizarProfessor(professorData.id, updateData);
-        ("✅ Professor atualizado via service:", professorData.id);
       }
 
       ("🎉 Sucesso! Chamando onSuccess()");
