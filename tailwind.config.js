@@ -15,6 +15,7 @@ export default {
         'koa-beige': '#BAA58D',  // Pantone 4253 CP
         'koa-brown': '#6E4C1E',  // Pantone 1405 CP
         'koa-dark': '#212721',   // Pantone Black 3 CP
+        'koa-sand': '#b49b81'
       }
     },
   },

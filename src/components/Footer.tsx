@@ -3,7 +3,7 @@ import { FaInstagram } from 'react-icons/fa'; // Ícone do Instagram (Font Aweso
 
 function Footer() {
   return (
-    <footer className="bg-gradient-to-r from-emerald-900 to-amber-800 text-gray-300 text-sm">
+    <footer className="bg-koa-dark text-gray-300 text-sm">
       <div className="container mx-auto py-2">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
 

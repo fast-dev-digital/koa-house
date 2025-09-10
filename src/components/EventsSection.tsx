@@ -100,7 +100,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                 <div className="absolute top-6 left-6">
                   <motion.span 
                     whileHover={{ scale: 1.1 }}
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white text-sm font-bold rounded-full shadow-xl backdrop-blur-sm border border-yellow-300/30"
+                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-sm font-bold rounded-full shadow-xl backdrop-blur-sm border border-yellow-300/30"
                   >
                     <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
                     {evento.tipo}
@@ -159,7 +159,7 @@ function EventsSection({ mode = 'page' }: EventsSectionProps) {
                       href="/eventos"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      className="group/btn relative inline-flex items-center justify-center w-full bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-yellow-500/25 transition-all duration-500 overflow-hidden"
+                      className="group/btn relative inline-flex items-center justify-center w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-yellow-500/25 transition-all duration-500 overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
                       <span className="relative z-10 flex items-center">
