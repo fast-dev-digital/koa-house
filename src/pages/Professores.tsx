@@ -6,9 +6,9 @@ import { useRef } from 'react';
 
 // importação de imagens dos professores
 import imgChris from "../assets/ft-chris.jpeg";
-import imgVitinho from "../assets/ft-vitinho.jpeg";
+import imgVitinho from "../assets/ft-vitinho-1.jpeg";
 import imgKlebao from "../assets/ft-klebao.png";
-import imgMarra from "../assets/ft-marra.png";
+import imgClebinho from "../assets/ft-clebinho.png";
 import imgMello from "../assets/ft-mellinho.png";
 
 function Professores() {
@@ -112,14 +112,14 @@ function Professores() {
                 linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Klebão"                
                 />
 
-                {/*Marra*/}
+                {/*Clebinho*/}
                 <InfoSection
-                title="Professor Marra"
+                title="Professor Clebinho"
                 description="Escolha seu horário e aproveite nossas quadras premium para jogar com os amigos. Estrutura moderna, bar e estacionamento seguro!"
-                buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° MARRA AGORA!"
-                imageUrl={imgMarra}
-                imageAlt="Foto do professor Marra"
-                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Marra"
+                buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° Clebinho AGORA!"
+                imageUrl={imgClebinho}
+                imageAlt="Foto do professor Clebinho"
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Clebinho"
                 reverse={true}
                 />
 
