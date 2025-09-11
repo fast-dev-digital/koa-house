@@ -49,7 +49,7 @@ function PricingCard({ plano, mode = 'planos' }: PricingCardProps) {
     }
         
     return (
-    <div className={`rounded-lg shadow-lg p-6 flex flex-col bg-white ${cardClasses}`}>
+    <div className={`rounded-lg shadow-lg p-6 flex flex-col bg-white ${cardClasses} h-full min-h-[480px]`}>
       <div className={`text-xs font-bold uppercase tracking-wider text-center py-1 px-3 rounded-full mb-4 self-center ${headerClasses}`}>
         Mais Vantajoso
       </div>
