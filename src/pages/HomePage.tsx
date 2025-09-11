@@ -7,7 +7,7 @@ import PricingCard from '../components/PricingCard';
 import { planos } from '../data/planosData';
 import Modal from '../components/Modal';
 import WhatsappFloat from '../components/WhatsappFloat';
-import modalTeste from '../assets/interno-img.png';
+import modalTeste from '../assets/interno-img-1.png';
 import bgHawaiiDesk from '../assets/bg-hawaii-desk.png';
 import bgHawaiiMobile from '../assets/bg-hawaii-mobile.png';
 
@@ -304,7 +304,7 @@ function HomePage() {
                     </motion.h2>
                     
                     <motion.div 
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch"
                         variants={plansContainerVariants}
                         initial="hidden"
                         animate={plansInView ? "visible" : "hidden"}
@@ -413,7 +413,7 @@ function HomePage() {
                     <h3 className="text-2xl font-bold text-white mb-4 text-center">Nosso Torneio Interno!</h3>
                     <img src={modalTeste} alt="Anúncio de torneio interno" className="w-full rounded-md mb-4" />
                     <p className="text-white text-center">
-                        Ei, aluno! Participe do melhor torneio interno da região, que ocorrerá nos dias 30 e 31 de Agosto, com muita resenha, futevôlei e brindes para os campeões!
+                        Ei, aluno! Participe do melhor torneio interno da região, que ocorrerá nos dias 27 e 28 de Setembro, com muita resenha, futevôlei e brindes para os campeões!
                     </p>
                 </motion.div>
             </Modal>
