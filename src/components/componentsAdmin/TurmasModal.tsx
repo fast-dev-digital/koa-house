@@ -30,8 +30,6 @@ export default function TurmaModal({
   mode,
   turmaData,
 }: TurmaModalProps) {
-  ("🎯 TurmasModal renderizado - isOpen:", isOpen); // ✅ DEBUG
-
   // ESTADOS DO FORMULÁRIO - SEM DATAS NO ESTADO INICIAL
   const [formData, setFormData] = useState<Turma>({
     nome: "",
@@ -61,9 +59,8 @@ export default function TurmaModal({
         ("📚 Carregando professores com cache...");
         const professoresData = await buscarProfessoresAtivos();
         setProfessores(professoresData);
-        ("✅ Professores carregados:", professoresData.length);
       } catch (error) {
-        console.error("❌ Erro ao carregar professores:", error);
+        console.error(" Erro ao carregar professores:", error);
       }
     };
 
@@ -175,7 +172,7 @@ export default function TurmaModal({
         };
 
         const turmaId = await criarTurma(turmaDataToSave);
-        ("✅ Turma criada via service - ID:", turmaId);
+        console.log(turmaId);
       } else {
         // ✅ DADOS PARA ATUALIZAÇÃO
         if (turmaData?.id) {
@@ -199,7 +196,7 @@ export default function TurmaModal({
           };
 
           await atualizarTurma(turmaData.id, updateData);
-          ("✅ Turma atualizada via service:", turmaData.id);
+          console.log(turmaData.id);
         }
       }
 

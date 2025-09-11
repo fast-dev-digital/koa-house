@@ -36,11 +36,6 @@ export default function DataTable({
   itemsPerPage = 20,
 }: DataTableProps) {
   // ✅ DEBUG DAS PROPS
-  ("🎯 DataTable props:", {
-    onEdit: !!onEdit,
-    onDelete: !!onDelete,
-    onView: !!onView,
-  });
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);

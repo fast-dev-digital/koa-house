@@ -76,7 +76,7 @@ const cacheIntegracao: CacheIntegracao = {
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutos
 
 //  FUNÇÃO PARA INVALIDAR CACHE
- export function invalidarCacheIntegracao(): void {
+function invalidarCacheIntegracao(): void {
   ("🧹 Invalidando cache de integração...");
   cacheIntegracao.todosAlunos = null;
   cacheIntegracao.timestampTodos = 0;
@@ -107,7 +107,7 @@ export async function criarAlunoComPagamentosArray(
 ): Promise<void> {
   try {
     if (alunoData.status !== "Ativo") {
-      (`⏸️ Aluno ${alunoData.nome} não está ativo`);
+      `⏸️ Aluno ${alunoData.nome} não está ativo`;
       return;
     }
 
@@ -119,7 +119,7 @@ export async function criarAlunoComPagamentosArray(
     const existeSnapshot = await getDocs(existeQuery);
 
     if (!existeSnapshot.empty) {
-      (`⏸️ ${alunoData.nome} já existe na nova estrutura`);
+      `⏸️ ${alunoData.nome} já existe na nova estrutura`;
       return;
     }
 
@@ -167,7 +167,7 @@ export async function criarAlunoComPagamentosArray(
       updatedAt: Timestamp.now(),
     });
 
-    (`✅ ${alunoData.nome} criado na nova estrutura`);
+    `✅ ${alunoData.nome} criado na nova estrutura`;
     invalidarCacheIntegracao();
   } catch (error) {
     console.error("❌ Erro ao criar aluno na nova estrutura:", error);
@@ -183,11 +183,11 @@ export async function buscarAlunoComPagamentos(
   try {
     // ✅ VERIFICAR CACHE INDIVIDUAL PRIMEIRO
     if (cacheValidoIndividual(alunoId)) {
-      (`🔄 Usando cache para aluno ${alunoId}`);
+      `🔄 Usando cache para aluno ${alunoId}`;
       return cacheIntegracao.alunoIndividual.get(alunoId) || null;
     }
 
-    (`📡 Buscando aluno ${alunoId} do Firebase...`);
+    `📡 Buscando aluno ${alunoId} do Firebase...`;
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
       where("alunoId", "==", alunoId)
@@ -227,7 +227,7 @@ export async function buscarAlunoComPagamentos(
     cacheIntegracao.alunoIndividual.set(alunoId, aluno);
     cacheIntegracao.timestampIndividual.set(alunoId, Date.now());
 
-    (`✅ Aluno ${data.nome} carregado e cacheado`);
+    `✅ Aluno ${data.nome} carregado e cacheado`;
     return aluno;
   } catch (error) {
     console.error("❌ Erro ao buscar aluno:", error);
@@ -284,7 +284,7 @@ export async function listarAlunosComPagamentos(): Promise<
     cacheIntegracao.todosAlunos = alunos;
     cacheIntegracao.timestampTodos = Date.now();
 
-    (`✅ ${alunos.length} alunos carregados e cacheados`);
+    `✅ ${alunos.length} alunos carregados e cacheados`;
     return alunos;
   } catch (error) {
     console.error("❌ Erro ao listar alunos:", error);
@@ -321,7 +321,7 @@ export async function adicionarProximoPagamentoArray(
 
     // Verificar se aluno está ativo
     if (alunoComPagamentos.status !== "Ativo") {
-      (`⏸️ Aluno ${alunoComPagamentos.nome} não está ativo`);
+      `⏸️ Aluno ${alunoComPagamentos.nome} não está ativo`;
       return;
     }
 
@@ -330,7 +330,7 @@ export async function adicionarProximoPagamentoArray(
       (p) => p.status === "Pendente"
     );
     if (temPendente) {
-      (`⏸️ ${alunoComPagamentos.nome} já possui pagamento pendente`);
+      `⏸️ ${alunoComPagamentos.nome} já possui pagamento pendente`;
       return;
     }
 
@@ -345,13 +345,9 @@ export async function adicionarProximoPagamentoArray(
       year: "numeric",
     });
 
-    (`📅 Gerando próximo pagamento:`);
-    (`   • Aluno: ${alunoComPagamentos.nome}`);
-    (
-      `   • Próximo vencimento: ${proximoVencimento.toLocaleDateString(
-        "pt-BR"
-      )}`
-    );
+    `📅 Gerando próximo pagamento:`;
+    `   • Aluno: ${alunoComPagamentos.nome}`;
+    `   • Próximo vencimento: ${proximoVencimento.toLocaleDateString("pt-BR")}`;
 
     // ✅ CRIAR ARRAY COMPLETAMENTE LIMPO
     const novosPagamentos: any[] = [];
@@ -434,9 +430,7 @@ export async function adicionarProximoPagamentoArray(
       dadosLimpos
     );
 
-    (
-      `✅ Próximo pagamento adicionado para ${alunoComPagamentos.nome}`
-    );
+    `✅ Próximo pagamento adicionado para ${alunoComPagamentos.nome}`;
     invalidarCacheIntegracao();
     ("invalidar cache funcionando");
   } catch (error) {
@@ -461,9 +455,9 @@ export async function marcarPagamentoPagoArray(
       throw new Error("Aluno não encontrado");
     }
 
-    (`💰 Marcando pagamento como pago:`);
-    (`   • Aluno: ${alunoComPagamentos.nome}`);
-    (`   • Mês: ${mesReferencia}`);
+    `💰 Marcando pagamento como pago:`;
+    `   • Aluno: ${alunoComPagamentos.nome}`;
+    `   • Mês: ${mesReferencia}`;
 
     // ✅ Verificar se o pagamento existe e está pendente
     const pagamentoEncontrado = alunoComPagamentos.pagamentos.find(
@@ -500,7 +494,7 @@ export async function marcarPagamentoPagoArray(
         pagamentoBase.status = "Pago";
         pagamentoBase.dataPagamento = Timestamp.fromDate(dataPagamento);
 
-        (`   ✅ Pagamento ${mesReferencia} marcado como pago`);
+        `   ✅ Pagamento ${mesReferencia} marcado como pago`;
       } else {
         // ✅ Para outros pagamentos, adicionar campos opcionais apenas se válidos
 
@@ -562,10 +556,10 @@ export async function marcarPagamentoPagoArray(
       .filter((p) => p.status === "Arquivado")
       .reduce((sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0), 0);
 
-    (`📊 Totais atualizados:`);
-    (`   • Pago: R$ ${totalPago.toFixed(2)}`);
-    (`   • Pendente: R$ ${totalPendente.toFixed(2)}`);
-    (`   • Arquivado: R$ ${totalArquivado.toFixed(2)}`);
+    `📊 Totais atualizados:`;
+    `   • Pago: R$ ${totalPago.toFixed(2)}`;
+    `   • Pendente: R$ ${totalPendente.toFixed(2)}`;
+    `   • Arquivado: R$ ${totalArquivado.toFixed(2)}`;
 
     // ✅ DADOS PARA ATUALIZAR completamente limpos (sem undefined)
     const dadosLimpos = {
@@ -583,9 +577,7 @@ export async function marcarPagamentoPagoArray(
       dadosLimpos
     );
 
-    (
-      `✅ Pagamento marcado como pago para ${alunoComPagamentos.nome}`
-    );
+    `✅ Pagamento marcado como pago para ${alunoComPagamentos.nome}`;
     invalidarCacheIntegracao();
   } catch (error) {
     console.error("❌ Erro ao marcar pagamento como pago:", error);
@@ -602,13 +594,12 @@ export async function fecharMesComArray(): Promise<{
   mensagem?: string;
 }> {
   try {
-    ("🔍 Iniciando fechamento do próximo mês disponível...");
-
-    // Buscar todos os alunos ativos
+    console.log(
+      "[fecharMesComArray] Iniciando fechamento do próximo mês disponível..."
+    );
     const alunosSnapshot = await getDocs(
       query(collection(db, "alunosPagamentos"), where("status", "==", "Ativo"))
     );
-
     if (alunosSnapshot.empty) {
       return {
         alunosProcessados: 0,
@@ -617,24 +608,25 @@ export async function fecharMesComArray(): Promise<{
         erro: "Nenhum aluno ativo encontrado",
       };
     }
-
-    // ✅ ENCONTRAR O PRÓXIMO MÊS DISPONÍVEL PARA FECHAR
+    console.log(
+      `[fecharMesComArray] Alunos ativos encontrados: ${alunosSnapshot.size}`
+    );
     let mesParaFechar = "";
     const mesesDisponiveis = new Set<string>();
-
-    // Coletar todos os meses que têm pagamentos não arquivados
     alunosSnapshot.docs.forEach((alunoDoc) => {
-      const alunoData = alunoDoc.data() as any;
-      alunoData.pagamentos?.forEach((p: any) => {
-        if (p.status !== "Arquivado") {
-          mesesDisponiveis.add(p.mesReferencia);
-        }
+      const alunoData = alunoDoc.data();
+      (alunoData.pagamentos || []).forEach((p: any) => {
+        if (p.status !== "Arquivado") mesesDisponiveis.add(p.mesReferencia);
       });
     });
-
-    // Ordenar meses e pegar o primeiro (mais antigo)
-    const mesesOrdenados = Array.from(mesesDisponiveis).sort();
-
+    // Ordenar meses cronologicamente (ano, depois mês)
+    const mesesOrdenados = Array.from(mesesDisponiveis).sort((a, b) => {
+      const [ma, aa] = a.split("/");
+      const [mb, ab] = b.split("/");
+      return Number(aa) !== Number(ab)
+        ? Number(aa) - Number(ab)
+        : Number(ma) - Number(mb);
+    });
     if (mesesOrdenados.length === 0) {
       return {
         alunosProcessados: 0,
@@ -643,170 +635,123 @@ export async function fecharMesComArray(): Promise<{
         mensagem: "Não há pagamentos disponíveis para fechar",
       };
     }
-
     mesParaFechar = mesesOrdenados[0];
-    (`📅 Fechando próximo mês disponível: ${mesParaFechar}`);
-    (`📋 Meses disponíveis: ${mesesOrdenados.join(", ")}`);
+    console.log(
+      `[fecharMesComArray] Meses disponíveis para fechar: ${mesesOrdenados.join(
+        ", "
+      )}`
+    );
+    console.log(
+      `[fecharMesComArray] Mês selecionado para fechar: ${mesParaFechar}`
+    );
+    let alunosProcessados = 0,
+      pagamentosArquivados = 0,
+      novosPagamentosGerados = 0,
+      alunosComPagamentosJaArquivados = 0,
+      alunosSemPagamentosDoMes = 0;
 
-    let alunosProcessados = 0;
-    let pagamentosArquivados = 0;
-    let novosPagamentosGerados = 0;
-    let alunosComPagamentosJaArquivados = 0;
-    let alunosSemPagamentosDoMes = 0;
-
-    // Processar cada aluno
     for (const alunoDoc of alunosSnapshot.docs) {
       try {
-        const alunoData = alunoDoc.data() as any;
-
-        (`🔍 Processando aluno: ${alunoData.nome}`);
-
-        // ✅ VERIFICAR se tem pagamentos do mês escolhido
-        const todosPagamentosDoMes =
-          alunoData.pagamentos?.filter(
-            (p: any) => p.mesReferencia === mesParaFechar
-          ) || [];
-
-        // ✅ VERIFICAR se tem pagamentos do mês que NÃO estão arquivados
-        const pagamentosDoMesParaProcessar = todosPagamentosDoMes.filter(
-          (p: any) => p.status !== "Arquivado"
+        const alunoData = alunoDoc.data();
+        const pagamentos = alunoData.pagamentos || [];
+        const pagamentosDoMes = pagamentos.filter(
+          (p: any) => p.mesReferencia === mesParaFechar
         );
-
-        (
-          `   📊 Pagamentos do mês ${mesParaFechar} - Total: ${todosPagamentosDoMes.length}, Para processar: ${pagamentosDoMesParaProcessar.length}`
-        );
-
-        // ✅ CASOS DIFERENTES
-        if (todosPagamentosDoMes.length === 0) {
-          // Não tem nenhum pagamento do mês
+        if (pagamentosDoMes.length === 0) {
           alunosSemPagamentosDoMes++;
-          (
-            `   ⏸️ ${alunoData.nome} - Sem pagamentos para o mês ${mesParaFechar}`
-          );
           continue;
         }
-
-        if (pagamentosDoMesParaProcessar.length === 0) {
-          // Tem pagamentos do mês, mas todos já estão arquivados
+        const todosArquivados = pagamentosDoMes.every(
+          (p: any) => p.status === "Arquivado"
+        );
+        if (todosArquivados) {
           alunosComPagamentosJaArquivados++;
-          (
-            `   ✅ ${alunoData.nome} - Pagamentos do mês ${mesParaFechar} já foram arquivados`
-          );
           continue;
         }
 
-        // ✅ VERIFICAR se tinha pendente antes de arquivar
-        const tinhaQualquerPagamento = pagamentosDoMesParaProcessar.some(
-          (p: any) => p.status === "Pendente"
-        );
-
-        (
-          `   🔄 ${alunoData.nome} - Pagamentos para processar: ${pagamentosDoMesParaProcessar.length}`
-        );
-        (
-          `   📊 Status dos pagamentos: [${pagamentosDoMesParaProcessar
-            .map((p: any) => p.status)
-            .join(", ")}]`
-        );
-
-        // ✅ CRIAR ARRAY DE PAGAMENTOS ATUALIZADO
-        const pagamentosAtualizados =
-          alunoData.pagamentos?.map((pagamento: any) => {
-            // Se é pagamento do mês escolhido e não está arquivado
-            if (
-              pagamento.mesReferencia === mesParaFechar &&
-              pagamento.status !== "Arquivado"
-            ) {
-              pagamentosArquivados++;
-              (
-                `   📦 Arquivando pagamento: ${pagamento.mesReferencia} - Status: ${pagamento.status}`
-              );
-
-              return limparObjetoUndefined({
-                mesReferencia: pagamento.mesReferencia,
-                dataVencimento: pagamento.dataVencimento,
-                valor: pagamento.valor,
-                status: "Arquivado",
-                statusAnterior: pagamento.status,
-                arquivadoEm: Timestamp.now(),
-                // Manter campos existentes se válidos
-                ...(pagamento.dataPagamento && {
-                  dataPagamento: pagamento.dataPagamento,
-                }),
-                ...(pagamento.observacoes && {
-                  observacoes: pagamento.observacoes,
-                }),
-              });
-            }
-
-            // Para outros pagamentos, manter como está (mas limpo)
-            return limparObjetoUndefined(pagamento);
-          }) || [];
-
-        // ✅ GERAR PRÓXIMO PAGAMENTO APENAS SE TINHA PENDENTE
-        if (tinhaQualquerPagamento) {
-          // Encontrar último pagamento (pode ser o recém-arquivado)
-          const ultimoPagamento =
-            pagamentosAtualizados[pagamentosAtualizados.length - 1];
-
-          const ultimaDataVencimento = ultimoPagamento.dataVencimento?.toDate
-            ? ultimoPagamento.dataVencimento.toDate()
-            : new Date(ultimoPagamento.dataVencimento);
-
-          const proximoVencimento = new Date(ultimaDataVencimento);
-          proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
-
-          const proximoMes = proximoVencimento.toLocaleDateString("pt-BR", {
-            month: "2-digit",
-            year: "numeric",
-          });
-
-          (`   📅 Gerando próximo pagamento para: ${proximoMes}`);
-
-          // ✅ VERIFICAR se já existe pagamento para o próximo mês
-          const jaExisteProximo = pagamentosAtualizados.some(
-            (p: any) => p.mesReferencia === proximoMes
-          );
-
-          if (!jaExisteProximo) {
-            const novoPagamento = limparObjetoUndefined({
-              mesReferencia: proximoMes,
-              dataVencimento: Timestamp.fromDate(proximoVencimento),
-              valor: alunoData.valorMensalidade,
-              status: "Pendente",
+        let pagamentosAtualizados = pagamentos.map((pagamento: any) => {
+          if (
+            pagamento.mesReferencia === mesParaFechar &&
+            pagamento.status !== "Arquivado"
+          ) {
+            pagamentosArquivados++;
+            return limparObjetoUndefined({
+              ...pagamento,
+              status: "Arquivado",
+              statusAnterior: pagamento.status,
+              arquivadoEm: Timestamp.now(),
             });
-
-            pagamentosAtualizados.push(novoPagamento);
-            novosPagamentosGerados++;
-            (`   ✅ Próximo pagamento gerado: ${proximoMes}`);
-          } else {
-            (`   ⏸️ Pagamento para ${proximoMes} já existe`);
           }
+          console.log(
+            `[fecharMesComArray] Processando aluno: ${alunoData.nome} (${alunoDoc.id})`
+          );
+          console.log(
+            `[fecharMesComArray] Pagamentos do mês ${mesParaFechar}:`,
+            pagamentosDoMes
+          );
+          return limparObjetoUndefined(pagamento);
+        });
+
+        // Encontrar o maior mês existente no array de pagamentos
+        const maiorMes = pagamentosAtualizados.reduce((max: number, p: any) => {
+          const [mes, ano] = p.mesReferencia.split("/").map(Number);
+          const valor = ano * 100 + mes;
+          return valor > max ? valor : max;
+        }, 0);
+
+        // Verificar se todos os pagamentos do maior mês estão arquivados
+        const [maiorMesNum, maiorAnoNum] = [
+          maiorMes % 100,
+          Math.floor(maiorMes / 100),
+        ];
+        const pagamentosMaiorMes = pagamentosAtualizados.filter((p: any) => {
+          const [mes, ano] = p.mesReferencia.split("/").map(Number);
+          return mes === maiorMesNum && ano === maiorAnoNum;
+        });
+        const todosArquivadosMaiorMes =
+          pagamentosMaiorMes.length > 0 &&
+          pagamentosMaiorMes.every((p: any) => p.status === "Arquivado");
+
+        // Calcular o próximo vencimento a partir do maior mês
+        const proximoVencimento = new Date(maiorAnoNum, maiorMesNum - 1, 20);
+        proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
+        const proximoMes = proximoVencimento.toLocaleDateString("pt-BR", {
+          month: "2-digit",
+          year: "numeric",
+        });
+
+        // Só gera novo pagamento se todos os pagamentos do maior mês estiverem arquivados e não existir pagamento para o próximo mês
+        const existePagamentoProximoMes = pagamentosAtualizados.some(
+          (p: any) => p.mesReferencia === proximoMes
+        );
+        if (todosArquivadosMaiorMes && !existePagamentoProximoMes) {
+          console.log(
+            `[fecharMesComArray] Gerando novo pagamento para o próximo mês (${proximoMes}) do aluno ${alunoData.nome} (${alunoDoc.id})`
+          );
+          const novoPagamento = limparObjetoUndefined({
+            mesReferencia: proximoMes,
+            dataVencimento: Timestamp.fromDate(proximoVencimento),
+            valor: alunoData.valorMensalidade,
+            status: "Pendente",
+          });
+          pagamentosAtualizados.push(novoPagamento);
+          novosPagamentosGerados++;
         }
 
-        // ✅ RECALCULAR totais
         const totalPago = pagamentosAtualizados
           .filter((p: any) => p.status === "Pago")
           .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-
         const totalPendente = pagamentosAtualizados
           .filter((p: any) => p.status === "Pendente")
           .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-
         const totalArquivado = pagamentosAtualizados
           .filter((p: any) => p.status === "Arquivado")
           .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
 
-        (
-          `   📊 Totais recalculados - Pago: ${totalPago}, Pendente: ${totalPendente}, Arquivado: ${totalArquivado}`
-        );
-
-        // ✅ ATUALIZAR próximo vencimento
         const pagamentosPendentes = pagamentosAtualizados.filter(
           (p: any) => p.status === "Pendente"
         );
-
-        const proximoVencimento =
+        const proximoVencimentoField =
           pagamentosPendentes.length > 0
             ? pagamentosPendentes.sort((a: any, b: any) => {
                 const dateA = a.dataVencimento?.toDate
@@ -819,7 +764,6 @@ export async function fecharMesComArray(): Promise<{
               })[0].dataVencimento
             : null;
 
-        // ✅ SALVAR alterações com dados limpos
         const dadosParaAtualizar = limparObjetoUndefined({
           pagamentos: pagamentosAtualizados,
           totais: {
@@ -827,21 +771,18 @@ export async function fecharMesComArray(): Promise<{
             pendente: totalPendente,
             arquivado: totalArquivado,
           },
-          proximoVencimento: proximoVencimento,
+          proximoVencimento: proximoVencimentoField,
           updatedAt: Timestamp.now(),
         });
-
         await updateDoc(alunoDoc.ref, dadosParaAtualizar);
-
         alunosProcessados++;
-        (`   ✅ ${alunoData.nome} processado com sucesso`);
       } catch (error) {
-        console.error(`❌ Erro ao processar aluno ${alunoDoc.id}:`, error);
-        // Continua processando outros alunos mesmo se um der erro
+        console.error(
+          `[fecharMesComArray] Erro ao processar aluno ${alunoDoc.id}:`,
+          error
+        );
       }
     }
-
-    // ✅ MENSAGEM MAIS CLARA
     let mensagem = "";
     if (pagamentosArquivados === 0 && alunosComPagamentosJaArquivados > 0) {
       mensagem = `Mês ${mesParaFechar} já foi fechado anteriormente. ${alunosComPagamentosJaArquivados} alunos já tinham pagamentos arquivados.`;
@@ -849,7 +790,6 @@ export async function fecharMesComArray(): Promise<{
       mensagem = `Nenhum pagamento encontrado para o mês ${mesParaFechar}. ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês.`;
     }
     invalidarCacheIntegracao();
-    ("🧹 Cache invalidado após fechar mês");
     return {
       alunosProcessados,
       pagamentosArquivados,
@@ -857,7 +797,7 @@ export async function fecharMesComArray(): Promise<{
       mensagem,
     };
   } catch (error: any) {
-    console.error("❌ Erro ao fechar mês:", error);
+    console.error("[fecharMesComArray] Erro ao fechar mês:", error);
     return {
       alunosProcessados: 0,
       pagamentosArquivados: 0,
@@ -932,14 +872,14 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
         const existeSnapshot = await getDocs(existeQuery);
 
         if (!existeSnapshot.empty) {
-          (`⏸️ Aluno ${alunoId} já migrado`);
+          `⏸️ Aluno ${alunoId} já migrado`;
           continue;
         }
 
         // Buscar dados do aluno
         const alunoDoc = await getDoc(doc(db, "Alunos", alunoId));
         if (!alunoDoc.exists()) {
-          (`⚠️ Aluno ${alunoId} não encontrado`);
+          `⚠️ Aluno ${alunoId} não encontrado`;
           continue;
         }
 
@@ -1045,17 +985,15 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
 
         alunosMigrados++;
         pagamentosMigrados += pagamentos.length;
-        (
-          `✅ ${alunoData.nome} migrado com ${pagamentos.length} pagamentos`
-        );
+        `✅ ${alunoData.nome} migrado com ${pagamentos.length} pagamentos`;
       } catch (error) {
         console.error(`❌ Erro ao migrar aluno ${alunoId}:`, error);
       }
     }
 
-    (`🎉 Migração concluída:`);
-    (`   • ${alunosMigrados} alunos migrados`);
-    (`   • ${pagamentosMigrados} pagamentos migrados`);
+    `🎉 Migração concluída:`;
+    `   • ${alunosMigrados} alunos migrados`;
+    `   • ${pagamentosMigrados} pagamentos migrados`;
 
     return { alunosMigrados, pagamentosMigrados };
   } catch (error: any) {
