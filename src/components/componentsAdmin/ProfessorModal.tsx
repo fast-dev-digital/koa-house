@@ -79,6 +79,7 @@ export default function ProfessorModal({
             | "Vôlei",
           status: formData.status as "Ativo" | "Inativo",
         };
+        await criarProfessor(professorDataToSave);
       } else {
         // ✅ ATUALIZAR VIA SERVICE
         if (!professorData?.id)
