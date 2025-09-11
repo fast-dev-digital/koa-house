@@ -117,8 +117,6 @@ export default function DashboardAluno() {
           Array.isArray(alunoInfo.turmasIds) &&
           alunoInfo.turmasIds.length > 0
         ) {
-          ("TurmasIds encontradas:", alunoInfo.turmasIds); // DEBUG
-
           // Buscar cada turma no Firestore
           for (const turmaId of alunoInfo.turmasIds) {
             if (turmaId && turmaId.trim()) {
@@ -244,7 +242,7 @@ export default function DashboardAluno() {
                 className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm"
               >
                 <FaTrophy />
-                Cadastrar Torneio
+                Cadastrar No Torneio
               </Link>
               <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm">
                 <FaWhatsapp />
