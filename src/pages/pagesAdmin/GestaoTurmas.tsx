@@ -143,7 +143,7 @@ export default function GestaoTurmas() {
   const [professorFilter, setProfessorFilter] = useState("");
   const [generoFilter, setGeneroFilter] = useState("");
 
-  const [csvLoading, setCsvLoading] = useState(false); //  ESTADO FALTANTE ADICIONADO
+  const [, setCsvLoading] = useState(false); //  ESTADO FALTANTE ADICIONADO
 
   // FUNÇÃO HELPER PARA TOAST
   const showToastMessage = (message: string, type: "success" | "error") => {
@@ -166,8 +166,6 @@ export default function GestaoTurmas() {
       setEstatisticas({ ...estatisticasData }); // Spread nas estatísticas também
 
       setRefreshKey((prev) => prev + 1);
-
-      
     } catch (erro) {
       showToastMessage("Erro ao carregar turmas", "error");
     } finally {

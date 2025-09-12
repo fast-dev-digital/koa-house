@@ -114,8 +114,8 @@ export default function GestaoAlunos() {
   // 🔍 ESTADOS DE FILTROS
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [turmasFilter, setTurmasFilter] = useState("");
-  const [horariosFilter, setHorariosFilter] = useState("");
+  const [turmasFilter] = useState("");
+  const [horariosFilter] = useState("");
 
   // 🎭 ESTADOS DO MODAL
   const [isModalOpen, setIsModalOpen] = useState(false);

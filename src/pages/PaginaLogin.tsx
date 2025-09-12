@@ -1,24 +1,11 @@
 import { useState } from "react";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
-import { auth, db } from "../firebase-config";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
-} from "firebase/firestore";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { db, auth } from "../firebase-config";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import BackgroundImage from "../assets/bg-hawaii-desk.png";
 import BackgroundImageMobile from "../assets/bg-hawaii-mobile.png";
-
-import NewBackgroundSand from "../assets/koa-sand-bgdesk-notext.png";
-import NewBackgroundSand1 from "../assets/koa-sand-bgdesk-notext.png";
 
 function PaginaLogin() {
   const [email, setEmail] = useState("");
@@ -33,15 +20,7 @@ function PaginaLogin() {
     setError("");
 
     try {
-      email;
-
-      // Tentar fazer login normalmente
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        senha
-      );
-      ("✅ Login realizado com sucesso!");
+      await signInWithEmailAndPassword(auth, email, senha);
 
       // Verificar se é admin
       const adminQuery = query(

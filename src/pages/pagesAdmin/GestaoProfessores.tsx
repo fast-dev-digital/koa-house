@@ -8,7 +8,6 @@ import { exportarProfessoresCSV } from "../../utils/exportarCsv";
 import type { Professor } from "../../types/professor";
 import {
   buscarTodosProfessores,
-  criarProfessor,
   obterEstatisticasProfessores,
   type EstatisticasProfessores,
 } from "../../services/professorService";
@@ -33,7 +32,7 @@ export default function GestaoProfessores() {
   const [estatisticas, setEstatisticas] =
     useState<EstatisticasProfessores | null>(null);
   // Estado para exportar CSV
-  const [csvLoading, setCsvLoading] = useState(false);
+  const [, setCsvLoading] = useState(false);
 
   // Configuração das colunas
   const columns = [
@@ -103,7 +102,7 @@ export default function GestaoProfessores() {
       setLoading(false);
     }
   };
-   
+
   useEffect(() => {
     fetchProfessores();
   }, []);

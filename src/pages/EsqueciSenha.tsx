@@ -23,8 +23,6 @@ const EsqueciSenha = () => {
     }
 
     try {
-      ("🔍 Verificando email no sistema:", email);
-
       // Verificar se o email existe como admin
       const adminQuery = query(
         collection(db, "admins"),
@@ -49,15 +47,11 @@ const EsqueciSenha = () => {
         return;
       }
 
-      const isAdmin = !adminSnapshot.empty;
       const isAluno = !alunoSnapshot.empty;
-
-      ("✅ Email encontrado no sistema:", { isAdmin, isAluno });
 
       // ✅ SE É ALUNO, VERIFICAR SE JÁ TEM CONTA NO AUTH
       if (isAluno) {
         const alunoData = alunoSnapshot.docs[0].data();
-        ("🔍 Dados do aluno:", alunoData);
 
         // ✅ SE É PRIMEIRO ACESSO (não tem authCreated ou authCreated = false)
         if (!alunoData.authCreated) {

@@ -36,7 +36,7 @@ export default function ManageAlunosModal({
     "matriculados"
   );
   const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [alunosDisponiveis, setAlunosDisponiveis] = useState<Aluno[]>([]);
+  const [, setAlunosDisponiveis] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingDisponiveis, setLoadingDisponiveis] = useState(false);
   const [loadingRemover, setLoadingRemover] = useState<string | null>(null);
@@ -92,9 +92,7 @@ export default function ManageAlunosModal({
 
       setTodosAlunos(alunosProcessados);
       setTodasTurmas(turmasMap);
-      (
-        `✅ Cache carregado: ${alunosProcessados.length} alunos ativos, ${turmasMap.size} turmas`
-      );
+      `✅ Cache carregado: ${alunosProcessados.length} alunos ativos, ${turmasMap.size} turmas`;
     } catch (error) {
       console.error("❌ Erro ao carregar dados:", error);
       showToast("Erro ao carregar dados", "error");

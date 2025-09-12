@@ -76,7 +76,12 @@ export default function GestaoPagamentos() {
         });
       });
 
-      setPagamentos(pagamentosFormatados);
+      // Antes de setar pagamentos:
+      const pagamentosFiltrados = pagamentosFormatados.filter(
+        (p) => p && typeof p === "object" && "status" in p
+      );
+      setPagamentos(pagamentosFiltrados);
+      console.log("Pagamentos para tabela:", pagamentosFiltrados);
     } catch (error) {
       mostrarToast("Erro ao carregar pagamentos", "error");
     } finally {
@@ -234,21 +239,29 @@ export default function GestaoPagamentos() {
       key: "valor",
       label: "Valor",
       sortable: true,
-      render: (value: number) => (
-        <span className="font-semibold text-green-600">
-          R$ {value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-        </span>
-      ),
+      render: (_: any, row: any) => {
+        if (!row || typeof row !== "object" || typeof row.valor !== "number") {
+          return <span className="text-gray-400">—</span>;
+        }
+        return (
+          <span className="font-semibold text-green-600">
+            R$ {row.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          </span>
+        );
+      },
     },
     {
       key: "dataVencimento",
       label: "Vencimento",
       sortable: true,
-      render: (value: Date) => {
-        const atrasado = new Date(value) < new Date();
+      render: (_: any, row: any) => {
+        if (!row || typeof row !== "object" || !row.dataVencimento) {
+          return <span className="text-gray-400">—</span>;
+        }
+        const atrasado = new Date(row.dataVencimento) < new Date();
         return (
           <span className={atrasado ? "text-red-600 font-semibold" : ""}>
-            {new Date(value).toLocaleDateString("pt-BR")}
+            {new Date(row.dataVencimento).toLocaleDateString("pt-BR")}
           </span>
         );
       },
@@ -257,11 +270,19 @@ export default function GestaoPagamentos() {
       key: "status",
       label: "Status",
       sortable: true,
-      render: (value: string, row: Pagamento) => {
+      render: (_: any, row: any) => {
+        console.log("Render status row:", row);
+        if (!row || typeof row !== "object" || typeof row.status !== "string") {
+          return <span className="text-gray-400">—</span>;
+        }
         const hoje = new Date();
-        const vencimento = new Date(row.dataVencimento);
+        const vencimento = row.dataVencimento
+          ? new Date(row.dataVencimento)
+          : null;
         const realStatus =
-          value === "Pendente" && vencimento < hoje ? "Atrasado" : value;
+          row.status === "Pendente" && vencimento && vencimento < hoje
+            ? "Atrasado"
+            : row.status;
         const colors = {
           Pago: "bg-green-100 text-green-700",
           Pendente: "bg-yellow-100 text-yellow-700",
@@ -271,7 +292,7 @@ export default function GestaoPagamentos() {
         return (
           <span
             className={`px-2 py-1 text-xs font-semibold rounded-full ${
-              colors[realStatus as keyof typeof colors]
+              colors[realStatus as keyof typeof colors] || ""
             }`}
           >
             {realStatus}
@@ -282,33 +303,38 @@ export default function GestaoPagamentos() {
     {
       key: "acoes",
       label: "Ações",
-      render: (value: any, row: Pagamento) => (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setSelectedAlunoId(row.alunoId);
-              setShowHistoricoModal(true);
-            }}
-            className="bg-blue-600 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-700 transition-colors flex items-center gap-1"
-          >
-            <FaHistory className="text-xs" />
-            Histórico
-          </button>
-
-          <button
-            onClick={() => handleMarcarComoPago(row)}
-            disabled={row.status !== "Pendente" || loading}
-            className={`px-3 py-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
-              row.status === "Pendente"
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-gray-400 text-gray-600 cursor-not-allowed"
-            }`}
-          >
-            <FaEdit className="text-xs" />
-            {row.status === "Pendente" ? "Pagar" : "Pago ✓"}
-          </button>
-        </div>
-      ),
+      render: (_: any, row: Pagamento) => {
+        console.log("Render ações row:", row);
+        if (!row) {
+          return <span className="text-gray-400">—</span>;
+        }
+        return (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setSelectedAlunoId(row.alunoId);
+                setShowHistoricoModal(true);
+              }}
+              className="bg-blue-600 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-700 transition-colors flex items-center gap-1"
+            >
+              <FaHistory className="text-xs" />
+              Histórico
+            </button>
+            <button
+              onClick={() => handleMarcarComoPago(row)}
+              disabled={row.status !== "Pendente" || loading}
+              className={`px-3 py-1 rounded-md text-xs transition-colors flex items-center gap-1 ${
+                row.status === "Pendente"
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-400 text-gray-600 cursor-not-allowed"
+              }`}
+            >
+              <FaEdit className="text-xs" />
+              {row.status === "Pendente" ? "Pagar" : "Pago ✓"}
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -393,14 +419,14 @@ export default function GestaoPagamentos() {
             Exportar CSV
           </button>
 
-          {/*<button
+          <button
             onClick={gerarPagamentosParaAlunosExistentes}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
             disabled={loading}
           >
             {loading ? "Gerando..." : "Gerar Pagamentos"}
           </button>
-          */}
+
           <button
             onClick={handleFecharMes}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
@@ -474,7 +500,9 @@ export default function GestaoPagamentos() {
       {/* TABELA */}
       <div className="bg-white rounded-lg shadow">
         <DataTable
-          data={pagamentosFiltrados}
+          data={pagamentosFiltrados.filter(
+            (p) => p && typeof p === "object" && typeof p.status === "string"
+          )}
           columns={pagamentosColumns}
           loading={loading}
         />
