@@ -81,7 +81,6 @@ export default function GestaoPagamentos() {
         (p) => p && typeof p === "object" && "status" in p
       );
       setPagamentos(pagamentosFiltrados);
-      console.log("Pagamentos para tabela:", pagamentosFiltrados);
     } catch (error) {
       mostrarToast("Erro ao carregar pagamentos", "error");
     } finally {
@@ -271,7 +270,6 @@ export default function GestaoPagamentos() {
       label: "Status",
       sortable: true,
       render: (_: any, row: any) => {
-        console.log("Render status row:", row);
         if (!row || typeof row !== "object" || typeof row.status !== "string") {
           return <span className="text-gray-400">—</span>;
         }
@@ -304,7 +302,6 @@ export default function GestaoPagamentos() {
       key: "acoes",
       label: "Ações",
       render: (_: any, row: Pagamento) => {
-        console.log("Render ações row:", row);
         if (!row) {
           return <span className="text-gray-400">—</span>;
         }
