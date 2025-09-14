@@ -34,13 +34,48 @@ export default function GestaoProfessores() {
   // Estado para exportar CSV
   const [, setCsvLoading] = useState(false);
 
+  const ESPECIALIDADE_COLORS: Record<string, string> = {
+    Futevôlei: "bg-blue-100 text-blue-800 ",
+    "Beach Tennis": "bg-pink-100 text-pink-800",
+    Vôlei: "bg-purple-100 text-purple-800",
+  };
   // Configuração das colunas
   const columns = [
     { key: "nome", label: "Nome" },
     { key: "email", label: "Email" },
     { key: "telefone", label: "Telefone" },
-    { key: "especialidade", label: "Especialidade" },
-    { key: "status", label: "Status" },
+    {
+      key: "especialidade",
+      label: "Especialidade",
+      render: (value: string) => {
+        const colorClass =
+          ESPECIALIDADE_COLORS[value] || "bg-gray-100 text-gray-700 ";
+        return (
+          <span
+            className={`px-2 py-1 text-xs rounded-full font-medium ${colorClass}`}
+          >
+            {value}
+          </span>
+        );
+      },
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value: string) => {
+        const colorClass =
+          value === "Ativo"
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700";
+        return (
+          <span
+            className={`px-2 py-1 text-xs rounded-full font-medium ${colorClass}`}
+          >
+            {value}
+          </span>
+        );
+      },
+    },
   ];
 
   // Configuração dos filtros
