@@ -9,7 +9,6 @@ import Toast from "../../components/componentsAdmin/Toast";
 import { exportarAlunosCSV } from "../../utils/exportarCsv";
 import type { Aluno } from "../../types/alunos";
 
-// 🎯 TIPOS E INTERFACES
 type StatusType = "Ativo" | "Inativo" | "Suspenso";
 type ToastType = "success" | "error";
 type ModalMode = "create" | "edit";
@@ -19,7 +18,6 @@ interface FilterOption {
   label: string;
 }
 
-// ✅ TIPAGEM CORRETA PARA SearchAndFilters
 interface FilterConfig {
   label: string;
   value: string;
@@ -59,7 +57,6 @@ const FILTER_OPTIONS = {
   ],
 };
 
-// 📊 CONFIGURAÇÃO DAS COLUNAS
 const createAlunosColumns = () => [
   { key: "nome", label: "Nome", sortable: true },
   { key: "email", label: "Email", sortable: true },
@@ -70,14 +67,17 @@ const createAlunosColumns = () => [
     label: "Status",
     sortable: true,
     render: (value: string) => {
-      const status = (value || "Inativo") as StatusType;
-      const colorClass = STATUS_COLORS[status] || STATUS_COLORS.Inativo;
-
+      const colorClass =
+        STATUS_COLORS[
+          ["Ativo", "Inativo", "Suspenso"].includes(value)
+            ? (value as StatusType)
+            : "Inativo"
+        ] || "bg-gray-100 text-gray-700";
       return (
         <span
           className={`px-2 py-1 text-xs font-semibold rounded-full ${colorClass}`}
         >
-          {status}
+          {value}
         </span>
       );
     },
