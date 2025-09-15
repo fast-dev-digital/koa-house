@@ -270,7 +270,7 @@ export default function GestaoAlunos() {
             disabled={alunos.length === 0 || csvLoading}
           >
             <FaDownload className={csvLoading ? "animate-spin" : ""} />
-            <span>{csvLoading ? "Exportando..." : "Exportar"}</span>
+            <span>{csvLoading ? "Exportando..." : "Exportar CSV"}</span>
           </button>
           <button
             onClick={handleCreateAluno}

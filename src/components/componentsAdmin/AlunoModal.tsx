@@ -342,7 +342,6 @@ export default function AlunoModal({
               >
                 <option value="Ativo">Ativo</option>
                 <option value="Inativo">Inativo</option>
-                <option value="Suspenso">Suspenso</option>
               </select>
             </div>
           </div>
