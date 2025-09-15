@@ -183,11 +183,11 @@ export async function buscarAlunoComPagamentos(
   try {
     // ✅ VERIFICAR CACHE INDIVIDUAL PRIMEIRO
     if (cacheValidoIndividual(alunoId)) {
-      `🔄 Usando cache para aluno ${alunoId}`;
+      
       return cacheIntegracao.alunoIndividual.get(alunoId) || null;
     }
 
-    `📡 Buscando aluno ${alunoId} do Firebase...`;
+   
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
       where("alunoId", "==", alunoId)
@@ -242,11 +242,11 @@ export async function listarAlunosComPagamentos(): Promise<
   try {
     // VERIFICAR CACHE PRIMEIRO
     if (cacheValidoTodos()) {
-      ("🔄 Usando cache para listar todos os alunos com pagamentos");
+      
       return cacheIntegracao.todosAlunos!;
     }
 
-    ("📡 Buscando todos os alunos com pagamentos do Firebase...");
+   
     const snapshot = await getDocs(collection(db, "alunosPagamentos"));
     const alunos: AlunoComPagamentos[] = [];
 

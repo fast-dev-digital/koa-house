@@ -142,6 +142,7 @@ export default function GestaoTurmas() {
   const [modalidadeFilter, setModalidadeFilter] = useState("");
   const [professorFilter, setProfessorFilter] = useState("");
   const [generoFilter, setGeneroFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const [, setCsvLoading] = useState(false); //  ESTADO FALTANTE ADICIONADO
 
@@ -183,17 +184,32 @@ export default function GestaoTurmas() {
           .includes(searchText.toLowerCase()) ||
         (turma.modalidade || "")
           .toLowerCase()
-          .includes(searchText.toLowerCase());
+          .includes(searchText.toLowerCase()) ||
+        (turma.status || "").toLowerCase().includes(searchText.toLowerCase());
 
       const matchModalidade =
         !modalidadeFilter || turma.modalidade === modalidadeFilter;
       const matchGenero = !generoFilter || turma.genero === generoFilter;
       const matchProfessor =
         !professorFilter || turma.professorNome === professorFilter;
+      const matchStatus = !statusFilter || turma.status === statusFilter;
 
-      return matchSearch && matchModalidade && matchGenero && matchProfessor;
+      return (
+        matchSearch &&
+        matchModalidade &&
+        matchGenero &&
+        matchProfessor &&
+        matchStatus
+      );
     });
-  }, [turmas, searchText, modalidadeFilter, generoFilter, professorFilter]);
+  }, [
+    turmas,
+    searchText,
+    modalidadeFilter,
+    generoFilter,
+    professorFilter,
+    statusFilter,
+  ]);
 
   // CARREGAR DADOS NA INICIALIZAÇÃO
   useEffect(() => {
@@ -381,6 +397,16 @@ export default function GestaoTurmas() {
               value: prof,
               label: prof,
             })),
+          },
+          {
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            placeholder: "Todos os Status",
+            options: [
+              { value: "Ativa", label: "Ativa" },
+              { value: "Inativa", label: "Inativa" },
+            ],
           },
         ]}
       />
