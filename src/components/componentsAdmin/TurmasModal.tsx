@@ -311,7 +311,7 @@ export default function TurmaModal({
             {/* PROFESSOR - OPCIONAL PARA TESTE */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Professor (Opcional para teste)
+                Professor 
               </label>
               <select
                 value={formData.professorId || ""}
@@ -330,7 +330,7 @@ export default function TurmaModal({
             {/* DIAS - OPCIONAL PARA TESTE */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Dias da Semana (Opcional para teste)
+                Dias da Semana 
               </label>
               <select
                 value={formData.dias || ""}
@@ -351,7 +351,7 @@ export default function TurmaModal({
             {/* HORÁRIO - OPCIONAL PARA TESTE */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Horário (Opcional para teste)
+                Horário 
               </label>
               <input
                 type="text"
@@ -378,7 +378,7 @@ export default function TurmaModal({
             {/* CAPACIDADE - OPCIONAL PARA TESTE */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Capacidade (Opcional para teste)
+                Capacidade 
               </label>
               <input
                 type="number"

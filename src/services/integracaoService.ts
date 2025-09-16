@@ -125,14 +125,8 @@ export async function criarAlunoComPagamentosArray(
 
     // Calcular primeiro vencimento
     const hoje = new Date();
-    const diaHoje = hoje.getDate();
-    let dataVencimento = new Date(hoje);
 
-    if (diaHoje <= 5) {
-      dataVencimento.setDate(5);
-    } else {
-      dataVencimento.setDate(20);
-    }
+    let dataVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), 10);
 
     const mesReferencia = dataVencimento.toLocaleDateString("pt-BR", {
       month: "2-digit",
@@ -183,11 +177,9 @@ export async function buscarAlunoComPagamentos(
   try {
     // ✅ VERIFICAR CACHE INDIVIDUAL PRIMEIRO
     if (cacheValidoIndividual(alunoId)) {
-      
       return cacheIntegracao.alunoIndividual.get(alunoId) || null;
     }
 
-   
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
       where("alunoId", "==", alunoId)
@@ -242,11 +234,9 @@ export async function listarAlunosComPagamentos(): Promise<
   try {
     // VERIFICAR CACHE PRIMEIRO
     if (cacheValidoTodos()) {
-      
       return cacheIntegracao.todosAlunos!;
     }
 
-   
     const snapshot = await getDocs(collection(db, "alunosPagamentos"));
     const alunos: AlunoComPagamentos[] = [];
 
@@ -337,22 +327,21 @@ export async function adicionarProximoPagamentoArray(
     // Calcular próximo vencimento (último vencimento + 1 mês)
     const ultimoPagamento =
       alunoComPagamentos.pagamentos[alunoComPagamentos.pagamentos.length - 1];
-    const proximoVencimento = new Date(ultimoPagamento.dataVencimento);
-    proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
+    const ultimoVencimento = new Date(ultimoPagamento.dataVencimento);
+    const proximoVencimento = new Date(
+      ultimoVencimento.getFullYear(),
+      ultimoVencimento.getMonth() + 1,
+      10
+    ); // Sempre dia 10
 
     const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
       month: "2-digit",
       year: "numeric",
     });
 
-    `📅 Gerando próximo pagamento:`;
-    `   • Aluno: ${alunoComPagamentos.nome}`;
-    `   • Próximo vencimento: ${proximoVencimento.toLocaleDateString("pt-BR")}`;
-
-    // ✅ CRIAR ARRAY COMPLETAMENTE LIMPO
     const novosPagamentos: any[] = [];
 
-    // ✅ PROCESSAR pagamentos existentes
+    //  PROCESSAR pagamentos existentes
     for (const pagamento of alunoComPagamentos.pagamentos) {
       const pagamentoBase: any = {
         mesReferencia: pagamento.mesReferencia || "",
@@ -814,8 +803,6 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
   erro?: string;
 }> {
   try {
-    ("🔄 Iniciando migração para nova estrutura...");
-
     // 1. Buscar todos os pagamentos da estrutura ANTIGA
     const pagamentosSnapshot = await getDocs(collection(db, "pagamentos"));
     const pagamentosPorAluno: { [alunoId: string]: any[] } = {};
@@ -830,10 +817,19 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
       }
 
       // ✅ Tratamento seguro das datas
-      const dataVencimento = data.dataVencimento?.toDate
-        ? data.dataVencimento.toDate()
-        : new Date(data.dataVencimento || Date.now());
-
+      // ...existing code...
+      const dataVencimento = (() => {
+        if (data.dataVencimento?.toDate) {
+          const d = data.dataVencimento.toDate();
+          return new Date(d.getFullYear(), d.getMonth(), 10); // Sempre dia 10
+        }
+        if (data.dataVencimento) {
+          const d = new Date(data.dataVencimento);
+          return new Date(d.getFullYear(), d.getMonth(), 10); // Sempre dia 10
+        }
+        return new Date(Date.now());
+      })();
+      // ...existing code...
       const dataPagamento = data.dataPagamento?.toDate
         ? data.dataPagamento.toDate()
         : data.dataPagamento
