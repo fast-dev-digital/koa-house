@@ -407,7 +407,7 @@ function HomePage() {
           </motion.p>
 
           <motion.a
-            href="https://wa.me/5519981924006?text=Olá%20quero%20saber%20mais%20sobre%20a%20Arena%20Brazuka"
+            href="https://wa.me/5519981924006?text=Olá,%20quero%20saber%20mais%20sobre%20a%20Koa%20House"
             className="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-12 rounded-full text-xl shadow-2xl"
             initial={{ y: 50, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
