@@ -28,6 +28,8 @@ export default function DashboardAluno() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showHistorico, setShowHistorico] = useState(false);
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const navigate = useNavigate();
 
   // Componente do botão de logout reutilizável
@@ -225,9 +227,9 @@ export default function DashboardAluno() {
       )}
 
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex items-center justify-between py-4">
             <div>
               <h1 className="text-xl font-bold">
                 Bem-vindo{nome ? `, ${nome}` : ""}!
@@ -236,23 +238,73 @@ export default function DashboardAluno() {
                 {alunoData?.email || "Bem-vindo à sua área pessoal"}
               </p>
             </div>
-            <div className="flex space-x-3">
+
+            {/* Botões Desktop */}
+            <div className="hidden md:flex flex-row gap-3 items-center">
               <Link
                 to="/cadastrar-torneio"
                 className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm"
               >
                 <FaTrophy />
-                Cadastrar No Torneio
+                Inscrever No Torneio
               </Link>
-              <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm">
+              <button
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm"
+                onClick={() => window.open("https://wa.me/5519981924006", "_blank")}
+              >
                 <FaWhatsapp />
                 Contato
               </button>
-
               <LogoutButton className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-3 py-2 rounded-lg text-sm" />
             </div>
+
+            {/* Botão Menu Mobile */}
+            <button
+              className="md:hidden p-2 ml-2"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label="Abrir menu"
+            >
+              <svg
+                className="w-7 h-7"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 12h12M6 6h12M6 18h12"
+                />
+              </svg>
+            </button>
           </div>
         </div>
+
+        {/* Menu Mobile Dropdown */}
+        {menuOpen && (
+          <div className="md:hidden absolute right-4 top-20 bg-white rounded-xl shadow-lg z-50 w-48 p-2 flex flex-col gap-2 border">
+            <Link
+              to="/cadastrar-torneio"
+              className="w-full text-left px-4 py-2 rounded hover:bg-yellow-50 flex items-center gap-2 text-yellow-700"
+              onClick={() => setMenuOpen(false)}
+            >
+              <FaTrophy />
+              Inscrever No Torneio
+            </Link>
+            <button
+              className="w-full text-left px-4 py-2 rounded hover:bg-green-50 flex items-center gap-2 text-green-700"
+              onClick={() => {
+                window.open("https://wa.me/5519981924006", "_blank");
+                setMenuOpen(false);
+              }}
+            >
+              <FaWhatsapp />
+              Contato
+            </button>
+            <LogoutButton className="w-full text-left px-4 py-2 rounded hover:bg-red-50 flex items-center gap-2 text-red-700" />
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
