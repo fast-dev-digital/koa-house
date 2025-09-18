@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FaTrophy } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const categoriasOpcoes = [
   { label: "Estreante", value: "Estreante" },
@@ -54,9 +55,32 @@ export default function CadastrarTorneio() {
     window.open(url, "_blank");
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-2">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-4 sm:p-8">
+        <button
+          type="button"
+          onClick={() => navigate("/aluno")}
+          className="mb-4 text-sm text-gray-600 hover:text-green-700 flex items-center gap-2"
+        >
+          {/* Ícone de seta para a esquerda */}
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Voltar para Dashboard
+        </button>
         <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
           <FaTrophy className="text-yellow-500" />
           Cadastra-se no Torneio
