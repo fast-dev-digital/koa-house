@@ -28,10 +28,13 @@ import TermosDeServico from "./pages/TermosDeServico";
 import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade";
 import CadastrarTorneio from "./pages/pagesAluno/CadastrarTorneio";
 
+import ScrollToTop from "./components/ScrollToTop";
+
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           {/* Rotas públicas com Navbar/Footer */}
           <Route path="/" element={<Layout />}>
