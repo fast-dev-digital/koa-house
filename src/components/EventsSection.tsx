@@ -9,17 +9,6 @@ type EventsSectionProps = {
 
 const eventos = [
   {
-    tipo: "Musica ao vivo",
-    titulo: "Pagode do Gordin",
-    data: "Sábado, 15 de Julho",
-    imagem: "torneio-img.png",
-    link: "/eventos/pagode-do-gordin",
-    local: "Rua das Flores, 123 - Centro, São Paulo",
-    descricao:
-      "O Pagode do Gordin é um evento que acontece todos os sábados no nosso clube.",
-    horario: "18:00 às 00:00",
-  },
-  {
     tipo: "Torneio",
     titulo: "Torneio Interno de Futevôlei",
     data: "Sábado e Domingo, 27 e 28 de Setembro a partir das 9h",
@@ -30,6 +19,21 @@ const eventos = [
     descricao:
       "Participe do melhor torneio interno da região, que ocorrerá nos dias 27 e 28 de Setembro, com muita resenha, futevôlei e brindes para os campeões!",
     horario: "09:00 às 17:00",
+  },
+  {
+    tipo: "Happy Hour",
+    titulo: "Happy Hour",
+    data: "Toda Sexta-feira, das 17h às 20h",
+    imagem: "happyhour-koa.png",
+    link: "/eventos/happy-hour",
+    local: "R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180",
+    descricao: `
+      Eu ouvi happy hour? Agora é oficial: toda sexta-feira, das 17h às 20h, tem Happy Hour na arena!🔥
+      🍻 Chopp em dobro
+      🫒 Cardápio exclusivo
+      ✌️ Aquela vibe pra você relaxar depois de um dia puxado 💼
+    `,
+    horario: "17:00 às 20:00",
   },
 ];
 
@@ -97,17 +101,6 @@ function EventsSection({ mode = "page" }: EventsSectionProps) {
                 />
                 {/* Simplified gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                {/* Enhanced type badge */}
-                <div className="absolute top-6 left-6">
-                  <motion.span
-                    whileHover={{ scale: 1.1 }}
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-sm font-bold rounded-full shadow-xl backdrop-blur-sm border border-yellow-300/30"
-                  >
-                    <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
-                    {evento.tipo}
-                  </motion.span>
-                </div>
 
                 {/* Floating date badge */}
                 <div className="absolute top-6 right-6">
