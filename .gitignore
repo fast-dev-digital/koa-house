@@ -33,4 +33,6 @@ scripts/cache/*.json
 *.njsproj
 *.sln
 *.sw?
-/.env
+/.env*
+.firebase/
+.build/
