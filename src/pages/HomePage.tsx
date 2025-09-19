@@ -435,8 +435,11 @@ function HomePage() {
           </h3>
           <img
             src={modalTeste}
+            srcSet="/assets/interno-img-1-400.png 400w, /assets/interno-img-1.png 800w"
+            sizes="(max-width: 600px) 400px, 800px"
             alt="Anúncio de torneio interno"
             className="w-full rounded-md mb-4"
+            loading="lazy"
           />
           <p className="text-white text-center">
             Ei, aluno! Participe do melhor torneio interno da região, que

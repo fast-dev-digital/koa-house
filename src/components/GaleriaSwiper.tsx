@@ -1,20 +1,13 @@
 // src/components/GaleriaSwiper.tsx
-import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation } from 'swiper/modules'
-import img1 from '../assets/torneio-img.png'
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
+import img1 from "../assets/torneio-img.png";
 
-import 'swiper/css'
-import 'swiper/css/navigation'
+import "swiper/css";
+import "swiper/css/navigation";
 
 export default function GaleriaSwiper() {
-  const imagens = [
-    img1,
-    img1,
-    img1,
-    img1,
-    img1,
-    img1,
-  ]
+  const imagens = [img1, img1, img1, img1, img1, img1];
 
   return (
     <div className="relative w-full max-w-[1200px] h-[200px] md:h-[400px] overflow-hidden rounded-xl mx-auto mt-[20px] px-4">
@@ -43,5 +36,5 @@ export default function GaleriaSwiper() {
         ))}
       </Swiper>
     </div>
-  )
+  );
 }
