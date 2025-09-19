@@ -23,16 +23,17 @@ function HeroCarousel() {
               className="w-full h-full bg-cover bg-center flex flex-col gap-4 md:gap-6 items-center justify-center text-white text-center px-4"
               style={{
                 backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${BackgroundImage1})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
               }}
             >
               <h2 className="text-2xl md:text-6xl font-bold">
                 Viva o melhor do Esporte na Areia
               </h2>
               <p className="max-w-2xl text-sm md:text-lg">
-                Treine, jogue e se divirta nas melhores quadras de areia da região. Bar, loja, estacionamento e diversão garantida!
+                Treine, jogue e se divirta nas melhores quadras de areia da
+                região. Bar, loja, estacionamento e diversão garantida!
               </p>
               <button className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold text-xs md:text-base py-2 md:py-3 px-4 md:px-6 rounded shadow-md">
                 FALE COM A GENTE
@@ -46,9 +47,9 @@ function HeroCarousel() {
               className="w-full h-full bg-cover bg-center flex flex-col gap-4 md:gap-6 items-center justify-center text-white text-center px-4"
               style={{
                 backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${BackgroundImage2})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
               }}
             >
               <h2 className="text-2xl md:text-6xl font-bold">
@@ -69,7 +70,6 @@ function HeroCarousel() {
               className="w-full h-full bg-cover bg-center flex flex-col gap-4 md:gap-6 items-center justify-center text-white text-center px-4"
               style={{
                 backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${BackgroundImage3})`,
-                  
               }}
             >
               <h2 className="text-2xl md:text-6xl font-bold">
