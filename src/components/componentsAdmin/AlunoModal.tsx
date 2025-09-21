@@ -249,10 +249,10 @@ export default function AlunoModal({
                 required
               />
               {mode === "edit" && (
-              <p className="text-xs text-gray-500 mt-1">
-                Email não pode ser alterado após cadastro
-              </p>
-            )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Email não pode ser alterado após cadastro
+                </p>
+              )}
             </div>
 
             {/* TELEFONE */}
@@ -289,11 +289,6 @@ export default function AlunoModal({
                 <option value="Masculino">Masculino</option>
                 <option value="Feminino">Feminino</option>
               </select>
-              {mode === "edit" && (
-              <p className="text-xs text-gray-500 mt-1">
-                Gênero não pode ser alterado após cadastro
-              </p>
-            )}
             </div>
 
             {/* PLANO */}
