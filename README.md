@@ -1,4 +1,4 @@
-# Arena Koah
+# KOA HOUSE
 
 Sistema web para gestão de alunos, pagamentos, torneios e eventos esportivos.
 
@@ -291,7 +291,7 @@ const LoginProtectedRoute = ({ children }) => {
 
 ## 📄 Licença
 
-Este projeto é privado e de uso exclusivo da Arena Brazuka.
+Este projeto é privado e de uso exclusivo da KOA HOUSE.
 
 ---
 
