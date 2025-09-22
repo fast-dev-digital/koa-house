@@ -26,7 +26,7 @@ function TermosDeServico() {
               Termos de Serviço
             </h1>
             <p className="text-gray-600">
-              Última atualização: {new Date().toLocaleDateString('pt-BR')}
+              Última atualização: 22/09/2025 (v1.0)
             </p>
           </div>
 
@@ -35,17 +35,17 @@ function TermosDeServico() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">1. Aceitação dos Termos</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Ao acessar e usar os serviços da Arena Brazuka, você concorda em cumprir e estar vinculado a estes Termos de Serviço. Se você não concordar com qualquer parte destes termos, não deve usar nossos serviços.
+                Ao acessar e usar os serviços da Koa House, você concorda em cumprir e estar vinculado a estes Termos de Serviço. Se você não concordar com qualquer parte destes termos, não deve usar nossos serviços.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">2. Descrição dos Serviços</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                A Arena Brazuka oferece serviços de ensino de beach tennis, incluindo:
+                A Koa House oferece serviços de ensino de beach tennis, incluindo:
               </p>
               <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
-                <li>Aulas de beach tennis para diferentes níveis</li>
+                <li>Aulas de futevôlei e beach tennis para diferentes níveis</li>
                 <li>Aluguel de quadras</li>
                 <li>Organização de eventos e torneios</li>
                 <li>Plataforma digital para gestão de alunos e pagamentos</li>
@@ -88,7 +88,7 @@ function TermosDeServico() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">6. Limitação de Responsabilidade</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                A Arena Brazuka não será responsável por danos indiretos, incidentais, especiais ou consequenciais decorrentes do uso de nossos serviços. Nossa responsabilidade total não excederá o valor pago pelos serviços.
+                A Koa House não será responsável por danos indiretos, incidentais, especiais ou consequenciais decorrentes do uso de nossos serviços. Nossa responsabilidade total não excederá o valor pago pelos serviços.
               </p>
             </section>
 
@@ -102,7 +102,7 @@ function TermosDeServico() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">8. Contato</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Para dúvidas sobre estes Termos de Serviço, entre em contato conosco através dos canais oficiais da Arena Brazuka.
+                Para dúvidas sobre estes Termos de Serviço, entre em contato conosco através dos canais oficiais da Koa House.
               </p>
             </section>
           </div>
@@ -111,7 +111,7 @@ function TermosDeServico() {
           <div className="mt-12 pt-8 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <p className="text-gray-600 mb-4 sm:mb-0">
-                © 2024 Arena Brazuka. Todos os direitos reservados.
+                © 2025 Koa House. Todos os direitos reservados.
               </p>
               <Link 
                 to="/politica-de-privacidade" 

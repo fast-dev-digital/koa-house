@@ -26,7 +26,7 @@ function PoliticaDePrivacidade() {
               Política de Privacidade
             </h1>
             <p className="text-gray-600">
-              Última atualização: {new Date().toLocaleDateString('pt-BR')}
+              Última atualização: 22/09/2025 (v1.0)
             </p>
           </div>
 
@@ -35,7 +35,7 @@ function PoliticaDePrivacidade() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">1. Informações que Coletamos</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                A Arena Brazuka coleta as seguintes informações:
+                A Koa House coleta as seguintes informações:
               </p>
               <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
                 <li><strong>Informações pessoais:</strong> Nome, e-mail, telefone, CPF</li>
@@ -52,7 +52,7 @@ function PoliticaDePrivacidade() {
               </p>
               <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2">
                 <li>Fornecer e melhorar nossos serviços</li>
-                <li>Processar pagamentos e gerenciar sua conta</li>
+                <li>Encaminhar pagamentos e gerenciar sua conta</li>
                 <li>Comunicar sobre aulas, eventos e atualizações</li>
                 <li>Cumprir obrigações legais e regulamentares</li>
                 <li>Prevenir fraudes e garantir a segurança</li>
@@ -138,8 +138,8 @@ function PoliticaDePrivacidade() {
                   <strong>Encarregado de Proteção de Dados (DPO)</strong>
                 </p>
                 <p className="text-gray-700">
-                  E-mail: privacidade@arenabrazuka.com.br<br />
-                  Telefone: (11) 99999-9999
+                  E-mail: contato@koahouse.com.br<br />
+                  Telefone: (19) 98192-4006
                 </p>
               </div>
             </section>
@@ -149,7 +149,7 @@ function PoliticaDePrivacidade() {
           <div className="mt-12 pt-8 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-center">
               <p className="text-gray-600 mb-4 sm:mb-0">
-                © 2024 Arena Brazuka. Todos os direitos reservados.
+                © 2025 Koa House. Todos os direitos reservados.
               </p>
               <Link 
                 to="/termos-de-servico" 

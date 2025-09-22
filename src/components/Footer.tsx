@@ -41,7 +41,7 @@ function Footer() {
             </div>
             <h4 className="font-semibold text-white mb-2 pt-6">Contato</h4>
             <ul>
-              <li className='mb-2 text-xs'>Email: koahouse@gmail.com</li>
+              <li className='mb-2 text-xs'>Email: contato@koahouse.com.br</li>
               <li className='mb-2 text-xs'>Telefone: (19) 98192-4006</li>
               <li className='mb-2 text-xs'>R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180</li>
             </ul>
