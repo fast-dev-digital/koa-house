@@ -702,7 +702,7 @@ export async function fecharMesComArray(): Promise<{
           pagamentosMaiorMes.every((p: any) => p.status === "Arquivado");
 
         // Calcular o próximo vencimento a partir do maior mês
-        const proximoVencimento = new Date(maiorAnoNum, maiorMesNum - 1, 20);
+        const proximoVencimento = new Date(maiorAnoNum, maiorMesNum - 1, 10);
         proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
         const proximoMes = proximoVencimento.toLocaleDateString("pt-BR", {
           month: "2-digit",
