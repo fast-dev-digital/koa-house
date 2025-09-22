@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { fetchSignInMethodsForEmail } from "firebase/auth";
 
 //  INTERFACE PARA TIPAGEM
 interface AlunoData {
@@ -55,8 +56,6 @@ export default function PrimeiroAcesso() {
     setErro("");
 
     try {
-      
-
       const alunoQuery = query(
         collection(db, "Alunos"),
         where("email", "==", emailToCheck.toLowerCase())
@@ -74,8 +73,6 @@ export default function PrimeiroAcesso() {
 
       const aluno = alunoSnapshot.docs[0];
       const dadosAluno = aluno.data();
-
-      
 
       if (dadosAluno.authCreated === true) {
         setErro(
@@ -135,7 +132,14 @@ export default function PrimeiroAcesso() {
     setLoading(true);
 
     try {
-      
+      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+      if (signInMethods.length > 0) {
+        setErro(
+          'Este email já possui uma conta ativa. Use "Redefinir Senha" na tela de login.'
+        );
+        setLoading(false);
+        return;
+      }
 
       // ✅ CRIAR CONTA NO FIREBASE AUTH
       const userCredential = await createUserWithEmailAndPassword(
@@ -143,8 +147,6 @@ export default function PrimeiroAcesso() {
         email,
         senha
       );
-
-      
 
       // ✅ ATUALIZAR FIRESTORE
       await updateDoc(doc(db, "Alunos", alunoData.id), {
