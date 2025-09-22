@@ -385,14 +385,33 @@ export async function adicionarProximoPagamentoArray(
       novosPagamentos.push(limparObjetoUndefined(pagamentoBase));
     }
 
+    // ✅ BUSCAR VALOR ATUAL DA MENSALIDADE DO ALUNO
+    let valorAtualMensalidade = alunoComPagamentos.valorMensalidade;
+    try {
+      const alunoAtualDoc = await getDoc(
+        doc(db, "Alunos", alunoComPagamentos.alunoId)
+      );
+      if (alunoAtualDoc.exists()) {
+        const dadosAtuais = alunoAtualDoc.data();
+        valorAtualMensalidade =
+          dadosAtuais.valorMensalidade || alunoComPagamentos.valorMensalidade;
+        console.log(
+          `Valor da mensalidade atualizado para ${alunoComPagamentos.nome}: R$ ${valorAtualMensalidade}`
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `Erro ao buscar valor atual da mensalidade para ${alunoComPagamentos.nome}, usando valor do cache:`,
+        error
+      );
+    }
+
     // ✅ ADICIONAR novo pagamento (sem campos undefined)
     const novoPagamento = {
       mesReferencia,
       dataVencimento: Timestamp.fromDate(proximoVencimento),
       valor:
-        typeof alunoComPagamentos.valorMensalidade === "number"
-          ? alunoComPagamentos.valorMensalidade
-          : 0,
+        typeof valorAtualMensalidade === "number" ? valorAtualMensalidade : 0,
       status: "Pendente",
     };
 
@@ -717,10 +736,32 @@ export async function fecharMesComArray(): Promise<{
           console.log(
             `[fecharMesComArray] Gerando novo pagamento para o próximo mês (${proximoMes}) do aluno ${alunoData.nome} (${alunoDoc.id})`
           );
+
+          // ✅ BUSCAR VALOR ATUAL DA MENSALIDADE DO ALUNO
+          let valorAtualMensalidade = alunoData.valorMensalidade;
+          try {
+            const alunoAtualDoc = await getDoc(
+              doc(db, "Alunos", alunoData.alunoId)
+            );
+            if (alunoAtualDoc.exists()) {
+              const dadosAtuais = alunoAtualDoc.data();
+              valorAtualMensalidade =
+                dadosAtuais.valorMensalidade || alunoData.valorMensalidade;
+              console.log(
+                `[fecharMesComArray] Valor da mensalidade atualizado: R$ ${valorAtualMensalidade} (era R$ ${alunoData.valorMensalidade})`
+              );
+            }
+          } catch (error) {
+            console.warn(
+              `[fecharMesComArray] Erro ao buscar valor atual da mensalidade para ${alunoData.nome}, usando valor do cache:`,
+              error
+            );
+          }
+
           const novoPagamento = limparObjetoUndefined({
             mesReferencia: proximoMes,
             dataVencimento: Timestamp.fromDate(proximoVencimento),
-            valor: alunoData.valorMensalidade,
+            valor: valorAtualMensalidade, // ✅ Valor atualizado
             status: "Pendente",
           });
           pagamentosAtualizados.push(novoPagamento);
