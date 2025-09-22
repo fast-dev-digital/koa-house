@@ -353,7 +353,10 @@ function EventsSection({ mode = "page" }: EventsSectionProps) {
 
                           {/* Call to action */}
                           <div className="mt-6 pt-6 border-t border-white/30">
-                            <motion.button
+                            <motion.a
+                              href="https://wa.me/5519981924006"
+                              target="_blank"
+                              rel="noopener noreferrer"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                               className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
@@ -372,7 +375,7 @@ function EventsSection({ mode = "page" }: EventsSectionProps) {
                                 />
                               </svg>
                               Entrar em Contato
-                            </motion.button>
+                            </motion.a>
                           </div>
                         </motion.div>
                       )}
