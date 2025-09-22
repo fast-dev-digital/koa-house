@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../../firebase-config";
+//import { collection, getDocs, query, where } from "firebase/firestore";
+//import { db } from "../../firebase-config";
 import {
   FaCreditCard,
   FaDownload,
@@ -15,7 +15,7 @@ import {
   adicionarProximoPagamentoArray,
   fecharMesComArray,
   marcarPagamentoPagoArray,
-  criarAlunoComPagamentosArray,
+  //criarAlunoComPagamentosArray,
   listarAlunosComPagamentos,
   limparObjetoUndefined,
 } from "../../services/integracaoService";
@@ -88,7 +88,7 @@ export default function GestaoPagamentos() {
     }
   };
 
-  // ✅ FUNÇÃO - Gerar pagamentos para alunos existentes
+  /* ✅ FUNÇÃO - Gerar pagamentos para alunos existentes
   const gerarPagamentosParaAlunosExistentes = async () => {
     try {
       setLoading(true);
@@ -127,7 +127,7 @@ export default function GestaoPagamentos() {
       setLoading(false);
     }
   };
-
+*/
   // ✅ FUNÇÃO - Marcar como pago
   const handleMarcarComoPago = async (pagamento: Pagamento) => {
     try {
@@ -416,7 +416,7 @@ export default function GestaoPagamentos() {
             Exportar CSV
           </button>
 
-         {/* <button
+          {/* <button
             onClick={gerarPagamentosParaAlunosExistentes}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
             disabled={loading}
