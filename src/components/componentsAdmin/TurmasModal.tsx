@@ -318,7 +318,7 @@ export default function TurmaModal({
                 onChange={(e) => handleProfessorChange(e.target.value)}
                 className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               >
-                <option value="">Nenhum professor (teste)</option>
+                <option value="">Nenhum professor</option>
                 {professores.map((professor) => (
                   <option key={professor.id} value={professor.id}>
                     {professor.nome}
