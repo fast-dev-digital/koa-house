@@ -15,7 +15,7 @@ import {
   adicionarProximoPagamentoArray,
   fecharMesComArray,
   marcarPagamentoPagoArray,
-  //criarAlunoComPagamentosArray,
+  criarAlunoComPagamentosArray,
   listarAlunosComPagamentos,
   limparObjetoUndefined,
 } from "../../services/integracaoService";
