@@ -1,6 +1,6 @@
 // src/components/EventsSection.tsx
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Tipo da prop
 type EventsSectionProps = {
@@ -9,6 +9,7 @@ type EventsSectionProps = {
 
 const eventos = [
   {
+    id: "interno-27-09",
     tipo: "Torneio",
     titulo: "Torneio Interno de Futevôlei",
     data: "Sábado e Domingo, 27 e 28 de Setembro a partir das 9h",
@@ -21,6 +22,7 @@ const eventos = [
     horario: "09:00 às 17:00",
   },
   {
+    id: "happy-hour",
     tipo: "Happy Hour",
     titulo: "Happy Hour",
     data: "Toda Sexta-feira, das 17h às 20h",
@@ -46,8 +48,8 @@ const images = import.meta.glob("../assets/*.png", {
 function EventsSection({ mode = "page" }: EventsSectionProps) {
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
 
-  const toggleExpand = (titulo: string) => {
-    setExpandedEvent(expandedEvent === titulo ? null : titulo);
+  const toggleExpand = (id: string) => {
+    setExpandedEvent(expandedEvent === id ? null : id);
   };
 
   const containerVariants = {
@@ -76,14 +78,16 @@ function EventsSection({ mode = "page" }: EventsSectionProps) {
     <section className="py-16 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
-          className="grid grid-cols-1 lg:grid-cols-2 gap-12"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:items-stretch"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {eventos.map((evento) => (
             <motion.div
-              key={evento.titulo}
+              key={evento.id}
+              layout // 👈 AQUI para layout animations
+              transition={{ layout: { duration: 0.5, ease: "easeOut" } }} // 👈 AQUI para suavizar
               variants={cardVariants}
               whileHover={{
                 scale: 1.03,
@@ -210,14 +214,14 @@ function EventsSection({ mode = "page" }: EventsSectionProps) {
                   ) : (
                     <>
                       <motion.button
-                        onClick={() => toggleExpand(evento.titulo)}
+                        onClick={() => toggleExpand(evento.id)}
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
                         className="group/btn relative w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:via-yellow-600 hover:to-yellow-700 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-yellow-500/25 transition-all duration-500 overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
                         <span className="relative z-10 flex items-center justify-center">
-                          {expandedEvent === evento.titulo ? (
+                          {expandedEvent === evento.id ? (
                             <>
                               Ver Menos
                               <svg
@@ -254,12 +258,13 @@ function EventsSection({ mode = "page" }: EventsSectionProps) {
                           )}
                         </span>
                       </motion.button>
-
-                      {expandedEvent === evento.titulo && (
+                      <AnimatePresence>
+                      {expandedEvent === evento.id && (
                         <motion.div
+                          key="details" // Importante ter a key pro AnimatePresence funcionar
                           initial={{ opacity: 0, height: 0, y: -20 }}
                           animate={{ opacity: 1, height: "auto", y: 0 }}
-                          exit={{ opacity: 0, height: 0, y: -20 }}
+                          exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.5, ease: "easeOut" }}
                           className="bg-white/80 rounded-2xl p-6 border border-white/40 shadow-lg"
                         >
@@ -379,6 +384,7 @@ function EventsSection({ mode = "page" }: EventsSectionProps) {
                           </div>
                         </motion.div>
                       )}
+                      </AnimatePresence>
                     </>
                   )}
                 </div>
