@@ -117,7 +117,7 @@ export const planos: Plano[] = [
     {
         tipo: 'Locação',
         titulo: 'Locação Churrasqueira',
-        preco: 'R$ 29,90',
+        preco: 'R$ 69,90',
         unidade: '/por hora',
         destacado: false,
         features: [
