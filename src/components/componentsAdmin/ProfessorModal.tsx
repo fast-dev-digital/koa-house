@@ -164,13 +164,9 @@ export default function ProfessorModal({
               required
               className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
               placeholder="professor@email.com"
-              disabled={mode == "edit" || loading}
+              
             />
-            {mode === "edit" && (
-              <p className="text-xs text-gray-500 mt-1">
-                Email não pode ser alterado após cadastro
-              </p>
-            )}
+            
           </div>
 
           {/* Telefone */}
