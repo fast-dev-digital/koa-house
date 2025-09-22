@@ -245,7 +245,6 @@ export default function AlunoModal({
                 value={formData.email}
                 onChange={(e) => updateField("email", e.target.value)}
                 className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                disabled={mode === "edit" || loading}
                 required
               />
               {mode === "edit" && (
@@ -282,7 +281,6 @@ export default function AlunoModal({
                   updateField("genero", e.target.value as GeneroType | "")
                 }
                 className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                disabled={mode === "edit" || loading}
                 required
               >
                 <option value="">Selecione o gênero</option>
