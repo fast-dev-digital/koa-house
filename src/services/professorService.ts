@@ -147,7 +147,7 @@ export async function atualizarProfessor(
 
 export async function obterEstatisticasProfessores(): Promise<EstatisticasProfessores> {
   try {
-    ("📊 Calculando estatísticas de professores...");
+    
 
     const professores = await buscarTodosProfessores();
 
