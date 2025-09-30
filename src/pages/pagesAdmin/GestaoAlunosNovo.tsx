@@ -59,6 +59,28 @@ const FILTER_OPTIONS = {
 
 const createAlunosColumns = () => [
   { key: "nome", label: "Nome", sortable: true },
+  {
+    key: "dataMatricula",
+    label: "Data Matricula",
+    sortable: true,
+    render: (value: string) => {
+      if (!value) return "Não informado";
+      try {
+        if (value.includes("T")) {
+          const date = new Date(value);
+          return date.toLocaleDateString("pt-BR");
+        }
+        if (value.includes("-") && value.length === 10) {
+          const [ano, mes, dia] = value.split("-");
+          return `${dia}/${mes}/${ano}`;
+        }
+        return value;
+      } catch (error) {
+        console.error("Erro ao formatar data de matricula");
+        return value;
+      }
+    },
+  },
   { key: "email", label: "Email", sortable: true },
   { key: "telefone", label: "Telefone" },
   { key: "plano", label: "Plano", sortable: true },
