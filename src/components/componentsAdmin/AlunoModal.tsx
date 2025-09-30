@@ -81,15 +81,15 @@ export default function AlunoModal({
 
   const validateForm = (): string | null => {
     const { nome, email, telefone, genero, plano } = formData;
-
-    if (!nome.trim()) return "Nome é obrigatório";
-    if (!email.trim()) return "Email é obrigatório";
-    if (!telefone.trim()) return "Telefone é obrigatório";
-    if (!genero) return "Selecione o gênero";
-    if (!plano) return "Selecione um plano";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
-      return "Email inválido";
-
+    if (mode === "create") {
+      if (!nome.trim()) return "Nome é obrigatório";
+      if (!email.trim()) return "Email é obrigatório";
+      if (!telefone.trim()) return "Telefone é obrigatório";
+      if (!genero) return "Selecione o gênero";
+      if (!plano) return "Selecione um plano";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+        return "Email inválido";
+    }
     return null;
   };
 
@@ -161,6 +161,8 @@ export default function AlunoModal({
 
         const dadosAtualizacao: Partial<Aluno> = {
           nome: formData.nome.trim(),
+          email: formData.email.trim(),
+
           telefone: formData.telefone.trim(),
           status: formData.status,
           valorMensalidade: formData.valorMensalidade,
@@ -281,7 +283,7 @@ export default function AlunoModal({
                   updateField("genero", e.target.value as GeneroType | "")
                 }
                 className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                required
+                required={mode === "create"}
               >
                 <option value="">Selecione o gênero</option>
                 <option value="Masculino">Masculino</option>
