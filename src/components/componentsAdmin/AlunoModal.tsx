@@ -7,6 +7,12 @@ import {
 } from "../../services/alunoService";
 import { criarAlunoComPagamentosArray } from "../../services/integracaoService";
 import type { Aluno } from "../../types/alunos";
+import {
+  calcularDataFinalMatricula,
+  formatarDataBR,
+  planoTemDataFinal,
+  formatarDataParaInput,
+} from "../../utils/dateUtils";
 
 interface AlunoModalProps {
   isOpen: boolean;
@@ -29,6 +35,7 @@ interface FormDataType {
   plano: PlanoType | "";
   status: StatusType;
   valorMensalidade: number;
+  dataFinalMatricula: string;
 }
 
 const INITIAL_STATE: FormDataType = {
@@ -39,6 +46,7 @@ const INITIAL_STATE: FormDataType = {
   plano: "",
   status: "Ativo", // ✅ CORRIGIDO PARA MAIÚSCULO
   valorMensalidade: 150,
+  dataFinalMatricula: "",
 };
 
 export default function AlunoModal({
@@ -63,6 +71,9 @@ export default function AlunoModal({
         plano: alunoData.plano,
         status: alunoData.status,
         valorMensalidade: alunoData.valorMensalidade || 150,
+        dataFinalMatricula: formatarDataParaInput(
+          alunoData.dataFinalMatricula || ""
+        ),
       });
     } else {
       setFormData(INITIAL_STATE);
@@ -122,6 +133,12 @@ export default function AlunoModal({
           return;
         }
 
+        const dataMatricula = new Date().toISOString().split("T")[0];
+        const dataFinalMatricula = calcularDataFinalMatricula(
+          dataMatricula,
+          formData.plano as PlanoType
+        );
+
         const novoAluno: Omit<Aluno, "id"> = {
           nome: formData.nome.trim(),
           email: formData.email.trim().toLowerCase(),
@@ -130,7 +147,8 @@ export default function AlunoModal({
           plano: formData.plano as PlanoType,
           status: formData.status,
           valorMensalidade: formData.valorMensalidade,
-          dataMatricula: new Date().toISOString().split("T")[0],
+          dataMatricula: dataMatricula,
+          dataFinalMatricula: dataFinalMatricula,
           turmasIds: [],
           horarios: "",
           role: "user",
@@ -162,10 +180,10 @@ export default function AlunoModal({
         const dadosAtualizacao: Partial<Aluno> = {
           nome: formData.nome.trim(),
           email: formData.email.trim(),
-
           telefone: formData.telefone.trim(),
           status: formData.status,
           valorMensalidade: formData.valorMensalidade,
+
           updatedAt: new Date().toISOString(),
         };
 
@@ -174,6 +192,26 @@ export default function AlunoModal({
         }
         if (formData.plano) {
           dadosAtualizacao.plano = formData.plano as PlanoType;
+
+          // Para planos com data final (Trimestral/Semestral), usar valor do input
+          if (
+            planoTemDataFinal(formData.plano) &&
+            formData.dataFinalMatricula
+          ) {
+            dadosAtualizacao.dataFinalMatricula = formData.dataFinalMatricula;
+          } else if (
+            planoTemDataFinal(formData.plano) &&
+            alunoData.dataMatricula
+          ) {
+            // Se não tem data final no input, calcular automaticamente
+            dadosAtualizacao.dataFinalMatricula = calcularDataFinalMatricula(
+              alunoData.dataMatricula,
+              formData.plano
+            );
+          } else if (!planoTemDataFinal(formData.plano)) {
+            // Para planos mensais, remover data final
+            dadosAtualizacao.dataFinalMatricula = "";
+          }
         }
 
         await atualizarAluno(alunoData.id, dadosAtualizacao);
@@ -354,6 +392,30 @@ export default function AlunoModal({
                 <option value="Inativo">Inativo</option>
               </select>
             </div>
+
+            {/* DATA FINAL DA MATRÍCULA (EDITÁVEL PARA TRIMESTRAL E SEMESTRAL) */}
+            {mode === "edit" &&
+              formData.plano &&
+              planoTemDataFinal(formData.plano) && (
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Data Final da Matrícula
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.dataFinalMatricula}
+                    onChange={(e) =>
+                      updateField("dataFinalMatricula", e.target.value)
+                    }
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Ajuste a data de vencimento do plano{" "}
+                    {formData.plano.toLowerCase()}
+                  </p>
+                </div>
+              )}
           </div>
 
           {/* MENSAGEM DE SUCESSO */}
