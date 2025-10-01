@@ -26,7 +26,6 @@ export function calcularDataFinalMatricula(
 
     return dataFinal.toISOString().split("T")[0];
   } catch (error) {
-    console.error("Erro ao calcular data final:", error);
     return "";
   }
 }
@@ -44,25 +43,57 @@ export function formatarDataBR(data: string): string {
 export function verificarStatusVencimento(dataFinal: string): string {
   if (!dataFinal) return "";
 
-  const hoje = new Date();
-  const dataVencimento = new Date(dataFinal);
-  const diasRestantes = Math.ceil(
-    (dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  try {
+    // Normalizar as datas para evitar problemas de timezone
+    const hoje = new Date();
+    const anoHoje = hoje.getFullYear();
+    const mesHoje = hoje.getMonth();
+    const diaHoje = hoje.getDate();
 
-  if (diasRestantes < 0) return "text-red-600"; // Vencido
-  if (diasRestantes <= 7) return "text-orange-600"; // Vence em 7 dias
-  return "text-green-600"; // Normal
+    // Criar data de hoje normalizada
+    const dataHojeNormalizada = new Date(anoHoje, mesHoje, diaHoje);
+
+    // Parse da data de vencimento
+    const [ano, mes, dia] = dataFinal.split("-").map(Number);
+    const dataVencimentoNormalizada = new Date(ano, mes - 1, dia); // mes - 1 porque Date usa 0-11
+
+    const diasRestantes = Math.ceil(
+      (dataVencimentoNormalizada.getTime() - dataHojeNormalizada.getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    if (diasRestantes < 0) return "text-red-600"; // Vencido
+    if (diasRestantes <= 7) return "text-orange-600"; // Vence em 7 dias
+    return "text-green-600"; // Normal
+  } catch (error) {
+    return "text-gray-600"; // Cor neutra em caso de erro
+  }
 }
 
 export function obterDiasRestantes(dataFinal: string): number | null {
   if (!dataFinal) return null;
 
-  const hoje = new Date();
-  const dataVencimento = new Date(dataFinal);
-  return Math.ceil(
-    (dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  try {
+    // Normalizar as datas para evitar problemas de timezone
+    const hoje = new Date();
+    const anoHoje = hoje.getFullYear();
+    const mesHoje = hoje.getMonth();
+    const diaHoje = hoje.getDate();
+
+    // Criar data de hoje normalizada
+    const dataHojeNormalizada = new Date(anoHoje, mesHoje, diaHoje);
+
+    // Parse da data de vencimento
+    const [ano, mes, dia] = dataFinal.split("-").map(Number);
+    const dataVencimentoNormalizada = new Date(ano, mes - 1, dia); // mes - 1 porque Date usa 0-11
+
+    return Math.ceil(
+      (dataVencimentoNormalizada.getTime() - dataHojeNormalizada.getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+  } catch (error) {
+    return null;
+  }
 }
 
 // Verifica se o plano deve mostrar data final (apenas Trimestral e Semestral)
