@@ -9,7 +9,7 @@ import { criarAlunoComPagamentosArray } from "../../services/integracaoService";
 import type { Aluno } from "../../types/alunos";
 import {
   calcularDataFinalMatricula,
-  formatarDataBR,
+  
   planoTemDataFinal,
   formatarDataParaInput,
 } from "../../utils/dateUtils";
@@ -44,7 +44,7 @@ const INITIAL_STATE: FormDataType = {
   telefone: "",
   genero: "",
   plano: "",
-  status: "Ativo", // ✅ CORRIGIDO PARA MAIÚSCULO
+  status: "Ativo", 
   valorMensalidade: 150,
   dataFinalMatricula: "",
 };
