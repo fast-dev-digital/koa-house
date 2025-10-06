@@ -275,10 +275,10 @@ export default function GestaoAlunos() {
     setSelectedAluno(null);
   }, []);
 
-  const handleModalSuccess = useCallback(() => {
+  const handleModalSuccess = useCallback(async () => {
     setIsModalOpen(false);
     setSelectedAluno(null);
-    fetchAlunos();
+    await fetchAlunos();
 
     const action = modalMode === "create" ? "cadastrado" : "atualizado";
     showToastMessage(`Aluno ${action} com sucesso!`, "success");
