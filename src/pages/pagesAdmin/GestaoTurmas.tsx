@@ -95,14 +95,11 @@ const colunasTurmas = [
     label: "Horário",
     sortable: true,
     render: (value: string) => {
-      // 📝 LOG PARA ESTUDO: Valor do horário antes da renderização
-      console.log("🕐 [HORÁRIO RENDER TURMAS]", { value, type: typeof value });
       return value || "A definir";
     },
     sortFn: (a: any, b: any, direction: "asc" | "desc") => {
       const aValue = String(a.horario || "").toLowerCase();
       const bValue = String(b.horario || "").toLowerCase();
-      console.log("🔄 [HORÁRIO SORTFN TURMAS]", { aValue, bValue, direction });
 
       if (aValue < bValue) return direction === "asc" ? -1 : 1;
       if (aValue > bValue) return direction === "asc" ? 1 : -1;
