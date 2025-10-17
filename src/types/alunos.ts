@@ -10,6 +10,7 @@ export interface Aluno {
   valorMensalidade: number;
   status: "Ativo" | "Inativo" | "Suspenso";
   dataMatricula: string;
+  dataFinalMatricula?: string;
 
   turmas?: string;
   turmasIds?: string[];

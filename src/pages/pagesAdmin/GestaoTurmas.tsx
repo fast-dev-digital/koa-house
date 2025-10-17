@@ -12,6 +12,50 @@ import type { Turma } from "../../types/turmas";
 import ManageAlunosModal from "../../components/componentsAdmin/ManageAlunosModal";
 import { exportarTurmasCSV } from "../../utils/exportarCsv";
 
+// 🗓️ FUNÇÃO HELPER PARA ORDENAR DIAS DA SEMANA
+const obterOrdemDia = (diaTexto: string): number => {
+  
+
+  if (!diaTexto) return 999; // Dias vazios vão para o final
+
+  const ORDEM_DIAS: { [key: string]: number } = {
+    seg: 1,
+    segunda: 1,
+    "segunda-feira": 1,
+    ter: 2,
+    terça: 2,
+    terca: 2,
+    "terça-feira": 2,
+    "terca-feira": 2,
+    qua: 3,
+    quarta: 3,
+    "quarta-feira": 3,
+    qui: 4,
+    quinta: 4,
+    "quinta-feira": 4,
+    sex: 5,
+    sexta: 5,
+    "sexta-feira": 5,
+    sab: 6,
+    sábado: 6,
+    sabado: 6,
+    dom: 7,
+    domingo: 7,
+  };
+
+  // Pegar o primeiro dia mencionado no texto
+  const diaLimpo = diaTexto.toLowerCase().trim();
+
+  // Se tem hífen (seg-qua), pega o primeiro dia
+  const primeiroDia = diaLimpo.split("-")[0].split(",")[0].trim();
+
+  const ordem = ORDEM_DIAS[primeiroDia] || 999;
+
+  
+
+  return ordem;
+};
+
 //  COLUNAS Turmas
 const colunasTurmas = [
   {
@@ -88,13 +132,41 @@ const colunasTurmas = [
   {
     key: "dias",
     label: "Dias",
-    render: (value: string) => value || "A definir",
+    sortable: true,
+    render: (value: string) => {
+      
+      return value || "A definir";
+    },
+    sortFn: (a: any, b: any, direction: "asc" | "desc") => {
+      
+
+      const ordemA = obterOrdemDia(a.dias || "");
+      const ordemB = obterOrdemDia(b.dias || "");
+
+      
+
+      if (direction === "asc") {
+        return ordemA - ordemB;
+      } else {
+        return ordemB - ordemA;
+      }
+    },
   },
   {
     key: "horario",
     label: "Horário",
     sortable: true,
-    render: (value: string) => value || "A definir",
+    render: (value: string) => {
+      return value || "A definir";
+    },
+    sortFn: (a: any, b: any, direction: "asc" | "desc") => {
+      const aValue = String(a.horario || "").toLowerCase();
+      const bValue = String(b.horario || "").toLowerCase();
+
+      if (aValue < bValue) return direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return direction === "asc" ? 1 : -1;
+      return 0;
+    },
   },
   {
     key: "alunosInscritos",
@@ -281,6 +353,7 @@ export default function GestaoTurmas() {
           <button
             onClick={handleExportCSV}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={turmas.length === 0 || loading}
           >
             <FaDownload />
             <span>Exportar CSV</span>

@@ -7,6 +7,12 @@ import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters"
 import AlunoModal from "../../components/componentsAdmin/AlunoModal";
 import Toast from "../../components/componentsAdmin/Toast";
 import { exportarAlunosCSV } from "../../utils/exportarCsv";
+import {
+  formatarDataBR,
+  verificarStatusVencimento,
+  obterDiasRestantes,
+  planoTemDataFinal,
+} from "../../utils/dateUtils";
 import type { Aluno } from "../../types/alunos";
 
 type StatusType = "Ativo" | "Inativo" | "Suspenso";
@@ -59,6 +65,57 @@ const FILTER_OPTIONS = {
 
 const createAlunosColumns = () => [
   { key: "nome", label: "Nome", sortable: true },
+  {
+    key: "dataMatricula",
+    label: "Data Início",
+    sortable: true,
+    render: (value: string) => {
+      if (!value) return "Não informado";
+      try {
+        if (value.includes("T")) {
+          const date = new Date(value);
+          return date.toLocaleDateString("pt-BR");
+        }
+        if (value.includes("-") && value.length === 10) {
+          return formatarDataBR(value);
+        }
+        return value;
+      } catch (error) {
+        console.error("Erro ao formatar data de matricula");
+        return value;
+      }
+    },
+  },
+  {
+    key: "dataFinalMatricula",
+    label: "Data Final",
+    sortable: true,
+    render: (value: string, item: Aluno) => {
+      // Só mostrar data final para planos Trimestral e Semestral
+      if (!planoTemDataFinal(item.plano)) {
+        return <span className="text-gray-500 text-xs">N/A (Mensal)</span>;
+      }
+
+      if (!value)
+        return <span className="text-gray-500 text-xs">Não calculado</span>;
+
+      const statusClass = verificarStatusVencimento(value);
+      const diasRestantes = obterDiasRestantes(value);
+
+      let statusText = "";
+      if (diasRestantes !== null) {
+        if (diasRestantes < 0) statusText = " (Vencido)";
+        else if (diasRestantes <= 7) statusText = ` (${diasRestantes}d)`;
+      }
+
+      return (
+        <span className={statusClass}>
+          {formatarDataBR(value)}
+          {statusText}
+        </span>
+      );
+    },
+  },
   { key: "email", label: "Email", sortable: true },
   { key: "telefone", label: "Telefone" },
   { key: "plano", label: "Plano", sortable: true },
@@ -218,10 +275,10 @@ export default function GestaoAlunos() {
     setSelectedAluno(null);
   }, []);
 
-  const handleModalSuccess = useCallback(() => {
+  const handleModalSuccess = useCallback(async () => {
     setIsModalOpen(false);
     setSelectedAluno(null);
-    fetchAlunos();
+    await fetchAlunos();
 
     const action = modalMode === "create" ? "cadastrado" : "atualizado";
     showToastMessage(`Aluno ${action} com sucesso!`, "success");
@@ -241,7 +298,7 @@ export default function GestaoAlunos() {
     }
   }, [showToastMessage]);
 
-  // 🔧 CONFIGURAÇÃO DOS FILTROS
+  //  CONFIGURAÇÃO DOS FILTROS
   const filterConfigs: FilterConfig[] = useMemo(
     () => [
       {

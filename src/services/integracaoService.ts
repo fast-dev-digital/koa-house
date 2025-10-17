@@ -298,13 +298,176 @@ export function limparObjetoUndefined(obj: any): any {
   return objetoLimpo;
 }
 
+// ✅ FUNÇÃO PARA SINCRONIZAR TODOS OS DADOS DO ALUNO
+export async function sincronizarDadosAluno(alunoId: string): Promise<void> {
+  try {
+    // Buscar dados atuais do aluno na coleção Alunos
+    const alunoAtualDoc = await getDoc(doc(db, "Alunos", alunoId));
+    if (!alunoAtualDoc.exists()) {
+      throw new Error(`Aluno ${alunoId} não encontrado na coleção Alunos`);
+    }
+
+    const dadosAtuais = alunoAtualDoc.data();
+
+    // Buscar documento na estrutura de pagamentos
+    const alunoQuery = query(
+      collection(db, "alunosPagamentos"),
+      where("alunoId", "==", alunoId)
+    );
+    const alunoSnapshot = await getDocs(alunoQuery);
+
+    if (alunoSnapshot.empty) {
+      throw new Error(
+        `Aluno ${alunoId} não encontrado na coleção alunosPagamentos`
+      );
+    }
+
+    const docSnapshot = alunoSnapshot.docs[0];
+    const alunoData = docSnapshot.data();
+
+    // Verificar se algum dado mudou
+    const dadosParaAtualizar: any = {};
+    let algumDadoMudou = false;
+
+    // Verificar cada campo
+    if (alunoData.nome !== dadosAtuais.nome) {
+      dadosParaAtualizar.nome = dadosAtuais.nome;
+      algumDadoMudou = true;
+    }
+
+    if (alunoData.plano !== dadosAtuais.plano) {
+      dadosParaAtualizar.plano = dadosAtuais.plano;
+      algumDadoMudou = true;
+    }
+
+    if (alunoData.valorMensalidade !== dadosAtuais.valorMensalidade) {
+      dadosParaAtualizar.valorMensalidade = dadosAtuais.valorMensalidade;
+      algumDadoMudou = true;
+    }
+
+    if (alunoData.status !== dadosAtuais.status) {
+      dadosParaAtualizar.status = dadosAtuais.status;
+      algumDadoMudou = true;
+    }
+
+    // Verificar se não houve mudanças
+    if (!algumDadoMudou) {
+      return;
+    }
+
+    // Atualizar campos na estrutura de pagamentos
+    dadosParaAtualizar.updatedAt = Timestamp.now();
+    await updateDoc(docSnapshot.ref, dadosParaAtualizar);
+
+    // Invalidar cache
+    invalidarCacheIntegracao();
+  } catch (error) {
+    console.error("❌ Erro ao sincronizar dados do aluno:", error);
+    throw error;
+  }
+}
+
+// ✅ FUNÇÃO PARA SINCRONIZAR DADOS DE TODOS OS ALUNOS
+export async function sincronizarTodosDadosAlunos(): Promise<{
+  alunosSincronizados: number;
+  alunosComErro: number;
+  erro?: string;
+}> {
+  try {
+    // Buscar todos os alunos ativos na coleção Alunos
+    const alunosSnapshot = await getDocs(
+      query(collection(db, "Alunos"), where("status", "==", "Ativo"))
+    );
+
+    if (alunosSnapshot.empty) {
+      return {
+        alunosSincronizados: 0,
+        alunosComErro: 0,
+        erro: "Nenhum aluno ativo encontrado",
+      };
+    }
+
+    let alunosSincronizados = 0;
+    let alunosComErro = 0;
+
+    for (const alunoDoc of alunosSnapshot.docs) {
+      try {
+        await sincronizarDadosAluno(alunoDoc.id);
+        alunosSincronizados++;
+      } catch (error) {
+        console.error(`Erro ao sincronizar aluno ${alunoDoc.id}:`, error);
+        alunosComErro++;
+      }
+    }
+
+    return {
+      alunosSincronizados,
+      alunosComErro,
+    };
+  } catch (error: any) {
+    console.error("❌ Erro na sincronização geral:", error);
+    return {
+      alunosSincronizados: 0,
+      alunosComErro: 0,
+      erro: `Erro: ${error?.message}`,
+    };
+  }
+}
+
+// ✅ FUNÇÃO PARA SINCRONIZAR DADOS DE TODOS OS ALUNOS (INCLUINDO INATIVOS)
+export async function sincronizarTodosDadosAlunosCompleto(): Promise<{
+  alunosSincronizados: number;
+  alunosComErro: number;
+  erro?: string;
+}> {
+  try {
+    // Buscar TODOS os alunos na coleção Alunos (ativos e inativos)
+    const alunosSnapshot = await getDocs(collection(db, "Alunos"));
+
+    if (alunosSnapshot.empty) {
+      return {
+        alunosSincronizados: 0,
+        alunosComErro: 0,
+        erro: "Nenhum aluno encontrado",
+      };
+    }
+
+    let alunosSincronizados = 0;
+    let alunosComErro = 0;
+
+    for (const alunoDoc of alunosSnapshot.docs) {
+      try {
+        await sincronizarDadosAluno(alunoDoc.id);
+        alunosSincronizados++;
+      } catch (error) {
+        console.error(`Erro ao sincronizar aluno ${alunoDoc.id}:`, error);
+        alunosComErro++;
+      }
+    }
+
+    return {
+      alunosSincronizados,
+      alunosComErro,
+    };
+  } catch (error: any) {
+    console.error("❌ Erro na sincronização completa:", error);
+    return {
+      alunosSincronizados: 0,
+      alunosComErro: 0,
+      erro: `Erro: ${error?.message}`,
+    };
+  }
+}
+
 // ✅ FUNÇÃO ULTRA-DEFENSIVA - Adicionar próximo pagamento ao array de um aluno
 export async function adicionarProximoPagamentoArray(
   alunoId: string
 ): Promise<void> {
   try {
-    const alunoComPagamentos = await buscarAlunoComPagamentos(alunoId);
+    // ✅ PRIMEIRO: SINCRONIZAR TODOS OS DADOS DO ALUNO
+    await sincronizarDadosAluno(alunoId);
 
+    const alunoComPagamentos = await buscarAlunoComPagamentos(alunoId);
     if (!alunoComPagamentos) {
       throw new Error("Aluno não encontrado na nova estrutura");
     }
@@ -385,22 +548,22 @@ export async function adicionarProximoPagamentoArray(
       novosPagamentos.push(limparObjetoUndefined(pagamentoBase));
     }
 
+    // ✅ BUSCAR VALOR ATUAL DA MENSALIDADE DO ALUNO (já sincronizado)
+    const valorAtualMensalidade = alunoComPagamentos.valorMensalidade;
+
     // ✅ ADICIONAR novo pagamento (sem campos undefined)
     const novoPagamento = {
       mesReferencia,
       dataVencimento: Timestamp.fromDate(proximoVencimento),
       valor:
-        typeof alunoComPagamentos.valorMensalidade === "number"
-          ? alunoComPagamentos.valorMensalidade
-          : 0,
+        typeof valorAtualMensalidade === "number" ? valorAtualMensalidade : 0,
       status: "Pendente",
     };
 
     novosPagamentos.push(novoPagamento);
 
     const novoTotalPendente =
-      (alunoComPagamentos.totais?.pendente || 0) +
-      (alunoComPagamentos.valorMensalidade || 0);
+      (alunoComPagamentos.totais?.pendente || 0) + (valorAtualMensalidade || 0);
 
     // ✅ DADOS LIMPOS para atualização (sem undefined)
     const dadosLimpos = {
@@ -583,9 +746,10 @@ export async function fecharMesComArray(): Promise<{
   mensagem?: string;
 }> {
   try {
-    console.log(
-      "[fecharMesComArray] Iniciando fechamento do próximo mês disponível..."
-    );
+    // ✅ SINCRONIZAR TODOS OS DADOS DOS ALUNOS ANTES DO FECHAMENTO
+
+    await sincronizarTodosDadosAlunos();
+
     const alunosSnapshot = await getDocs(
       query(collection(db, "alunosPagamentos"), where("status", "==", "Ativo"))
     );
@@ -597,9 +761,7 @@ export async function fecharMesComArray(): Promise<{
         erro: "Nenhum aluno ativo encontrado",
       };
     }
-    console.log(
-      `[fecharMesComArray] Alunos ativos encontrados: ${alunosSnapshot.size}`
-    );
+
     let mesParaFechar = "";
     const mesesDisponiveis = new Set<string>();
     alunosSnapshot.docs.forEach((alunoDoc) => {
@@ -625,14 +787,7 @@ export async function fecharMesComArray(): Promise<{
       };
     }
     mesParaFechar = mesesOrdenados[0];
-    console.log(
-      `[fecharMesComArray] Meses disponíveis para fechar: ${mesesOrdenados.join(
-        ", "
-      )}`
-    );
-    console.log(
-      `[fecharMesComArray] Mês selecionado para fechar: ${mesParaFechar}`
-    );
+
     let alunosProcessados = 0,
       pagamentosArquivados = 0,
       novosPagamentosGerados = 0,
@@ -671,13 +826,7 @@ export async function fecharMesComArray(): Promise<{
               arquivadoEm: Timestamp.now(),
             });
           }
-          console.log(
-            `[fecharMesComArray] Processando aluno: ${alunoData.nome} (${alunoDoc.id})`
-          );
-          console.log(
-            `[fecharMesComArray] Pagamentos do mês ${mesParaFechar}:`,
-            pagamentosDoMes
-          );
+
           return limparObjetoUndefined(pagamento);
         });
 
@@ -714,13 +863,13 @@ export async function fecharMesComArray(): Promise<{
           (p: any) => p.mesReferencia === proximoMes
         );
         if (todosArquivadosMaiorMes && !existePagamentoProximoMes) {
-          console.log(
-            `[fecharMesComArray] Gerando novo pagamento para o próximo mês (${proximoMes}) do aluno ${alunoData.nome} (${alunoDoc.id})`
-          );
+          // ✅ USAR VALOR JÁ SINCRONIZADO DA MENSALIDADE
+          const valorAtualMensalidade = alunoData.valorMensalidade;
+
           const novoPagamento = limparObjetoUndefined({
             mesReferencia: proximoMes,
             dataVencimento: Timestamp.fromDate(proximoVencimento),
-            valor: alunoData.valorMensalidade,
+            valor: valorAtualMensalidade, // ✅ Valor atualizado
             status: "Pendente",
           });
           pagamentosAtualizados.push(novoPagamento);

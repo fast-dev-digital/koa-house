@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FaEdit, FaTrash, FaUsers } from "react-icons/fa";
 
 interface Column {
@@ -6,6 +6,7 @@ interface Column {
   label: string;
   sortable?: boolean;
   render?: (value: any, row: any) => React.ReactNode;
+  sortFn?: (a: any, b: any, direction: "asc" | "desc") => number;
 }
 
 interface DataTableProps {
@@ -40,10 +41,11 @@ export default function DataTable({
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPageData = data.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  // 🔄 ESTADOS PARA ORDENAÇÃO
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   const isSelected = (item: any) =>
     selectedItems.some((selected) => selected.id === item.id);
@@ -72,9 +74,67 @@ export default function DataTable({
       setSelectedItems([]);
     }
   };
+
+  // 🔄 FUNÇÃO DE ORDENAÇÃO COM LOGS PARA ESTUDO
+  const handleSort = (columnKey: string) => {
+    let direction: "asc" | "desc" = "asc";
+
+    if (
+      sortConfig &&
+      sortConfig.key === columnKey &&
+      sortConfig.direction === "asc"
+    ) {
+      direction = "desc";
+    }
+
+    setSortConfig({ key: columnKey, direction });
+  };
+
+  // 🔄 DADOS ORDENADOS COM LOGS DETALHADOS E SORTFN PERSONALIZADO
+  const sortedData = useMemo(() => {
+    if (!sortConfig) {
+      return data;
+    }
+
+    const column = columns.find((col) => col.key === sortConfig.key);
+
+    const sorted = [...data].sort((a, b) => {
+      // Se tem função de ordenação personalizada, usa ela
+      if (column?.sortFn) {
+        return column.sortFn(a, b, sortConfig.direction);
+      }
+
+      // Ordenação padrão alfabética
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+
+      const aStr = String(aValue || "").toLowerCase();
+      const bStr = String(bValue || "").toLowerCase();
+
+      if (aStr < bStr) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (aStr > bStr) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return sorted;
+  }, [data, sortConfig, columns]);
+
+  // 🔄 DADOS ORDENADOS E PAGINADOS
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageData = sortedData.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   useEffect(() => {
     setCurrentPage(1); // Reset para página 1 quando dados mudam
   }, [data.length]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset para página 1 quando ordenação muda
+  }, [sortConfig]);
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -122,9 +182,27 @@ export default function DataTable({
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                    column.sortable
+                      ? "cursor-pointer hover:bg-gray-100 transition-colors"
+                      : ""
+                  }`}
+                  onClick={
+                    column.sortable ? () => handleSort(column.key) : undefined
+                  }
                 >
-                  {column.label}
+                  <div className="flex items-center gap-1">
+                    {column.label}
+                    {column.sortable && (
+                      <span className="text-gray-400">
+                        {sortConfig?.key === column.key
+                          ? sortConfig.direction === "asc"
+                            ? "↑"
+                            : "↓"
+                          : "↕"}
+                      </span>
+                    )}
+                  </div>
                 </th>
               ))}
 
@@ -256,8 +334,14 @@ export default function DataTable({
 
       <div className="bg-white px-3 py-2 border-t border-gray-200 flex items-center justify-between">
         <div className="text-xs text-gray-700">
-          Mostrando {startIndex + 1} a {Math.min(endIndex, data.length)} de{" "}
-          {data.length} resultados
+          Mostrando {startIndex + 1} a {Math.min(endIndex, sortedData.length)}{" "}
+          de {sortedData.length} resultados
+          {sortConfig && (
+            <span className="ml-2 text-blue-600">
+              (ordenado por {sortConfig.key}{" "}
+              {sortConfig.direction === "asc" ? "↑" : "↓"})
+            </span>
+          )}
         </div>
 
         {/* ✅ NAVEGAÇÃO ENTRE PÁGINAS */}
