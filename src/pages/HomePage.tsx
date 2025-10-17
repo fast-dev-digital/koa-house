@@ -7,7 +7,7 @@ import PricingCard from "../components/PricingCard";
 import { planos } from "../data/planosData";
 import Modal from "../components/Modal";
 import WhatsappFloat from "../components/WhatsappFloat";
-import modalTeste from "../assets/interno-img-1.png";
+import modalTeste from "../assets/img-inaug-koa.png";
 import bgHawaiiMobile from "../assets/bg-hawaii-mobile.png";
 
 // Teste novo bg
@@ -440,9 +440,7 @@ function HomePage() {
             loading="lazy"
           />
           <p className="text-white text-center">
-            Ei, aluno! Participe do melhor torneio interno da região, que
-            ocorrerá nos dias 27 e 28 de Setembro, com muita resenha, futevôlei
-            e brindes para os campeões!
+            Inauguração Koa House!
           </p>
         </motion.div>
       </Modal>
