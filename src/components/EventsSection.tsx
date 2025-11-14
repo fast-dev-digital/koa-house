@@ -9,17 +9,19 @@ type EventsSectionProps = {
 
 const eventos = [
   {
-    id: "interno-27-09",
-    tipo: "Torneio",
-    titulo: "Torneio Interno de Futevôlei",
-    data: "Sábado e Domingo, 27 e 28 de Setembro a partir das 9h",
-    imagem: "interno-img-1.png",
-    link: "/torneios/interno-agosto",
+    id: "inauguração-koa",
+    tipo: "Evento",
+    titulo: "Inauguração Koa House",
+    data: "Sábado, 25 de Outubro a partir das 8h",
+    imagem: "img-inaug-koa.png",
+    link: "/eventos/inauguracao-koa",
     local:
       "R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180",
     descricao:
-      "Participe do melhor torneio interno da região, que ocorrerá nos dias 27 e 28 de Setembro, com muita resenha, futevôlei e brindes para os campeões!",
-    horario: "09:00 às 17:00",
+      `📣 Grande Inauguração da Koa House!
+No dia 25 de outubro (sábado), às 8h, participe do Koa Day com pilates na areia, funcional da 4Beach e café da manhã com DJ.
+Um evento especial para celebrar boas energias, esporte e diversão! 🌴⚽☀️`,
+    horario: "08:00 às 18:00",
   },
   {
     id: "happy-hour",
