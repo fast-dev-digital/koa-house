@@ -14,8 +14,6 @@ import { exportarTurmasCSV } from "../../utils/exportarCsv";
 
 // 🗓️ FUNÇÃO HELPER PARA ORDENAR DIAS DA SEMANA
 const obterOrdemDia = (diaTexto: string): number => {
-  
-
   if (!diaTexto) return 999; // Dias vazios vão para o final
 
   const ORDEM_DIAS: { [key: string]: number } = {
@@ -51,13 +49,11 @@ const obterOrdemDia = (diaTexto: string): number => {
 
   const ordem = ORDEM_DIAS[primeiroDia] || 999;
 
-  
-
   return ordem;
 };
 
-//  COLUNAS Turmas
-const colunasTurmas = [
+//  COLUNAS Turmas - Precisa ser função para acessar alunosPorTurma
+const getColunasTurmas = (alunosPorTurmaMap: Map<string, string[]>) => [
   {
     key: "nome",
     label: "Nome da Turma",
@@ -89,6 +85,29 @@ const colunasTurmas = [
         {value}
       </span>
     ),
+  },
+  {
+    key: "alunos",
+    label: "Alunos Matriculados",
+    render: (_: any, row: Turma) => {
+      const alunosDaTurma = alunosPorTurmaMap.get(row.id || "") || [];
+      if (alunosDaTurma.length === 0) {
+        return (
+          <span className="text-gray-400 text-xs italic">Nenhum aluno</span>
+        );
+      }
+      return (
+        <div className="max-w-xs">
+          <div
+            className="text-xs text-gray-600 truncate"
+            title={alunosDaTurma.join(", ")}
+          >
+            {alunosDaTurma.slice(0, 3).join(", ")}
+            {alunosDaTurma.length > 3 && ` +${alunosDaTurma.length - 3}`}
+          </div>
+        </div>
+      );
+    },
   },
   {
     key: "genero",
@@ -134,16 +153,11 @@ const colunasTurmas = [
     label: "Dias",
     sortable: true,
     render: (value: string) => {
-      
       return value || "A definir";
     },
     sortFn: (a: any, b: any, direction: "asc" | "desc") => {
-      
-
       const ordemA = obterOrdemDia(a.dias || "");
       const ordemB = obterOrdemDia(b.dias || "");
-
-      
 
       if (direction === "asc") {
         return ordemA - ordemB;
@@ -170,7 +184,7 @@ const colunasTurmas = [
   },
   {
     key: "alunosInscritos",
-    label: "Alunos",
+    label: "Qtd.",
     render: (value: number, row: Turma) => (
       <div className="text-center">
         <span className="text-sm font-medium">
@@ -238,6 +252,9 @@ export default function GestaoTurmas() {
       const estatisticasData = await obterEstatisticasTurmas();
       setEstatisticas({ ...estatisticasData }); // Spread nas estatísticas também
 
+      // ✅ CARREGAR ALUNOS DE CADA TURMA
+      await carregarAlunosDasTurmas(turmasData);
+
       setRefreshKey((prev) => prev + 1);
     } catch (erro) {
       showToastMessage("Erro ao carregar turmas", "error");
@@ -246,9 +263,55 @@ export default function GestaoTurmas() {
     }
   };
 
-  // FILTRAR TURMAS
+  // ✅ NOVA FUNÇÃO - Carregar alunos de todas as turmas
+  const carregarAlunosDasTurmas = async (turmasData: Turma[]) => {
+    try {
+      const { buscarTodosAlunos } = await import("../../services/alunoService");
+      const todosAlunos = await buscarTodosAlunos();
+
+      const mapaAlunosPorTurma = new Map<string, string[]>();
+
+      turmasData.forEach((turma) => {
+        if (!turma.id) return;
+
+        const alunosDaTurma = todosAlunos
+          .filter((aluno) => {
+            // ✅ Suporte para turmasIds (array) e turmaId (string legado)
+            const turmasIds = aluno.turmasIds || [];
+            const turmaIdLegado = (aluno as any).turmaId;
+
+            // Verifica se o aluno está na turma através de turmasIds ou turmaId legado
+            return (
+              turmasIds.includes(turma.id!) ||
+              (turmaIdLegado && turmaIdLegado === turma.id)
+            );
+          })
+          .map((aluno) => aluno.nome);
+
+        mapaAlunosPorTurma.set(turma.id, alunosDaTurma);
+      });
+
+      setAlunosPorTurma(mapaAlunosPorTurma);
+      console.log("✅ Mapa de alunos por turma carregado:", mapaAlunosPorTurma);
+    } catch (error) {
+      console.error("❌ Erro ao carregar alunos das turmas:", error);
+    }
+  };
+
+  // ✅ NOVO ESTADO - Alunos por turma
+  const [alunosPorTurma, setAlunosPorTurma] = useState<Map<string, string[]>>(
+    new Map()
+  );
+
+  // FILTRAR TURMAS COM BUSCA POR ALUNO
   const turmasFiltradas = useMemo(() => {
     return turmas.filter((turma) => {
+      // Busca por aluno - verifica se o searchText corresponde a algum aluno da turma
+      const alunosDaTurma = alunosPorTurma.get(turma.id || "") || [];
+      const matchAluno = alunosDaTurma.some((nomeAluno) =>
+        nomeAluno.toLowerCase().includes(searchText.toLowerCase())
+      );
+
       const matchSearch =
         (turma.nome || "").toLowerCase().includes(searchText.toLowerCase()) ||
         (turma.professorNome || "")
@@ -257,7 +320,8 @@ export default function GestaoTurmas() {
         (turma.modalidade || "")
           .toLowerCase()
           .includes(searchText.toLowerCase()) ||
-        (turma.status || "").toLowerCase().includes(searchText.toLowerCase());
+        (turma.status || "").toLowerCase().includes(searchText.toLowerCase()) ||
+        matchAluno; // ✅ ADICIONADO - Busca por nome de aluno
 
       const matchModalidade =
         !modalidadeFilter || turma.modalidade === modalidadeFilter;
@@ -281,6 +345,7 @@ export default function GestaoTurmas() {
     generoFilter,
     professorFilter,
     statusFilter,
+    alunosPorTurma,
   ]);
 
   // CARREGAR DADOS NA INICIALIZAÇÃO
@@ -434,7 +499,7 @@ export default function GestaoTurmas() {
       <SearchAndFilters
         searchValue={searchText}
         onSearchChange={setSearchText}
-        searchPlaceholder="Buscar por nome, professor ou modalidade..."
+        searchPlaceholder="Buscar por turma, professor, modalidade ou nome do aluno..."
         searchLabel="Buscar Turmas"
         filters={[
           {
@@ -497,7 +562,7 @@ export default function GestaoTurmas() {
       <DataTable
         key={refreshKey}
         data={turmasFiltradas}
-        columns={colunasTurmas}
+        columns={getColunasTurmas(alunosPorTurma)}
         onEdit={handleEdit}
         onView={handleManageAlunos}
         loading={loading}
