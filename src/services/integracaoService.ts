@@ -474,7 +474,6 @@ export async function adicionarProximoPagamentoArray(
 
     // Verificar se aluno está ativo
     if (alunoComPagamentos.status !== "Ativo") {
-      `⏸️ Aluno ${alunoComPagamentos.nome} não está ativo`;
       return;
     }
 
@@ -797,6 +796,10 @@ export async function fecharMesComArray(): Promise<{
     for (const alunoDoc of alunosSnapshot.docs) {
       try {
         const alunoData = alunoDoc.data();
+
+        if (alunoData.status !== "Ativo") {
+          continue;
+        }
         const pagamentos = alunoData.pagamentos || [];
         const pagamentosDoMes = pagamentos.filter(
           (p: any) => p.mesReferencia === mesParaFechar
