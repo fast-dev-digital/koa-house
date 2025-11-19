@@ -18,7 +18,6 @@ import {
   //criarAlunoComPagamentosArray,
   listarAlunosComPagamentos,
   limparObjetoUndefined,
-  sincronizarTodosDadosAlunos,
 } from "../../services/integracaoService";
 import HistoricoModal from "../../components/HistoricoModal";
 import { exportarPagamentosComFiltros } from "../../utils/exportarCsv";
@@ -223,39 +222,6 @@ export default function GestaoPagamentos() {
       }
     } catch (error) {
       mostrarToast("Erro ao exportar", "error");
-    }
-  };
-
-  // ✅ FUNÇÃO TEMPORÁRIA - Sincronizar dados dos alunos
-  const handleSincronizarDados = async () => {
-    if (
-      !confirm(
-        "Deseja sincronizar os dados de todos os alunos? Isso pode levar alguns minutos."
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      mostrarToast("Sincronizando dados dos alunos...", "success");
-
-      const resultado = await sincronizarTodosDadosAlunos();
-
-      if (resultado.erro) {
-        mostrarToast(resultado.erro, "error");
-      } else {
-        mostrarToast(
-          `✅ ${resultado.alunosSincronizados} alunos sincronizados com sucesso!`,
-          "success"
-        );
-        // Recarregar pagamentos após sincronização
-        await fetchPagamentos();
-      }
-    } catch (error: any) {
-      mostrarToast(error.message || "Erro ao sincronizar dados", "error");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -500,16 +466,6 @@ export default function GestaoPagamentos() {
         </div>
 
         <div className="flex gap-3">
-          {/* 🔧 BOTÃO TEMPORÁRIO - Sincronizar Dados */}
-          <button
-            onClick={handleSincronizarDados}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-            disabled={loading}
-            title="Sincronizar campo dataFinalMatricula de todos os alunos"
-          >
-            🔄 Sincronizar Dados
-          </button>
-
           <button
             onClick={handleExportarCSV}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
