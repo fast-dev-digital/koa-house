@@ -57,6 +57,7 @@ interface AlunoComPagamentos {
   proximoVencimento?: Date;
   createdAt: Date;
   updatedAt: Date;
+  dataFinalMatricula?: Date;
 }
 
 interface CacheIntegracao {
@@ -213,6 +214,7 @@ export async function buscarAlunoComPagamentos(
       proximoVencimento: data.proximoVencimento?.toDate(),
       createdAt: data.createdAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
+      dataFinalMatricula: data.dataFinalMatricula?.toDate(),
     };
 
     // ✅ CACHEAR RESULTADO
@@ -261,6 +263,7 @@ export async function listarAlunosComPagamentos(): Promise<
         proximoVencimento: data.proximoVencimento?.toDate(),
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
+        dataFinalMatricula: data.dataFinalMatricula?.toDate(),
       };
 
       alunos.push(aluno);
@@ -347,6 +350,26 @@ export async function sincronizarDadosAluno(alunoId: string): Promise<void> {
 
     if (alunoData.status !== dadosAtuais.status) {
       dadosParaAtualizar.status = dadosAtuais.status;
+      algumDadoMudou = true;
+    }
+
+    // ✅ Sincronizar dataFinalMatricula (converter string para Timestamp se necessário)
+    const dataFinalAtual = dadosAtuais.dataFinalMatricula;
+    const dataFinalAluno =
+      alunoData.dataFinalMatricula?.toDate?.() || alunoData.dataFinalMatricula;
+
+    if (dataFinalAtual && dataFinalAtual !== dataFinalAluno) {
+      // Converter string para Timestamp se for string
+      if (typeof dataFinalAtual === "string") {
+        dadosParaAtualizar.dataFinalMatricula = Timestamp.fromDate(
+          new Date(dataFinalAtual)
+        );
+      } else if (dataFinalAtual instanceof Date) {
+        dadosParaAtualizar.dataFinalMatricula =
+          Timestamp.fromDate(dataFinalAtual);
+      } else {
+        dadosParaAtualizar.dataFinalMatricula = dataFinalAtual;
+      }
       algumDadoMudou = true;
     }
 
