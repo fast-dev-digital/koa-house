@@ -11,4 +11,5 @@ export interface Pagamento {
   createdAt?: Date;
   updatedAt?: Date;
   arquivadoEm?: Date;
+  dataFinalMatricula?: Date;
 }
