@@ -18,9 +18,16 @@ import {
   //criarAlunoComPagamentosArray,
   listarAlunosComPagamentos,
   limparObjetoUndefined,
+  sincronizarTodosDadosAlunos,
 } from "../../services/integracaoService";
 import HistoricoModal from "../../components/HistoricoModal";
 import { exportarPagamentosComFiltros } from "../../utils/exportarCsv";
+import {
+  formatarDataBR,
+  verificarStatusVencimento,
+  obterDiasRestantes,
+  planoTemDataFinal,
+} from "../../utils/dateUtils";
 
 export default function GestaoPagamentos() {
   // ✅ ESTADOS CONSOLIDADOS
@@ -54,6 +61,13 @@ export default function GestaoPagamentos() {
       setLoading(true);
       const alunosComPagamentos = await listarAlunosComPagamentos();
 
+      // 🔍 DEBUG - Verificar se dataFinalMatricula está vindo
+      console.log("📊 Primeiro aluno:", {
+        nome: alunosComPagamentos[0]?.nome,
+        plano: alunosComPagamentos[0]?.plano,
+        dataFinalMatricula: alunosComPagamentos[0]?.dataFinalMatricula,
+      });
+
       const pagamentosFormatados: Pagamento[] = [];
       alunosComPagamentos.forEach((aluno) => {
         aluno.pagamentos.forEach((pagamento) => {
@@ -71,6 +85,7 @@ export default function GestaoPagamentos() {
               arquivadoEm: pagamento.arquivadoEm,
               createdAt: aluno.createdAt,
               updatedAt: aluno.updatedAt,
+              dataFinalMatricula: aluno.dataFinalMatricula,
             });
           }
         });
@@ -211,6 +226,39 @@ export default function GestaoPagamentos() {
     }
   };
 
+  // ✅ FUNÇÃO TEMPORÁRIA - Sincronizar dados dos alunos
+  const handleSincronizarDados = async () => {
+    if (
+      !confirm(
+        "Deseja sincronizar os dados de todos os alunos? Isso pode levar alguns minutos."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      mostrarToast("Sincronizando dados dos alunos...", "success");
+
+      const resultado = await sincronizarTodosDadosAlunos();
+
+      if (resultado.erro) {
+        mostrarToast(resultado.erro, "error");
+      } else {
+        mostrarToast(
+          `✅ ${resultado.alunosSincronizados} alunos sincronizados com sucesso!`,
+          "success"
+        );
+        // Recarregar pagamentos após sincronização
+        await fetchPagamentos();
+      }
+    } catch (error: any) {
+      mostrarToast(error.message || "Erro ao sincronizar dados", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ✅ FUNÇÃO - Calcular estatísticas (inline)
   const getEstatisticas = () => {
     const hoje = new Date();
@@ -236,6 +284,48 @@ export default function GestaoPagamentos() {
     { key: "alunoNome", label: "Aluno", sortable: true },
     { key: "planoTipo", label: "Plano", sortable: true },
     { key: "mesReferencia", label: "Mês", sortable: true },
+    {
+      key: "dataFinalMatricula",
+      label: "Data Final",
+      sortable: true,
+      render: (value: any, row: Pagamento) => {
+        // Só mostrar data final para planos Trimestral e Semestral
+        if (!planoTemDataFinal(row.planoTipo)) {
+          return <span className="text-gray-500 text-xs">N/A (Mensal)</span>;
+        }
+
+        if (!value)
+          return <span className="text-gray-500 text-xs">Não calculado</span>;
+
+        // ✅ Converter Date para string se necessário
+        let dataString: string;
+        if (value instanceof Date) {
+          dataString = value.toISOString().split("T")[0]; // YYYY-MM-DD
+        } else if (typeof value === "string") {
+          dataString = value;
+        } else {
+          return (
+            <span className="text-gray-500 text-xs">Formato inválido</span>
+          );
+        }
+
+        const statusClass = verificarStatusVencimento(dataString);
+        const diasRestantes = obterDiasRestantes(dataString);
+
+        let statusText = "";
+        if (diasRestantes !== null) {
+          if (diasRestantes < 0) statusText = " (Vencido)";
+          else if (diasRestantes <= 7) statusText = ` (${diasRestantes}d)`;
+        }
+
+        return (
+          <span className={statusClass}>
+            {formatarDataBR(dataString)}
+            {statusText}
+          </span>
+        );
+      },
+    },
     {
       key: "valor",
       label: "Valor",
@@ -410,6 +500,16 @@ export default function GestaoPagamentos() {
         </div>
 
         <div className="flex gap-3">
+          {/* 🔧 BOTÃO TEMPORÁRIO - Sincronizar Dados */}
+          <button
+            onClick={handleSincronizarDados}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            disabled={loading}
+            title="Sincronizar campo dataFinalMatricula de todos os alunos"
+          >
+            🔄 Sincronizar Dados
+          </button>
+
           <button
             onClick={handleExportarCSV}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
