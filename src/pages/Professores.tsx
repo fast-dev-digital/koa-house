@@ -10,6 +10,7 @@ import imgVitinho from "../assets/ft-vitinho-1.jpeg";
 import imgKlebao from "../assets/ft-klebao.png";
 import imgClebinho from "../assets/ft-clebinho.png";
 import imgMello from "../assets/ft-mellinho.png";
+import imgLeo from "../assets/ft-leo.jpg";
 
 function Professores() {
     const headerRef = useRef(null);
@@ -131,6 +132,17 @@ function Professores() {
                 imageUrl={imgMello}
                 imageAlt="Foto do professor Mello"
                 linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Mellinho"
+                />
+
+                {/*Leo*/}
+                <InfoSection
+                title="Professor Leo"
+                description="Escolha seu horário e aproveite nossas quadras premium para jogar com os amigos. Estrutura moderna, bar e estacionamento seguro!"
+                buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° LEO AGORA!"
+                imageUrl={imgLeo}
+                imageAlt="Foto do professor LEO"
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Leo"
+                reverse = {true}
                 />
             </div>
             
