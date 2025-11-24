@@ -9,18 +9,16 @@ type EventsSectionProps = {
 
 const eventos = [
   {
-    id: "inauguração-koa",
+    id: "interno-dez-2025",
     tipo: "Evento",
-    titulo: "Inauguração Koa House",
-    data: "Sábado, 25 de Outubro a partir das 8h",
-    imagem: "img-inaug-koa.png",
+    titulo: "Torneio Interno Dezembro",
+    data: "Sábado e domingo, 13 e 14 de Dezembro a partir das 8h",
+    imagem: "interno-dezembro-2025-koa.png",
     link: "/eventos/inauguracao-koa",
     local:
       "R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180",
     descricao:
-      `📣 Grande Inauguração da Koa House!
-No dia 25 de outubro (sábado), às 8h, participe do Koa Day com pilates na areia, funcional da 4Beach e café da manhã com DJ.
-Um evento especial para celebrar boas energias, esporte e diversão! 🌴⚽☀️`,
+      `Participe do nosso grande Torneio Interno de Futevôlei que acontecerá nos dias 12, 13 e 14 de Dezembro a partir das 8h com muita diversão e competitividade saudável!`,
     horario: "08:00 às 18:00",
   },
   {

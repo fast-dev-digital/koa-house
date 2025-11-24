@@ -7,7 +7,7 @@ import PricingCard from "../components/PricingCard";
 import { planos } from "../data/planosData";
 import Modal from "../components/Modal";
 import WhatsappFloat from "../components/WhatsappFloat";
-import modalTeste from "../assets/img-inaug-koa.png";
+import modalPrincipal from "../assets/aulas-bt-koa.png";
 import bgHawaiiMobile from "../assets/bg-hawaii-mobile.png";
 
 // Teste novo bg
@@ -430,18 +430,12 @@ function HomePage() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <h3 className="text-2xl font-bold text-white mb-4 text-center">
-            Nosso Torneio Interno!
-          </h3>
           <img
-            src={modalTeste}
+            src={modalPrincipal}
             alt="Anúncio de torneio interno"
             className="w-full rounded-md mb-4"
             loading="lazy"
           />
-          <p className="text-white text-center">
-            Inauguração Koa House!
-          </p>
         </motion.div>
       </Modal>
 
