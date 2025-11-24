@@ -203,6 +203,9 @@ export default function GestaoPagamentos() {
     }
   };
 
+  // ✅ FUNÇÃO - Sincronizar dados de todos os alunos
+  /* Sincronização removida: botão temporário retirado conforme solicitado */
+
   // ✅ FUNÇÃO - Exportar CSV
   const handleExportarCSV = () => {
     try {
@@ -473,6 +476,8 @@ export default function GestaoPagamentos() {
             <FaDownload />
             Exportar CSV
           </button>
+
+          {/* Botão de sincronização removido */}
 
           {/* <button
             onClick={gerarPagamentosParaAlunosExistentes}

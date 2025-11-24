@@ -58,6 +58,7 @@ interface AlunoComPagamentos {
   createdAt: Date;
   updatedAt: Date;
   dataFinalMatricula?: Date;
+  telefone?: string;
 }
 
 interface CacheIntegracao {
@@ -215,6 +216,7 @@ export async function buscarAlunoComPagamentos(
       createdAt: data.createdAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
       dataFinalMatricula: data.dataFinalMatricula?.toDate(),
+      telefone: data.telefone || "",
     };
 
     // ✅ CACHEAR RESULTADO
@@ -264,6 +266,7 @@ export async function listarAlunosComPagamentos(): Promise<
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
         dataFinalMatricula: data.dataFinalMatricula?.toDate(),
+        telefone: data.telefone || "",
       };
 
       alunos.push(aluno);
@@ -370,6 +373,12 @@ export async function sincronizarDadosAluno(alunoId: string): Promise<void> {
       } else {
         dadosParaAtualizar.dataFinalMatricula = dataFinalAtual;
       }
+      algumDadoMudou = true;
+    }
+
+    // ✅ Sincronizar telefone
+    if (alunoData.telefone !== dadosAtuais.telefone) {
+      dadosParaAtualizar.telefone = dadosAtuais.telefone || "";
       algumDadoMudou = true;
     }
 
