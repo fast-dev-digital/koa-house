@@ -773,12 +773,13 @@ export async function fecharMesComArray(): Promise<{
   alunosProcessados: number;
   pagamentosArquivados: number;
   novosPagamentosGerados: number;
+  alunosInativos?: number;
+  nomesAlunosInativos?: string[];
   erro?: string;
   mensagem?: string;
 }> {
   try {
     // ✅ SINCRONIZAR TODOS OS DADOS DOS ALUNOS ANTES DO FECHAMENTO
-
     await sincronizarTodosDadosAlunos();
 
     const alunosSnapshot = await getDocs(
@@ -823,15 +824,22 @@ export async function fecharMesComArray(): Promise<{
       pagamentosArquivados = 0,
       novosPagamentosGerados = 0,
       alunosComPagamentosJaArquivados = 0,
-      alunosSemPagamentosDoMes = 0;
+      alunosSemPagamentosDoMes = 0,
+      alunosInativos = 0;
+
+    const nomesAlunosInativos: string[] = [];
 
     for (const alunoDoc of alunosSnapshot.docs) {
       try {
         const alunoData = alunoDoc.data();
 
+        // ✅ VERIFICAÇÃO CRÍTICA: Confirmar que aluno AINDA está ativo após sincronização
         if (alunoData.status !== "Ativo") {
+          alunosInativos++;
+          nomesAlunosInativos.push(alunoData.nome);
           continue;
         }
+
         const pagamentos = alunoData.pagamentos || [];
         const pagamentosDoMes = pagamentos.filter(
           (p: any) => p.mesReferencia === mesParaFechar
@@ -897,18 +905,29 @@ export async function fecharMesComArray(): Promise<{
         const existePagamentoProximoMes = pagamentosAtualizados.some(
           (p: any) => p.mesReferencia === proximoMes
         );
-        if (todosArquivadosMaiorMes && !existePagamentoProximoMes) {
-          // ✅ USAR VALOR JÁ SINCRONIZADO DA MENSALIDADE
+
+        // ✅ DUPLA VERIFICAÇÃO: Só gera se o aluno CONTINUA ativo
+        if (
+          todosArquivadosMaiorMes &&
+          !existePagamentoProximoMes &&
+          alunoData.status === "Ativo"
+        ) {
           const valorAtualMensalidade = alunoData.valorMensalidade;
 
           const novoPagamento = limparObjetoUndefined({
             mesReferencia: proximoMes,
             dataVencimento: Timestamp.fromDate(proximoVencimento),
-            valor: valorAtualMensalidade, // ✅ Valor atualizado
+            valor: valorAtualMensalidade,
             status: "Pendente",
           });
           pagamentosAtualizados.push(novoPagamento);
           novosPagamentosGerados++;
+        } else if (todosArquivadosMaiorMes && !existePagamentoProximoMes) {
+          // ✅ ADICIONAR ESTE BLOCO - Aluno teria direito mas está inativo
+          alunosInativos++;
+          if (!nomesAlunosInativos.includes(alunoData.nome)) {
+            nomesAlunosInativos.push(alunoData.nome);
+          }
         }
 
         const totalPago = pagamentosAtualizados
@@ -962,11 +981,25 @@ export async function fecharMesComArray(): Promise<{
     } else if (pagamentosArquivados === 0 && alunosSemPagamentosDoMes > 0) {
       mensagem = `Nenhum pagamento encontrado para o mês ${mesParaFechar}. ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês.`;
     }
+
+    if (alunosInativos > 0) {
+      const msgInativos =
+        alunosInativos === 1
+          ? `${alunosInativos} aluno inativo foi ignorado`
+          : `${alunosInativos} alunos inativos foram ignorados`;
+
+      mensagem = mensagem
+        ? `${mensagem} ${msgInativos}.`
+        : `${msgInativos} durante o fechamento do mês.`;
+    }
+
     invalidarCacheIntegracao();
     return {
       alunosProcessados,
       pagamentosArquivados,
       novosPagamentosGerados,
+      alunosInativos,
+      nomesAlunosInativos,
       mensagem,
     };
   } catch (error: any) {
