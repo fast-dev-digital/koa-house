@@ -491,6 +491,84 @@ export async function sincronizarTodosDadosAlunosCompleto(): Promise<{
   }
 }
 
+// ✅ FUNÇÃO ESPECÍFICA - Sincronizar APENAS telefone dos alunos (com Batch Processing)
+export async function sincronizarTelefoneTodosAlunos(): Promise<{
+  alunosSincronizados: number;
+  alunosComErro: number;
+  erro?: string;
+}> {
+  try {
+    const alunosSnapshot = await getDocs(collection(db, "Alunos"));
+
+    if (alunosSnapshot.empty) {
+      return {
+        alunosSincronizados: 0,
+        alunosComErro: 0,
+        erro: "Nenhum aluno encontrado na coleção Alunos",
+      };
+    }
+
+    let alunosSincronizados = 0;
+    let alunosComErro = 0;
+
+    // ✅ PROCESSAMENTO EM LOTES DE 50 para não sobrecarregar
+    const BATCH_SIZE = 50;
+    const docs = alunosSnapshot.docs;
+
+    for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+      const batch = docs.slice(i, i + BATCH_SIZE);
+
+      await Promise.all(
+        batch.map(async (alunoDoc) => {
+          try {
+            const alunoAtualData = alunoDoc.data();
+            const alunoId = alunoDoc.id;
+
+            // Buscar aluno em alunosPagamentos pela query (não pelo ID direto)
+            const alunoPagamentosQuery = query(
+              collection(db, "alunosPagamentos"),
+              where("alunoId", "==", alunoId)
+            );
+            const alunoPagamentosSnapshot = await getDocs(alunoPagamentosQuery);
+
+            if (alunoPagamentosSnapshot.empty) {
+              alunosComErro++;
+              return;
+            }
+
+            const alunoPagamentosDoc = alunoPagamentosSnapshot.docs[0];
+
+            // ✅ ATUALIZAR APENAS O TELEFONE
+            await updateDoc(alunoPagamentosDoc.ref, {
+              telefone: alunoAtualData.telefone || "",
+              updatedAt: Timestamp.now(),
+            });
+
+            alunosSincronizados++;
+          } catch (error) {
+            console.error(`Erro ao sincronizar aluno ${alunoDoc.id}:`, error);
+            alunosComErro++;
+          }
+        })
+      );
+    }
+
+    invalidarCacheIntegracao();
+
+    return {
+      alunosSincronizados,
+      alunosComErro,
+    };
+  } catch (error: any) {
+    console.error("[sincronizarTelefoneTodosAlunos] Erro:", error);
+    return {
+      alunosSincronizados: 0,
+      alunosComErro: 0,
+      erro: `Erro: ${error?.message}`,
+    };
+  }
+}
+
 // ✅ FUNÇÃO ULTRA-DEFENSIVA - Adicionar próximo pagamento ao array de um aluno
 export async function adicionarProximoPagamentoArray(
   alunoId: string
@@ -923,7 +1001,6 @@ export async function fecharMesComArray(): Promise<{
           pagamentosAtualizados.push(novoPagamento);
           novosPagamentosGerados++;
         } else if (todosArquivadosMaiorMes && !existePagamentoProximoMes) {
-          // ✅ ADICIONAR ESTE BLOCO - Aluno teria direito mas está inativo
           alunosInativos++;
           if (!nomesAlunosInativos.includes(alunoData.nome)) {
             nomesAlunosInativos.push(alunoData.nome);

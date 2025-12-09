@@ -477,8 +477,6 @@ export default function GestaoPagamentos() {
             Exportar CSV
           </button>
 
-          {/* Botão de sincronização removido */}
-
           {/* <button
             onClick={gerarPagamentosParaAlunosExistentes}
             className="bg-gray-400 text-gray-200 px-4 py-2 rounded-lg cursor-not-allowed"
