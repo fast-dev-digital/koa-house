@@ -58,6 +58,7 @@ interface AlunoComPagamentos {
   createdAt: Date;
   updatedAt: Date;
   dataFinalMatricula?: Date;
+  telefone?: string;
 }
 
 interface CacheIntegracao {
@@ -215,6 +216,7 @@ export async function buscarAlunoComPagamentos(
       createdAt: data.createdAt?.toDate() || new Date(),
       updatedAt: data.updatedAt?.toDate() || new Date(),
       dataFinalMatricula: data.dataFinalMatricula?.toDate(),
+      telefone: data.telefone || "",
     };
 
     // ✅ CACHEAR RESULTADO
@@ -264,6 +266,7 @@ export async function listarAlunosComPagamentos(): Promise<
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
         dataFinalMatricula: data.dataFinalMatricula?.toDate(),
+        telefone: data.telefone || "",
       };
 
       alunos.push(aluno);
@@ -373,6 +376,12 @@ export async function sincronizarDadosAluno(alunoId: string): Promise<void> {
       algumDadoMudou = true;
     }
 
+    // ✅ Sincronizar telefone
+    if (alunoData.telefone !== dadosAtuais.telefone) {
+      dadosParaAtualizar.telefone = dadosAtuais.telefone || "";
+      algumDadoMudou = true;
+    }
+
     // Verificar se não houve mudanças
     if (!algumDadoMudou) {
       return;
@@ -474,6 +483,84 @@ export async function sincronizarTodosDadosAlunosCompleto(): Promise<{
     };
   } catch (error: any) {
     console.error("❌ Erro na sincronização completa:", error);
+    return {
+      alunosSincronizados: 0,
+      alunosComErro: 0,
+      erro: `Erro: ${error?.message}`,
+    };
+  }
+}
+
+// ✅ FUNÇÃO ESPECÍFICA - Sincronizar APENAS telefone dos alunos (com Batch Processing)
+export async function sincronizarTelefoneTodosAlunos(): Promise<{
+  alunosSincronizados: number;
+  alunosComErro: number;
+  erro?: string;
+}> {
+  try {
+    const alunosSnapshot = await getDocs(collection(db, "Alunos"));
+
+    if (alunosSnapshot.empty) {
+      return {
+        alunosSincronizados: 0,
+        alunosComErro: 0,
+        erro: "Nenhum aluno encontrado na coleção Alunos",
+      };
+    }
+
+    let alunosSincronizados = 0;
+    let alunosComErro = 0;
+
+    // ✅ PROCESSAMENTO EM LOTES DE 50 para não sobrecarregar
+    const BATCH_SIZE = 50;
+    const docs = alunosSnapshot.docs;
+
+    for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+      const batch = docs.slice(i, i + BATCH_SIZE);
+
+      await Promise.all(
+        batch.map(async (alunoDoc) => {
+          try {
+            const alunoAtualData = alunoDoc.data();
+            const alunoId = alunoDoc.id;
+
+            // Buscar aluno em alunosPagamentos pela query (não pelo ID direto)
+            const alunoPagamentosQuery = query(
+              collection(db, "alunosPagamentos"),
+              where("alunoId", "==", alunoId)
+            );
+            const alunoPagamentosSnapshot = await getDocs(alunoPagamentosQuery);
+
+            if (alunoPagamentosSnapshot.empty) {
+              alunosComErro++;
+              return;
+            }
+
+            const alunoPagamentosDoc = alunoPagamentosSnapshot.docs[0];
+
+            // ✅ ATUALIZAR APENAS O TELEFONE
+            await updateDoc(alunoPagamentosDoc.ref, {
+              telefone: alunoAtualData.telefone || "",
+              updatedAt: Timestamp.now(),
+            });
+
+            alunosSincronizados++;
+          } catch (error) {
+            console.error(`Erro ao sincronizar aluno ${alunoDoc.id}:`, error);
+            alunosComErro++;
+          }
+        })
+      );
+    }
+
+    invalidarCacheIntegracao();
+
+    return {
+      alunosSincronizados,
+      alunosComErro,
+    };
+  } catch (error: any) {
+    console.error("[sincronizarTelefoneTodosAlunos] Erro:", error);
     return {
       alunosSincronizados: 0,
       alunosComErro: 0,
@@ -764,12 +851,13 @@ export async function fecharMesComArray(): Promise<{
   alunosProcessados: number;
   pagamentosArquivados: number;
   novosPagamentosGerados: number;
+  alunosInativos?: number;
+  nomesAlunosInativos?: string[];
   erro?: string;
   mensagem?: string;
 }> {
   try {
     // ✅ SINCRONIZAR TODOS OS DADOS DOS ALUNOS ANTES DO FECHAMENTO
-
     await sincronizarTodosDadosAlunos();
 
     const alunosSnapshot = await getDocs(
@@ -814,15 +902,22 @@ export async function fecharMesComArray(): Promise<{
       pagamentosArquivados = 0,
       novosPagamentosGerados = 0,
       alunosComPagamentosJaArquivados = 0,
-      alunosSemPagamentosDoMes = 0;
+      alunosSemPagamentosDoMes = 0,
+      alunosInativos = 0;
+
+    const nomesAlunosInativos: string[] = [];
 
     for (const alunoDoc of alunosSnapshot.docs) {
       try {
         const alunoData = alunoDoc.data();
 
+        // ✅ VERIFICAÇÃO CRÍTICA: Confirmar que aluno AINDA está ativo após sincronização
         if (alunoData.status !== "Ativo") {
+          alunosInativos++;
+          nomesAlunosInativos.push(alunoData.nome);
           continue;
         }
+
         const pagamentos = alunoData.pagamentos || [];
         const pagamentosDoMes = pagamentos.filter(
           (p: any) => p.mesReferencia === mesParaFechar
@@ -888,18 +983,28 @@ export async function fecharMesComArray(): Promise<{
         const existePagamentoProximoMes = pagamentosAtualizados.some(
           (p: any) => p.mesReferencia === proximoMes
         );
-        if (todosArquivadosMaiorMes && !existePagamentoProximoMes) {
-          // ✅ USAR VALOR JÁ SINCRONIZADO DA MENSALIDADE
+
+        // ✅ DUPLA VERIFICAÇÃO: Só gera se o aluno CONTINUA ativo
+        if (
+          todosArquivadosMaiorMes &&
+          !existePagamentoProximoMes &&
+          alunoData.status === "Ativo"
+        ) {
           const valorAtualMensalidade = alunoData.valorMensalidade;
 
           const novoPagamento = limparObjetoUndefined({
             mesReferencia: proximoMes,
             dataVencimento: Timestamp.fromDate(proximoVencimento),
-            valor: valorAtualMensalidade, // ✅ Valor atualizado
+            valor: valorAtualMensalidade,
             status: "Pendente",
           });
           pagamentosAtualizados.push(novoPagamento);
           novosPagamentosGerados++;
+        } else if (todosArquivadosMaiorMes && !existePagamentoProximoMes) {
+          alunosInativos++;
+          if (!nomesAlunosInativos.includes(alunoData.nome)) {
+            nomesAlunosInativos.push(alunoData.nome);
+          }
         }
 
         const totalPago = pagamentosAtualizados
@@ -953,11 +1058,25 @@ export async function fecharMesComArray(): Promise<{
     } else if (pagamentosArquivados === 0 && alunosSemPagamentosDoMes > 0) {
       mensagem = `Nenhum pagamento encontrado para o mês ${mesParaFechar}. ${alunosSemPagamentosDoMes} alunos sem pagamentos do mês.`;
     }
+
+    if (alunosInativos > 0) {
+      const msgInativos =
+        alunosInativos === 1
+          ? `${alunosInativos} aluno inativo foi ignorado`
+          : `${alunosInativos} alunos inativos foram ignorados`;
+
+      mensagem = mensagem
+        ? `${mensagem} ${msgInativos}.`
+        : `${msgInativos} durante o fechamento do mês.`;
+    }
+
     invalidarCacheIntegracao();
     return {
       alunosProcessados,
       pagamentosArquivados,
       novosPagamentosGerados,
+      alunosInativos,
+      nomesAlunosInativos,
       mensagem,
     };
   } catch (error: any) {

@@ -9,6 +9,7 @@ import {
   FaExclamationCircle,
   FaClock,
   FaArchive,
+  FaPhone,
 } from "react-icons/fa";
 import {
   buscarHistoricoParaAdmin,
@@ -169,7 +170,7 @@ export default function HistoricoModal({
           <div className="flex flex-col h-full max-h-[70vh]">
             {/* 4.1 INFORMAÇÕES DO ALUNO */}
             <div className="p-6 border-b border-gray-200 bg-gray-50">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 {/* Info Básica */}
                 <div className="flex items-center gap-2">
                   <FaUser className="text-blue-600" />
@@ -199,6 +200,16 @@ export default function HistoricoModal({
                           minimumFractionDigits: 2,
                         }
                       )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <FaPhone className="text-teal-600" />
+                  <div>
+                    <p className="text-xs text-gray-500">Telefone</p>
+                    <p className="font-semibold text-sm">
+                      {(historico.aluno as any).telefone || "Não informado"}
                     </p>
                   </div>
                 </div>
