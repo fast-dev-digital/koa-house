@@ -18,8 +18,15 @@ import {
   //criarAlunoComPagamentosArray,
   listarAlunosComPagamentos,
   limparObjetoUndefined,
+  atualizarDadosAlunoPagamento,
+  buscarAlunoComPagamentos,
 } from "../../services/integracaoService";
 import HistoricoModal from "../../components/HistoricoModal";
+import EditarAlunoModal from "../../components/componentsAdmin/EditarAlunoModal";
+import type {
+  DadosEditaveisAluno,
+  AlunoComPagamentos,
+} from "../../types/pagamentos";
 import { exportarPagamentosComFiltros } from "../../utils/exportarCsv";
 import {
   formatarDataBR,
@@ -44,6 +51,13 @@ export default function GestaoPagamentos() {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
+  // ✅ ESTADOS DO MODAL DE EDIÇÃO
+  const [showEditarModal, setShowEditarModal] = useState(false);
+  const [selectedAluno, setSelectedAluno] = useState<AlunoComPagamentos | null>(
+    null
+  );
+  const [editandoAlunoId, setEditandoAlunoId] = useState<string>("");
+
   // ✅ FUNÇÃO ÚNICA - Toast helper
   const mostrarToast = (
     mensagem: string,
@@ -52,6 +66,49 @@ export default function GestaoPagamentos() {
     setToastMessage(mensagem);
     setToastType(tipo);
     setShowToast(true);
+  };
+
+  // ✅ FUNÇÃO - Abrir modal de edição
+  const handleAbrirEditarModal = async (alunoId: string) => {
+    try {
+      const aluno = await buscarAlunoComPagamentos(alunoId);
+      if (aluno) {
+        setSelectedAluno(aluno);
+        setEditandoAlunoId(alunoId);
+        setShowEditarModal(true);
+      } else {
+        mostrarToast("Aluno não encontrado", "error");
+      }
+    } catch (error) {
+      console.error("Erro ao abrir modal:", error);
+      mostrarToast("Erro ao carregar dados do aluno", "error");
+    }
+  };
+
+  // ✅ FUNÇÃO - Salvar dados editados
+  const handleSalvarDadosAluno = async (dados: DadosEditaveisAluno) => {
+    try {
+      const resultado = await atualizarDadosAlunoPagamento(
+        editandoAlunoId,
+        dados
+      );
+
+      if (resultado.sucesso) {
+        mostrarToast(
+          resultado.mensagem || "Dados atualizados com sucesso",
+          "success"
+        );
+        setShowEditarModal(false);
+        setSelectedAluno(null);
+        setEditandoAlunoId("");
+        await fetchPagamentos(); // Recarregar tabela
+      } else {
+        mostrarToast(resultado.erro || "Erro ao atualizar", "error");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar dados:", error);
+      mostrarToast("Erro ao salvar dados do aluno", "error");
+    }
   };
 
   // ✅ FUNÇÃO PRINCIPAL - Buscar pagamentos
@@ -369,6 +426,14 @@ export default function GestaoPagamentos() {
         return (
           <div className="flex items-center gap-2">
             <button
+              onClick={() => handleAbrirEditarModal(row.alunoId)}
+              className="bg-purple-600 text-white px-3 py-1 rounded-md text-xs hover:bg-purple-700 transition-colors flex items-center gap-1"
+              title="Editar dados do aluno"
+            >
+              <FaEdit className="text-xs" />
+              Editar
+            </button>
+            <button
               onClick={() => {
                 setSelectedAlunoId(row.alunoId);
                 setShowHistoricoModal(true);
@@ -578,6 +643,18 @@ export default function GestaoPagamentos() {
           userType="admin"
         />
       )}
+
+      {/* MODAL DE EDIÇÃO */}
+      <EditarAlunoModal
+        isOpen={showEditarModal}
+        onClose={() => {
+          setShowEditarModal(false);
+          setSelectedAluno(null);
+          setEditandoAlunoId("");
+        }}
+        aluno={selectedAluno}
+        onSave={handleSalvarDadosAluno}
+      />
 
       {/* TOAST */}
       {showToast && (

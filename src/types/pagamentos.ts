@@ -1,3 +1,7 @@
+import type { AlunoComPagamentos } from "../services/integracaoService";
+
+export type { AlunoComPagamentos };
+
 export interface Pagamento {
   id?: string;
   alunoId: string; // Referência ao aluno
@@ -12,4 +16,18 @@ export interface Pagamento {
   updatedAt?: Date;
   arquivadoEm?: Date;
   dataFinalMatricula?: Date;
+}
+
+export interface DadosEditaveisAluno {
+  plano: string;
+  valorMensalidade: number;
+  telefone: string;
+  dataFinalMatricula?: Date;
+}
+
+export interface EditarAlunoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  aluno: AlunoComPagamentos;
+  onSave: (dados: DadosEditaveisAluno) => Promise<void>;
 }
