@@ -362,6 +362,8 @@ export async function buscarHistoricoAlunoNovo(
           createdAt: converterDataSegura(alunoData.createdAt),
           updatedAt: converterDataSegura(alunoData.updatedAt),
           arquivadoEm,
+          statusAnterior: p.statusAnterior,
+          observacoes: p.observacoes,
         };
       }
     );

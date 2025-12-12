@@ -280,6 +280,12 @@ export default function HistoricoModal({
                                 ).toLocaleDateString("pt-BR")}
                               </p>
                             )}
+                            {pagamento.observacoes && (
+                              <p className="text-sm text-gray-600 mt-1 italic flex items-center gap-1">
+                                <FaArchive className="text-gray-500" />
+                                {pagamento.observacoes}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -298,6 +304,11 @@ export default function HistoricoModal({
                           >
                             {pagamento.status}
                           </span>
+                          {pagamento.statusAnterior && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              (era {pagamento.statusAnterior})
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
