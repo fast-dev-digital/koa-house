@@ -116,12 +116,12 @@ export async function atualizarAluno(
   // Assim podemos atualizar só nome, ou só email, etc.
 
   try {
-    console.log(`✏️ Iniciando atualização do aluno ID: ${id}`);
-    console.log("📝 Dados recebidos para atualizar:", dadosAtualizacao);
+    `✏️ Iniciando atualização do aluno ID: ${id}`;
+    "📝 Dados recebidos para atualizar:", dadosAtualizacao;
 
     //  REFERÊNCIA AO DOCUMENTO ESPECÍFICO
     const docRef = doc(db, "Alunos", id);
-    console.log("📂 Referência do documento criada:", docRef.path);
+    "📂 Referência do documento criada:", docRef.path;
     //  ADICIONA TIMESTAMP DE ATUALIZAÇÃO
     const dadosCompletos = {
       ...dadosAtualizacao, // 📋 Campos a atualizar
@@ -130,11 +130,25 @@ export async function atualizarAluno(
 
     // 🔥 ATUALIZA NO FIREBASE
     await updateDoc(docRef, dadosCompletos);
-    console.log("✅ Documento atualizado no Firebase com sucesso!");
+
+    // ✅ Se mudou o status para Ativo, verificar e gerar pagamento
+    if (dadosAtualizacao.status === "Ativo") {
+      try {
+        const { verificarEGerarPagamentoAlunoAtivo } = await import(
+          "./integracaoService"
+        );
+        await verificarEGerarPagamentoAlunoAtivo(id);
+      } catch (erro) {
+        console.warn(
+          "⚠️ Erro ao tentar gerar pagamento para aluno ativo:",
+          erro
+        );
+        // Não throw - deixa a atualização do aluno continuar mesmo se falhar a geração do pagamento
+      }
+    }
 
     // 🧹 INVALIDA CACHE
     limparCache();
-    console.log("🧹 Cache invalidado - próxima busca será atualizada");
   } catch (error) {
     console.error("❌ Erro ao atualizar aluno:", error);
     throw new Error(`Falha ao atualizar aluno: ${error}`);
