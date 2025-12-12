@@ -14,7 +14,7 @@ export const planos: Plano[] = [
     {
         tipo: 'Futevôlei',
         titulo: 'Futevôlei 2x - Semestral',
-        preco: 'R$ 199,90',
+        preco: 'R$ 195,00',
         unidade: '/por mês',
         destacado: true, // Este será nosso card em destaque
         features: [
@@ -27,7 +27,7 @@ export const planos: Plano[] = [
     {
         tipo: 'Futevôlei',
         titulo: 'Futevôlei 2x - Trimestral',
-        preco: 'R$ 229,90',
+        preco: 'R$ 210,00',
         unidade: '/por mês',
         destacado: false,
         features: [
@@ -40,7 +40,7 @@ export const planos: Plano[] = [
     {
         tipo: 'Futevôlei',
         titulo: 'Futevôlei 2x - Mensal',
-        preco: 'R$ 249,90',
+        preco: 'R$ 230,00',
         unidade: '/por mês',
         destacado: false,
         features: [
@@ -52,8 +52,8 @@ export const planos: Plano[] = [
     },
     {
         tipo: 'Beach Tennis',
-        titulo: 'Beach Tennis 2x - Semestral',
-        preco: 'R$ 399,90',
+        titulo: 'Beach Tennis - Trimestral',
+        preco: 'R$ 380,00',
         unidade: '/por mês',
         destacado: true,
         features: [
@@ -65,21 +65,8 @@ export const planos: Plano[] = [
     },
     {
         tipo: 'Beach Tennis',
-        titulo: 'Beach Tennis 2x - Trimestral',
-        preco: 'R$ 429,90',
-        unidade: '/por mês',
-        destacado: false,
-        features: [
-            '2x Aula de Beach Tennis Semanal',
-            'Sem Taxa de Matrícula',
-            'Descontos em Serviços',
-            'Pagamento Recorrente',
-        ],
-    },
-    {
-        tipo: 'Beach Tennis',
-        titulo: 'Beach Tennis 2x - Mensal',
-        preco: 'R$ 449,90',
+        titulo: 'Beach Tennis - Mensal',
+        preco: 'R$ 400,00',
         unidade: '/por mês',
         destacado: false,
         features: [
@@ -91,8 +78,8 @@ export const planos: Plano[] = [
     },
     {
         tipo: 'Locação',
-        titulo: 'Locação de Quadra (1 hora) + Churrasqueira',
-        preco: 'R$ 129,90',
+        titulo: 'Locação de Quadra + Churrasqueira',
+        preco: 'R$ 180,00',
         unidade: '/por hora',
         destacado: true,
         features: [
@@ -104,8 +91,8 @@ export const planos: Plano[] = [
     },
     {
         tipo: 'Locação',
-        titulo: 'Locação de Quadra',
-        preco: 'R$ 99,90',
+        titulo: 'Locação de Quadra (ALUNO)',
+        preco: 'R$ 80,00',
         unidade: '/por hora',
         destacado: false,
         features: [
@@ -116,12 +103,14 @@ export const planos: Plano[] = [
     },
     {
         tipo: 'Locação',
-        titulo: 'Locação Churrasqueira',
-        preco: 'R$ 69,90',
+        titulo: 'Locação de Quadra (NÃO ALUNO)',
+        preco: 'R$ 100,00',
         unidade: '/por hora',
         destacado: false,
         features: [
-            'Espaço Gourmet Exclusivo',
+            '1 Hora de Quadra Exclusiva',
+            'Acesso à Estrutura da Arena',
+            'Bolas Inclusas',
         ],
     }
 ]

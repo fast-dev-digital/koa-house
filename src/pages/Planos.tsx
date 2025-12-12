@@ -43,9 +43,11 @@ function PlanosPage() {
         </div>
 
         {/* Grid de Planos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-8 max-w-5xl mx-auto">
           {planosFiltrados.map(plano => (
-            <PricingCard key={plano.titulo} plano={plano} mode="planos" />
+            <div key={plano.titulo} className="w-full max-w-xs">
+              <PricingCard plano={plano} mode="planos" />
+            </div>
           ))}
         </div>
 
