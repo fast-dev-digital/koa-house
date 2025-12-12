@@ -118,11 +118,12 @@ export default function GestaoPagamentos() {
       const alunosComPagamentos = await listarAlunosComPagamentos();
 
       // 🔍 DEBUG - Verificar se dataFinalMatricula está vindo
-      console.log("📊 Primeiro aluno:", {
-        nome: alunosComPagamentos[0]?.nome,
-        plano: alunosComPagamentos[0]?.plano,
-        dataFinalMatricula: alunosComPagamentos[0]?.dataFinalMatricula,
-      });
+      "📊 Primeiro aluno:",
+        {
+          nome: alunosComPagamentos[0]?.nome,
+          plano: alunosComPagamentos[0]?.plano,
+          dataFinalMatricula: alunosComPagamentos[0]?.dataFinalMatricula,
+        };
 
       const pagamentosFormatados: Pagamento[] = [];
       alunosComPagamentos.forEach((aluno) => {
@@ -427,7 +428,7 @@ export default function GestaoPagamentos() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleAbrirEditarModal(row.alunoId)}
-              className="bg-purple-600 text-white px-3 py-1 rounded-md text-xs hover:bg-purple-700 transition-colors flex items-center gap-1"
+              className="bg-yellow-600 text-white px-3 py-1 rounded-md text-xs hover:bg-purple-700 transition-colors flex items-center gap-1"
               title="Editar dados do aluno"
             >
               <FaEdit className="text-xs" />
