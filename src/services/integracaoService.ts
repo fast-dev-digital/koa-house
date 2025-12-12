@@ -325,10 +325,17 @@ export async function adicionarProximoPagamentoArray(
       throw new Error("Aluno não encontrado na nova estrutura");
     }
 
-    // Verificar se aluno está ativo
-    if (alunoComPagamentos.status !== "Ativo") {
-      return;
+    // ✅ Status SEMPRE da collection Alunos
+    let statusAluno = "";
+    try {
+      const docAluno = await getDoc(doc(db, "Alunos", alunoId));
+      if (docAluno.exists()) {
+        statusAluno = (docAluno.data().status || "").trim();
+      }
+    } catch (e) {
+      console.warn("⚠️ Não foi possível ler status em Alunos:", e);
     }
+    if (statusAluno.toLowerCase() !== "ativo") return;
 
     // Verificar se já tem pagamento pendente
     const temPendente = alunoComPagamentos.pagamentos.some(
@@ -457,10 +464,206 @@ export async function adicionarProximoPagamentoArray(
   }
 }
 
-// ✅ FUNÇÃO 8 - Marcar pagamento como pago na nova estrutura
-// ...existing code...
+// ✅ FUNÇÃO 7.5 - Verificar e gerar pagamento para aluno que voltou a ser ativo
+export async function verificarEGerarPagamentoAlunoAtivo(
+  alunoId: string
+): Promise<{ sucesso: boolean; mensagem?: string; erro?: string }> {
+  try {
+    `🔍 Verificando necessidade de gerar pagamento para aluno ${alunoId}`;
 
-// ✅ FUNÇÃO ULTRA-DEFENSIVA - Marcar pagamento como pago na nova estrutura
+    // Buscar aluno em alunosPagamentos
+    const alunoQuery = query(
+      collection(db, "alunosPagamentos"),
+      where("alunoId", "==", alunoId)
+    );
+    const alunoSnapshot = await getDocs(alunoQuery);
+
+    if (alunoSnapshot.empty) {
+      return {
+        sucesso: false,
+        erro: "Aluno não encontrado em alunosPagamentos",
+      };
+    }
+
+    const alunoDoc = alunoSnapshot.docs[0];
+    const alunoData = alunoDoc.data();
+    const pagamentos = alunoData.pagamentos || [];
+
+    // Verificar status na collection Alunos
+    let statusAluno = "";
+    try {
+      const docAluno = await getDoc(doc(db, "Alunos", alunoId));
+      if (docAluno.exists()) {
+        statusAluno = (docAluno.data().status || "").trim();
+      }
+    } catch (e) {
+      console.warn("⚠️ Não foi possível ler status em Alunos:", e);
+    }
+
+    // Se não está ativo, não gerar
+    if (statusAluno.toLowerCase() !== "ativo") {
+      return {
+        sucesso: false,
+        mensagem: "Aluno não está ativo",
+      };
+    }
+
+    // Verificar se já tem pagamento pendente
+    const temPendente = pagamentos.some((p: any) => p.status === "Pendente");
+    if (temPendente) {
+      return {
+        sucesso: false,
+        mensagem: "Aluno já possui pagamento pendente",
+      };
+    }
+
+    // Gerar novo pagamento
+    if (pagamentos.length > 0) {
+      // Tem histórico - gerar próximo mês
+      const ultimoPagamento = pagamentos[pagamentos.length - 1];
+      const ultimoVencimento = ultimoPagamento.dataVencimento?.toDate
+        ? ultimoPagamento.dataVencimento.toDate()
+        : new Date(ultimoPagamento.dataVencimento);
+
+      const proximoVencimento = new Date(
+        ultimoVencimento.getFullYear(),
+        ultimoVencimento.getMonth() + 1,
+        10
+      );
+
+      const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      // Verificar se já existe
+      const jaExiste = pagamentos.some(
+        (p: any) => p.mesReferencia === mesReferencia
+      );
+
+      if (jaExiste) {
+        return {
+          sucesso: false,
+          mensagem: `Pagamento para ${mesReferencia} já existe`,
+        };
+      }
+
+      const valorPagamento =
+        typeof ultimoPagamento.valor === "number"
+          ? ultimoPagamento.valor
+          : typeof alunoData.valorMensalidade === "number"
+          ? alunoData.valorMensalidade
+          : 0;
+
+      const planoParaNovo =
+        typeof alunoData.plano === "string" && alunoData.plano.trim()
+          ? alunoData.plano.trim()
+          : typeof ultimoPagamento?.plano === "string"
+          ? ultimoPagamento.plano
+          : undefined;
+
+      const novoPagamento = limparObjetoUndefined({
+        mesReferencia,
+        dataVencimento: Timestamp.fromDate(proximoVencimento),
+        valor: valorPagamento,
+        status: "Pendente",
+        ...(planoParaNovo ? { plano: planoParaNovo } : {}),
+      });
+
+      pagamentos.push(novoPagamento);
+
+      const totalPago = pagamentos
+        .filter((p: any) => p.status === "Pago")
+        .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+      const totalPendente = pagamentos
+        .filter((p: any) => p.status === "Pendente")
+        .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+      const totalArquivado = pagamentos
+        .filter((p: any) => p.status === "Arquivado")
+        .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+
+      await updateDoc(alunoDoc.ref, {
+        pagamentos: pagamentos.map((p: any) => limparObjetoUndefined(p)),
+        totais: {
+          pago: totalPago,
+          pendente: totalPendente,
+          arquivado: totalArquivado,
+        },
+        proximoVencimento: Timestamp.fromDate(proximoVencimento),
+        updatedAt: Timestamp.now(),
+      });
+
+      `   ✅ Pagamento gerado: ${mesReferencia} - R$ ${valorPagamento}`;
+      invalidarCacheIntegracao();
+
+      return {
+        sucesso: true,
+        mensagem: `Pagamento gerado para ${mesReferencia}`,
+      };
+    } else {
+      // Sem histórico - criar primeiro pagamento
+      const hoje = new Date();
+      const proximoVencimento = new Date(
+        hoje.getFullYear(),
+        hoje.getMonth(),
+        10
+      );
+      if (proximoVencimento < hoje) {
+        proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
+      }
+
+      const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      const valorPagamento =
+        typeof alunoData.valorMensalidade === "number"
+          ? alunoData.valorMensalidade
+          : 0;
+
+      const planoParaNovo =
+        typeof alunoData.plano === "string" && alunoData.plano.trim()
+          ? alunoData.plano.trim()
+          : undefined;
+
+      const novoPagamento = limparObjetoUndefined({
+        mesReferencia,
+        dataVencimento: Timestamp.fromDate(proximoVencimento),
+        valor: valorPagamento,
+        status: "Pendente",
+        ...(planoParaNovo ? { plano: planoParaNovo } : {}),
+      });
+
+      await updateDoc(alunoDoc.ref, {
+        pagamentos: [novoPagamento],
+        totais: {
+          pago: 0,
+          pendente: valorPagamento,
+          arquivado: 0,
+        },
+        proximoVencimento: Timestamp.fromDate(proximoVencimento),
+        updatedAt: Timestamp.now(),
+      });
+
+      `   ✅ Primeiro pagamento criado: ${mesReferencia} - R$ ${valorPagamento}`;
+      invalidarCacheIntegracao();
+
+      return {
+        sucesso: true,
+        mensagem: `Primeiro pagamento criado para ${mesReferencia}`,
+      };
+    }
+  } catch (error: any) {
+    console.error("❌ Erro ao verificar/gerar pagamento:", error);
+    return {
+      sucesso: false,
+      erro: `Erro: ${error?.message}`,
+    };
+  }
+}
+
+// ✅ FUNÇÃO 8 - Marcar pagamento como pago na nova estrutura
 export async function marcarPagamentoPagoArray(
   alunoId: string,
   mesReferencia: string,
@@ -473,9 +676,16 @@ export async function marcarPagamentoPagoArray(
       throw new Error("Aluno não encontrado");
     }
 
-    `💰 Marcando pagamento como pago:`;
-    `   • Aluno: ${alunoComPagamentos.nome}`;
-    `   • Mês: ${mesReferencia}`;
+    // ✅ Verificar status do aluno na collection Alunos
+    let statusAluno = "";
+    try {
+      const docAluno = await getDoc(doc(db, "Alunos", alunoId));
+      if (docAluno.exists()) {
+        statusAluno = (docAluno.data().status || "").trim();
+      }
+    } catch (e) {
+      console.warn("⚠️ Não foi possível ler status em Alunos:", e);
+    }
 
     // ✅ Verificar se o pagamento existe e está pendente
     const pagamentoEncontrado = alunoComPagamentos.pagamentos.find(
@@ -486,6 +696,111 @@ export async function marcarPagamentoPagoArray(
       throw new Error(
         `Pagamento não encontrado ou não está pendente para o mês ${mesReferencia}`
       );
+    }
+
+    // ✅ LÓGICA ESPECÍFICA PARA ALUNO INATIVO
+    if (statusAluno.toLowerCase() !== "ativo") {
+      const novosPagamentos: any[] = [];
+
+      for (const pagamento of alunoComPagamentos.pagamentos) {
+        const pagamentoBase: any = {
+          mesReferencia: pagamento.mesReferencia || "",
+          dataVencimento: Timestamp.fromDate(
+            pagamento.dataVencimento instanceof Date
+              ? pagamento.dataVencimento
+              : new Date(pagamento.dataVencimento)
+          ),
+          valor: typeof pagamento.valor === "number" ? pagamento.valor : 0,
+          status: pagamento.status || "Pendente",
+        };
+
+        // Se é o pagamento que queriam marcar como pago, arquivar
+        if (
+          pagamento.mesReferencia === mesReferencia &&
+          pagamento.status === "Pendente"
+        ) {
+          pagamentoBase.status = "Arquivado";
+          pagamentoBase.statusAnterior = "Pendente";
+          pagamentoBase.arquivadoEm = Timestamp.now();
+          pagamentoBase.observacoes =
+            "Arquivado automaticamente - pagamento de aluno inativo";
+
+          // Pagamento arquivado automaticamente
+        } else {
+          // Manter campos opcionais dos outros pagamentos
+          if (pagamento.dataPagamento) {
+            const dataParaConverter =
+              pagamento.dataPagamento instanceof Date
+                ? pagamento.dataPagamento
+                : new Date(pagamento.dataPagamento);
+            if (!isNaN(dataParaConverter.getTime())) {
+              pagamentoBase.dataPagamento =
+                Timestamp.fromDate(dataParaConverter);
+            }
+          }
+
+          if (pagamento.arquivadoEm) {
+            const dataParaConverter =
+              pagamento.arquivadoEm instanceof Date
+                ? pagamento.arquivadoEm
+                : new Date(pagamento.arquivadoEm);
+            if (!isNaN(dataParaConverter.getTime())) {
+              pagamentoBase.arquivadoEm = Timestamp.fromDate(dataParaConverter);
+            }
+          }
+
+          if (
+            pagamento.statusAnterior &&
+            typeof pagamento.statusAnterior === "string" &&
+            pagamento.statusAnterior.trim()
+          ) {
+            pagamentoBase.statusAnterior = pagamento.statusAnterior.trim();
+          }
+
+          if (
+            pagamento.observacoes &&
+            typeof pagamento.observacoes === "string" &&
+            pagamento.observacoes.trim()
+          ) {
+            pagamentoBase.observacoes = pagamento.observacoes.trim();
+          }
+        }
+
+        novosPagamentos.push(limparObjetoUndefined(pagamentoBase));
+      }
+
+      // Recalcular totais
+      const totalPago = novosPagamentos
+        .filter((p) => p.status === "Pago")
+        .reduce(
+          (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
+          0
+        );
+      const totalPendente = novosPagamentos
+        .filter((p) => p.status === "Pendente")
+        .reduce(
+          (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
+          0
+        );
+      const totalArquivado = novosPagamentos
+        .filter((p) => p.status === "Arquivado")
+        .reduce(
+          (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
+          0
+        );
+
+      await updateDoc(doc(db, "alunosPagamentos", alunoComPagamentos.id!), {
+        pagamentos: novosPagamentos,
+        totais: {
+          pago: totalPago,
+          pendente: totalPendente,
+          arquivado: totalArquivado,
+        },
+        updatedAt: Timestamp.now(),
+      });
+
+      invalidarCacheIntegracao();
+      return; // Sair da função aqui
     }
 
     // ✅ CRIAR PAGAMENTOS COMPLETAMENTE NOVOS (sem undefined)
@@ -614,17 +929,14 @@ export async function fecharMesComArray(): Promise<{
   mensagem?: string;
 }> {
   try {
-    // ✅ SINCRONIZAR TODOS OS DADOS DOS ALUNOS ANTES DO FECHAMENTO
-
-    const alunosSnapshot = await getDocs(
-      query(collection(db, "alunosPagamentos"), where("status", "==", "Ativo"))
-    );
+    // ✅ Buscar todos os alunos (filtraremos por status de Alunos)
+    const alunosSnapshot = await getDocs(collection(db, "alunosPagamentos"));
     if (alunosSnapshot.empty) {
       return {
         alunosProcessados: 0,
         pagamentosArquivados: 0,
         novosPagamentosGerados: 0,
-        erro: "Nenhum aluno ativo encontrado",
+        erro: "Nenhum aluno encontrado",
       };
     }
 
@@ -667,14 +979,217 @@ export async function fecharMesComArray(): Promise<{
       try {
         const alunoData = alunoDoc.data();
 
-        // ✅ VERIFICAÇÃO CRÍTICA: Confirmar que aluno AINDA está ativo após sincronização
-        if (alunoData.status !== "Ativo") {
-          alunosInativos++;
-          nomesAlunosInativos.push(alunoData.nome);
-          continue;
+        // ✅ Status SEMPRE da collection Alunos
+        let statusAluno = "";
+        try {
+          const docAluno = await getDoc(
+            doc(db, "Alunos", alunoData.alunoId || alunoDoc.id)
+          );
+          if (docAluno.exists()) {
+            statusAluno = (docAluno.data().status || "").trim();
+          }
+        } catch (e) {
+          console.warn("⚠️ Não foi possível ler status em Alunos:", e);
         }
 
         const pagamentos = alunoData.pagamentos || [];
+
+        // ✅ Se aluno INATIVO: arquivar TODOS os pagamentos não-arquivados
+        if (statusAluno.toLowerCase() !== "ativo") {
+          alunosInativos++;
+          nomesAlunosInativos.push(alunoData.nome);
+
+          // Arquivar TODOS os pagamentos não-arquivados (Pendente, Atrasado, Pago)
+          let pagamentosArquivadosNeste = 0;
+          const pagamentosAtualizados = pagamentos.map((pagamento: any) => {
+            if (pagamento.status !== "Arquivado") {
+              pagamentosArquivados++;
+              pagamentosArquivadosNeste++;
+              return limparObjetoUndefined({
+                ...pagamento,
+                status: "Arquivado",
+                statusAnterior: pagamento.status,
+                arquivadoEm: Timestamp.now(),
+                observacoes: "Arquivado automaticamente - aluno inativo",
+              });
+            }
+            return limparObjetoUndefined(pagamento);
+          });
+
+          // Pagamentos arquivados com sucesso
+
+          // Recalcular totais
+          const totalPago = pagamentosAtualizados
+            .filter((p: any) => p.status === "Pago")
+            .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+          const totalPendente = pagamentosAtualizados
+            .filter((p: any) => p.status === "Pendente")
+            .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+          const totalArquivado = pagamentosAtualizados
+            .filter((p: any) => p.status === "Arquivado")
+            .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+
+          // Atualizar documento
+
+          await updateDoc(alunoDoc.ref, {
+            pagamentos: pagamentosAtualizados,
+            totais: {
+              pago: totalPago,
+              pendente: totalPendente,
+              arquivado: totalArquivado,
+            },
+            updatedAt: Timestamp.now(),
+          });
+
+          alunosProcessados++;
+          continue;
+        }
+
+        // ✅ Aluno ATIVO: NÃO restaurar pagamentos arquivados por inatividade
+        // ✅ Se aluno está ativo e NÃO tem nenhum pagamento pendente, gerar um
+        const temPendente = pagamentos.some(
+          (p: any) => p.status === "Pendente"
+        );
+
+        if (!temPendente) {
+          let novoPagamentoCriado = false;
+
+          // Encontrar o último pagamento para calcular próximo vencimento
+          if (pagamentos.length > 0) {
+            const ultimoPagamento = pagamentos[pagamentos.length - 1];
+            const ultimoVencimento = ultimoPagamento.dataVencimento?.toDate
+              ? ultimoPagamento.dataVencimento.toDate()
+              : new Date(ultimoPagamento.dataVencimento);
+
+            const proximoVencimento = new Date(
+              ultimoVencimento.getFullYear(),
+              ultimoVencimento.getMonth() + 1,
+              10
+            );
+
+            const mesReferencia = proximoVencimento.toLocaleDateString(
+              "pt-BR",
+              { month: "2-digit", year: "numeric" }
+            );
+
+            // Verificar se já existe pagamento para este mês
+            const jaExiste = pagamentos.some(
+              (p: any) => p.mesReferencia === mesReferencia
+            );
+
+            if (!jaExiste) {
+              const valorPagamento =
+                typeof ultimoPagamento.valor === "number"
+                  ? ultimoPagamento.valor
+                  : typeof alunoData.valorMensalidade === "number"
+                  ? alunoData.valorMensalidade
+                  : 0;
+
+              const planoParaNovo =
+                typeof alunoData.plano === "string" && alunoData.plano.trim()
+                  ? alunoData.plano.trim()
+                  : typeof ultimoPagamento?.plano === "string"
+                  ? ultimoPagamento.plano
+                  : undefined;
+
+              const novoPagamento = limparObjetoUndefined({
+                mesReferencia,
+                dataVencimento: Timestamp.fromDate(proximoVencimento),
+                valor: valorPagamento,
+                status: "Pendente",
+                ...(planoParaNovo ? { plano: planoParaNovo } : {}),
+              });
+
+              pagamentos.push(novoPagamento);
+              novosPagamentosGerados++;
+              novoPagamentoCriado = true;
+
+              // Recalcular totais com novo pagamento
+              const totalPagoNovo = pagamentos
+                .filter((p: any) => p.status === "Pago")
+                .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+              const totalPendenteNovo = pagamentos
+                .filter((p: any) => p.status === "Pendente")
+                .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+              const totalArquivadoNovo = pagamentos
+                .filter((p: any) => p.status === "Arquivado")
+                .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+
+              await updateDoc(alunoDoc.ref, {
+                pagamentos: pagamentos.map((p: any) =>
+                  limparObjetoUndefined(p)
+                ),
+                totais: {
+                  pago: totalPagoNovo,
+                  pendente: totalPendenteNovo,
+                  arquivado: totalArquivadoNovo,
+                },
+                proximoVencimento: Timestamp.fromDate(proximoVencimento),
+                updatedAt: Timestamp.now(),
+              });
+            }
+          } else {
+            // Se não tem nenhum pagamento, criar o primeiro
+
+            const hoje = new Date();
+            const proximoVencimento = new Date(
+              hoje.getFullYear(),
+              hoje.getMonth(),
+              10
+            );
+            if (proximoVencimento < hoje) {
+              proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
+            }
+
+            const mesReferencia = proximoVencimento.toLocaleDateString(
+              "pt-BR",
+              {
+                month: "2-digit",
+                year: "numeric",
+              }
+            );
+
+            const valorPagamento =
+              typeof alunoData.valorMensalidade === "number"
+                ? alunoData.valorMensalidade
+                : 0;
+
+            const planoParaNovo =
+              typeof alunoData.plano === "string" && alunoData.plano.trim()
+                ? alunoData.plano.trim()
+                : undefined;
+
+            const novoPagamento = limparObjetoUndefined({
+              mesReferencia,
+              dataVencimento: Timestamp.fromDate(proximoVencimento),
+              valor: valorPagamento,
+              status: "Pendente",
+              ...(planoParaNovo ? { plano: planoParaNovo } : {}),
+            });
+
+            await updateDoc(alunoDoc.ref, {
+              pagamentos: [novoPagamento],
+              totais: {
+                pago: 0,
+                pendente: valorPagamento,
+                arquivado: 0,
+              },
+              proximoVencimento: Timestamp.fromDate(proximoVencimento),
+              updatedAt: Timestamp.now(),
+            });
+
+            novosPagamentosGerados++;
+            novoPagamentoCriado = true;
+          }
+
+          // Se criou novo pagamento, pular processamento normal do mês
+          if (novoPagamentoCriado) {
+            alunosProcessados++;
+            continue;
+          }
+        }
+
+        // ✅ Processar normalmente o fechamento do mês
         const pagamentosDoMes = pagamentos.filter(
           (p: any) => p.mesReferencia === mesParaFechar
         );
@@ -744,7 +1259,7 @@ export async function fecharMesComArray(): Promise<{
         if (
           todosArquivadosMaiorMes &&
           !existePagamentoProximoMes &&
-          alunoData.status === "Ativo"
+          statusAluno.toLowerCase() === "ativo"
         ) {
           // ✅ Usa o valor do último pagamento (mais seguro que valorMensalidade)
           const ultimoPagamento =
@@ -1111,14 +1626,7 @@ export async function atualizarDadosAlunoPagamento(
 
     // Pegar o document ID correto
     const alunoDocIds = alunoSnapshot.docs.map((d) => d.id);
-    console.log("🔍 DEBUG atualizarDadosAlunoPagamento:");
-    console.log("   • alunoId (field):", alunoId);
-    console.log("   • alunoDocIds (docs encontrados):", alunoDocIds);
-    console.log("   • Dados a atualizar:", {
-      plano: dadosEditaveis.plano,
-      valorMensalidade: dadosEditaveis.valorMensalidade,
-      telefone: dadosEditaveis.telefone,
-    });
+
     // 3️⃣ Converter dataFinalMatricula se necessário
     let dataFinalTimestamp: Timestamp | undefined = undefined;
     if (dadosEditaveis.dataFinalMatricula) {
@@ -1210,9 +1718,7 @@ export async function atualizarDadosAlunoPagamento(
       })
     );
 
-    console.log(
-      `✅ Dados atualizados para ${alunoId} em ${alunoDocIds.length} documento(s)`
-    );
+    `✅ Dados atualizados para ${alunoId} em ${alunoDocIds.length} documento(s)`;
 
     // ✅ Sincronizar de volta para collection Alunos
     try {
@@ -1235,7 +1741,6 @@ export async function atualizarDadosAlunoPagamento(
         }
 
         await updateDoc(alunoRef, dadosParaSincronizar);
-        console.log(`✅ Dados sincronizados para collection Alunos`);
       }
     } catch (syncError) {
       console.warn(
