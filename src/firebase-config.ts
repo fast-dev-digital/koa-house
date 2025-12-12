@@ -4,13 +4,6 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// ✅ DEBUG: Ver qual arquivo .env está sendo usado
-console.log("🔍 Variáveis de ambiente carregadas:");
-console.log("   MODE:", import.meta.env.MODE);
-console.log("   DEV:", import.meta.env.DEV);
-console.log("   PROJECT_ID:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
-console.log("   AUTH_DOMAIN:", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN);
-
 // Objeto de configuração que lê as variáveis de ambiente seguras do arquivo .env
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -25,7 +18,6 @@ const firebaseConfig = {
 
 // Inicializa o aplicativo Firebase com as configurações
 const app = initializeApp(firebaseConfig);
-("✅ Firebase inicializado com sucesso!");
 
 // Exporta os serviços que vamos usar no resto do projeto (Autenticação e Banco de Dados)
 export const auth = getAuth(app);
