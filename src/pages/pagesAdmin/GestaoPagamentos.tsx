@@ -118,12 +118,6 @@ export default function GestaoPagamentos() {
       const alunosComPagamentos = await listarAlunosComPagamentos();
 
       // 🔍 DEBUG - Verificar se dataFinalMatricula está vindo
-      "📊 Primeiro aluno:",
-        {
-          nome: alunosComPagamentos[0]?.nome,
-          plano: alunosComPagamentos[0]?.plano,
-          dataFinalMatricula: alunosComPagamentos[0]?.dataFinalMatricula,
-        };
 
       const pagamentosFormatados: Pagamento[] = [];
       alunosComPagamentos.forEach((aluno) => {

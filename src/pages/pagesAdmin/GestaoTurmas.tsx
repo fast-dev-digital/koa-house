@@ -292,7 +292,6 @@ export default function GestaoTurmas() {
       });
 
       setAlunosPorTurma(mapaAlunosPorTurma);
-      "✅ Mapa de alunos por turma carregado:", mapaAlunosPorTurma;
     } catch (error) {
       console.error("❌ Erro ao carregar alunos das turmas:", error);
     }

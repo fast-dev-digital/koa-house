@@ -116,12 +116,9 @@ export async function atualizarAluno(
   // Assim podemos atualizar só nome, ou só email, etc.
 
   try {
-    `✏️ Iniciando atualização do aluno ID: ${id}`;
-    "📝 Dados recebidos para atualizar:", dadosAtualizacao;
-
     //  REFERÊNCIA AO DOCUMENTO ESPECÍFICO
     const docRef = doc(db, "Alunos", id);
-    "📂 Referência do documento criada:", docRef.path;
+
     //  ADICIONA TIMESTAMP DE ATUALIZAÇÃO
     const dadosCompletos = {
       ...dadosAtualizacao, // 📋 Campos a atualizar
