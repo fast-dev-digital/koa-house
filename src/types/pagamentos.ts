@@ -16,6 +16,8 @@ export interface Pagamento {
   updatedAt?: Date;
   arquivadoEm?: Date;
   dataFinalMatricula?: Date;
+  statusAnterior?: string; // Status antes de ser arquivado
+  observacoes?: string; // Observações sobre o pagamento (ex: motivo do arquivamento)
 }
 
 export interface DadosEditaveisAluno {
