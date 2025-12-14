@@ -14,6 +14,8 @@ import {
   excluirReserva,
   gerarSlotsHorarios,
   formatarData,
+  sincronizarAulasAte2028,
+  limparAulasSincronizadas,
 } from "../../services/agendaService";
 import ReservaModal from "../../components/componentsAdmin/ReservaModal";
 import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";
@@ -98,6 +100,32 @@ export default function GestaoAgenda() {
 
   const irParaHoje = () => {
     setDataSelecionada(new Date());
+  };
+
+  // Sincronizar aulas até 2028
+  const sincronizarAulas = async () => {
+    if (
+      !confirm(
+        "Deseja sincronizar todas as aulas até o final de 2028? Isso pode levar alguns minutos."
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const aulasAdicionadas = await sincronizarAulasAte2028();
+      showToast(
+        `${aulasAdicionadas} aula(s) sincronizada(s) até 2028!`,
+        "success"
+      );
+      carregarReservas();
+    } catch (error) {
+      console.error("Erro ao sincronizar aulas:", error);
+      showToast("Erro ao sincronizar aulas", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Verificar se existe reserva em um slot
@@ -203,12 +231,31 @@ export default function GestaoAgenda() {
           <h2 className="text-xl font-semibold text-gray-800">
             {formatarData(dataSelecionada)}
           </h2>
-          <button
-            onClick={irParaHoje}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-          >
-            Hoje
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={irParaHoje}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+            >
+              Hoje
+            </button>
+            <button
+              onClick={sincronizarAulas}
+              disabled={loading}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Sincronizando...
+                </>
+              ) : (
+                <>
+                  <FaPlus size={14} />
+                  Sincronizar Aulas
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <button
@@ -237,13 +284,13 @@ export default function GestaoAgenda() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 border-b-2 border-gray-300">
-                  <th className="p-3 text-left text-sm font-semibold text-gray-700 sticky left-0 bg-gray-100 z-10 min-w-[100px]">
+                  <th className="p-2 text-left text-xs font-semibold text-gray-700 sticky left-0 bg-gray-100 z-10 min-w-[70px]">
                     Horário
                   </th>
                   {quadras.map((quadra) => (
                     <th
                       key={quadra.id}
-                      className="p-3 text-center text-sm font-semibold text-white min-w-[200px]"
+                      className="p-2 text-center text-xs font-semibold text-white min-w-[140px]"
                       style={{ backgroundColor: quadra.cor || "#f3f4f6" }}
                     >
                       {quadra.nome}
@@ -275,56 +322,56 @@ export default function GestaoAgenda() {
                               )} border-2 rounded-lg p-3 min-h-[80px] cursor-pointer hover:shadow-md transition group relative`}
                               onClick={() => abrirModalEditar(reserva)}
                             >
-                              <div className="flex items-start justify-between mb-1">
-                                <span className="text-xs font-bold uppercase">
+                              <div className="flex items-start justify-between mb-0.5">
+                                <span className="text-[10px] font-bold uppercase">
                                   {reserva.tipo}
                                 </span>
-                                <div className="opacity-0 group-hover:opacity-100 transition flex gap-1">
+                                <div className="opacity-0 group-hover:opacity-100 transition flex gap-0.5">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       abrirModalEditar(reserva);
                                     }}
-                                    className="p-1 bg-white rounded hover:bg-gray-100"
+                                    className="p-0.5 bg-white rounded hover:bg-gray-100"
                                   >
-                                    <FaEdit size={12} />
+                                    <FaEdit size={10} />
                                   </button>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       abrirModalDeletar(reserva);
                                     }}
-                                    className="p-1 bg-white rounded hover:bg-red-100 text-red-600"
+                                    className="p-0.5 bg-white rounded hover:bg-red-100 text-red-600"
                                   >
-                                    <FaTrash size={12} />
+                                    <FaTrash size={10} />
                                   </button>
                                 </div>
                               </div>
-                              <p className="text-xs font-medium mb-1">
+                              <p className="text-[11px] font-medium mb-0.5">
                                 {reserva.horarioInicio} - {reserva.horarioFim}
                               </p>
                               {reserva.turmaNome && (
-                                <p className="text-xs truncate">
+                                <p className="text-[10px] truncate">
                                   {reserva.turmaNome}
                                 </p>
                               )}
                               {reserva.professorNome && (
-                                <p className="text-xs truncate">
+                                <p className="text-[10px] truncate">
                                   {reserva.professorNome}
                                 </p>
                               )}
                               {reserva.alunos && reserva.alunos.length > 0 && (
-                                <p className="text-xs">
+                                <p className="text-[10px]">
                                   {reserva.alunos.length} aluno(s)
                                 </p>
                               )}
                               {reserva.status === "pendente" && (
-                                <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs rounded-full">
+                                <span className="inline-block mt-0.5 px-1.5 py-0.5 bg-yellow-200 text-yellow-800 text-[9px] rounded-full">
                                   Pendente
                                 </span>
                               )}
                               {reserva.status === "cancelada" && (
-                                <span className="inline-block mt-1 px-2 py-0.5 bg-red-200 text-red-800 text-xs rounded-full">
+                                <span className="inline-block mt-0.5 px-1.5 py-0.5 bg-red-200 text-red-800 text-[9px] rounded-full">
                                   Cancelada
                                 </span>
                               )}
@@ -335,10 +382,10 @@ export default function GestaoAgenda() {
                               onClick={() =>
                                 abrirModalCriar(quadra.id!, slot.inicio)
                               }
-                              className="w-full min-h-[80px] border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition flex items-center justify-center group"
+                              className="w-full min-h-[60px] border-2 border-dashed border-gray-300 rounded-md hover:border-blue-500 hover:bg-blue-50 transition flex items-center justify-center group"
                             >
                               <FaPlus
-                                size={16}
+                                size={12}
                                 className="text-gray-400 group-hover:text-blue-600"
                               />
                             </button>
