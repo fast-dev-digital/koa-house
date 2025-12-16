@@ -15,7 +15,6 @@ import {
   gerarSlotsHorarios,
   formatarData,
   sincronizarAulasAte2028,
-  limparAulasSincronizadas,
 } from "../../services/agendaService";
 import ReservaModal from "../../components/componentsAdmin/ReservaModal";
 import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";

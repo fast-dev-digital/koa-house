@@ -55,10 +55,6 @@ export async function buscarReservasPorData(data: Date): Promise<Reserva[]> {
   const inicioDia = new Date(Date.UTC(ano, mes, dia, 0, 0, 0, 0));
   const fimDia = new Date(Date.UTC(ano, mes, dia, 23, 59, 59, 999));
 
-  console.log(
-    `🔍 Buscando reservas entre ${inicioDia.toISOString()} e ${fimDia.toISOString()}`
-  );
-
   const snapshot = await getDocs(
     query(
       collection(db, "reservas"),
@@ -67,8 +63,6 @@ export async function buscarReservasPorData(data: Date): Promise<Reserva[]> {
       orderBy("data") // ← Removido orderBy("horarioInicio")
     )
   );
-
-  console.log(`📦 Documentos encontrados: ${snapshot.docs.length}`);
 
   // Ordena manualmente no código
   const reservas = snapshot.docs.map((doc) => {
@@ -85,11 +79,6 @@ export async function buscarReservasPorData(data: Date): Promise<Reserva[]> {
         : new Date(data.updatedAt),
     } as Reserva;
 
-    console.log(
-      `  📅 Reserva: ${reserva.turmaNome || reserva.tipo} - ${
-        reserva.horarioInicio
-      } - Quadra: ${reserva.quadraNome}`
-    );
     return reserva;
   });
 
@@ -316,7 +305,6 @@ export async function sincronizarAulasSemana(
   dataInicio: Date
 ): Promise<number> {
   const turmas = await buscarTurmasAtivas();
-  console.log("🔍 Turmas encontradas:", turmas.length);
 
   if (turmas.length === 0) {
     console.warn("⚠️ Nenhuma turma ativa encontrada");
@@ -325,7 +313,6 @@ export async function sincronizarAulasSemana(
 
   // Busca as quadras uma vez só
   const quadras = await buscarQuadras();
-  console.log("🏐 Quadras disponíveis:", quadras.length);
 
   if (quadras.length === 0) {
     console.warn("⚠️ Nenhuma quadra disponível");
@@ -338,13 +325,6 @@ export async function sincronizarAulasSemana(
   const dataFim = new Date(dataInicio);
   dataFim.setDate(dataFim.getDate() + 6); // 7 dias
 
-  console.log(
-    "📅 Sincronizando de",
-    dataInicio.toLocaleDateString(),
-    "até",
-    dataFim.toLocaleDateString()
-  );
-
   // Para cada dia da semana
   for (let d = new Date(dataInicio); d <= dataFim; d.setDate(d.getDate() + 1)) {
     const diaSemana = d.getDay(); // 0=Dom, 1=Seg, 2=Ter, etc
@@ -353,10 +333,6 @@ export async function sincronizarAulasSemana(
     for (const turma of turmas) {
       // Converte os dias da turma para números
       const diasTurma = converterDiasParaNumeros(turma.dias || "");
-
-      console.log(
-        `📋 Turma "${turma.nome}" - Professor: "${turma.professorNome}" - Dias: "${turma.dias}" -> [${diasTurma}], Dia atual: ${diaSemana}`
-      );
 
       // Verifica se a turma tem aula neste dia
       if (diasTurma.includes(diaSemana)) {
@@ -375,20 +351,10 @@ export async function sincronizarAulasSemana(
         const horarioInicio = extrairHorarioInicio(turma.horario);
         const horarioFim = extrairHorarioFim(turma.horario);
 
-        console.log(
-          `✅ Turma tem aula na Quadra ${quadra.numero}! Horário: ${horarioInicio} - ${horarioFim}`
-        );
-
         // Verifica se já existe uma reserva para essa aula
         const dataBusca = new Date(d);
         dataBusca.setHours(12, 0, 0, 0);
         const reservasExistentes = await buscarReservasPorData(dataBusca);
-
-        console.log(
-          `🔍 Reservas encontradas para ${dataBusca.toLocaleDateString()}: ${
-            reservasExistentes.length
-          }`
-        );
 
         const aulaJaExiste = reservasExistentes.some(
           (r) =>
@@ -399,15 +365,7 @@ export async function sincronizarAulasSemana(
         );
 
         if (aulaJaExiste) {
-          console.log(
-            `⏭️ Aula já existe para ${turma.nome} em ${d.toLocaleDateString()}`
-          );
         } else {
-          console.log(
-            `➕ Criando aula para ${turma.nome} na Quadra ${
-              quadra.numero
-            } em ${d.toLocaleDateString()}`
-          );
           try {
             // Normaliza a data (remove horas para comparação correta)
             const dataNormalizada = new Date(d);
@@ -426,7 +384,7 @@ export async function sincronizarAulasSemana(
               observacoes: `Aula sincronizada automaticamente - ${turma.modalidade}`,
             });
             aulasAdicionadas++;
-            console.log(`✅ Aula criada! ID: ${reservaId}`);
+            console.log(`Aula criada! ID: ${reservaId}`);
           } catch (error) {
             console.error(`❌ Erro ao criar aula:`, error);
           }
@@ -470,29 +428,19 @@ export async function sincronizarAulasAte2028(): Promise<number> {
   const dataFinal = new Date(2026, 11, 31); // 31 de dezembro de 2028
   let totalAulas = 0;
 
-  console.log("📅 Sincronizando aulas até 2028...");
-
   // Sincroniza mês por mês
   for (
     let data = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     data <= dataFinal;
     data.setMonth(data.getMonth() + 1)
   ) {
-    console.log(
-      `📆 Sincronizando ${data.toLocaleDateString("pt-BR", {
-        month: "long",
-        year: "numeric",
-      })}...`
-    );
     const aulasDoMes = await sincronizarAulasMes(
       data.getFullYear(),
       data.getMonth()
     );
     totalAulas += aulasDoMes;
-    console.log(`✅ ${aulasDoMes} aulas adicionadas neste mês`);
   }
 
-  console.log(`🎉 Total: ${totalAulas} aulas sincronizadas até 2028!`);
   return totalAulas;
 }
 
@@ -529,8 +477,6 @@ export async function removerAulasTurma(
  * Remove todas as aulas sincronizadas automaticamente
  */
 export async function limparAulasSincronizadas(): Promise<number> {
-  console.log("🗑️ Removendo todas as aulas sincronizadas...");
-
   const snapshot = await getDocs(
     query(collection(db, "reservas"), where("tipo", "==", "aula"))
   );
@@ -538,6 +484,5 @@ export async function limparAulasSincronizadas(): Promise<number> {
   const promises = snapshot.docs.map((doc) => deleteDoc(doc.ref));
   await Promise.all(promises);
 
-  console.log(`✅ ${snapshot.docs.length} aulas removidas`);
   return snapshot.docs.length;
 }
