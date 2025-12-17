@@ -14,7 +14,6 @@ import {
   excluirReserva,
   gerarSlotsHorarios,
   formatarData,
-  sincronizarAulasAte2028,
 } from "../../services/agendaService";
 import ReservaModal from "../../components/componentsAdmin/ReservaModal";
 import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";
@@ -101,41 +100,34 @@ export default function GestaoAgenda() {
     setDataSelecionada(new Date());
   };
 
-  // Sincronizar aulas até 2028
-  const sincronizarAulas = async () => {
-    if (
-      !confirm(
-        "Deseja sincronizar todas as aulas até o final de 2028? Isso pode levar alguns minutos."
-      )
-    ) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const aulasAdicionadas = await sincronizarAulasAte2028();
-      showToast(
-        `${aulasAdicionadas} aula(s) sincronizada(s) até 2028!`,
-        "success"
-      );
-      carregarReservas();
-    } catch (error) {
-      console.error("Erro ao sincronizar aulas:", error);
-      showToast("Erro ao sincronizar aulas", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Verificar se existe reserva em um slot
+  // Verificar se existe reserva em um slot (aceita qualquer horário)
   const obterReserva = (
     quadraId: string,
     horarioInicio: string
   ): Reserva | null => {
+    // Pega o horário em formato hora:minuto e converte para minutos do dia
+    const converterParaMinutos = (hora: string): number => {
+      const [h, m] = hora.split(":").map(Number);
+      return h * 60 + m;
+    };
+
+    const slotInicio = converterParaMinutos(horarioInicio);
+    const slotFim = slotInicio + 60; // 1 hora de duração do slot
+
+    // Procura reserva que está nesta quadra e que ocupa este slot
     return (
-      reservas.find(
-        (r) => r.quadraId === quadraId && r.horarioInicio === horarioInicio
-      ) || null
+      reservas.find((r) => {
+        if (r.quadraId !== quadraId) return false;
+
+        const reservaInicio = converterParaMinutos(r.horarioInicio);
+        const reservaFim = converterParaMinutos(r.horarioFim);
+
+        // Verifica se a reserva começa dentro deste slot OU se ela ocupa este slot
+        return (
+          (reservaInicio >= slotInicio && reservaInicio < slotFim) || // Começa no slot
+          (reservaInicio <= slotInicio && reservaFim > slotInicio) // Já começou e ainda está ocupando
+        );
+      }) || null
     );
   };
 
@@ -230,31 +222,12 @@ export default function GestaoAgenda() {
           <h2 className="text-xl font-semibold text-gray-800">
             {formatarData(dataSelecionada)}
           </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={irParaHoje}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-            >
-              Hoje
-            </button>
-            <button
-              onClick={sincronizarAulas}
-              disabled={loading}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Sincronizando...
-                </>
-              ) : (
-                <>
-                  <FaPlus size={14} />
-                  Sincronizar Aulas
-                </>
-              )}
-            </button>
-          </div>
+          <button
+            onClick={irParaHoje}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+          >
+            Hoje
+          </button>
         </div>
 
         <button
