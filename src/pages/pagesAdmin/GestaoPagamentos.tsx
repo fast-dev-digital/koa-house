@@ -198,6 +198,9 @@ export default function GestaoPagamentos() {
   }
   // ✅ FUNÇÃO - Marcar como pago
   const handleMarcarComoPago = async (pagamento: Pagamento) => {
+    if (!confirm(`Confirmar o pagamento de ${pagamento.alunoNome}?`)) {
+      return;
+    }
     try {
       setLoading(true);
       const pagamentoLimpo = limparObjetoUndefined({
@@ -232,7 +235,12 @@ export default function GestaoPagamentos() {
 
   // ✅ FUNÇÃO - Fechar mês
   const handleFecharMes = async () => {
-    if (!confirm("Deseja fechar o próximo mês disponível?")) return;
+    if (
+      !confirm(
+        "Deseja fechar o próximo mês disponível? Lembre-se de EXPORTAR CSV"
+      )
+    )
+      return;
 
     try {
       setLoading(true);
