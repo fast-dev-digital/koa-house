@@ -13,7 +13,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase-config";
 import type { Reserva, Quadra } from "../types/agenda";
-import type { Turma } from "../types/turmas";
 
 // ==================== QUADRAS ====================
 
