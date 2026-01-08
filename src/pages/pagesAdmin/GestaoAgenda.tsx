@@ -48,57 +48,12 @@ export default function GestaoAgenda() {
   }>({ message: "", type: "success", isVisible: false });
 
   // Sincronização
-  const [sincronizando, setSincronizando] = useState(false);
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type, isVisible: true });
   };
 
   // Sincronizar aulas do ano de 2026
-  const handleSincronizarAno = async () => {
-    if (
-      !confirm(
-        "Deseja sincronizar todas as aulas de 2026? Isso pode demorar alguns minutos."
-      )
-    ) {
-      return;
-    }
-
-    setSincronizando(true);
-    try {
-      const totalAulas = await sincronizarAulas2026();
-      showToast(`${totalAulas} aulas sincronizadas com sucesso!`, "success");
-      carregarReservas(); // Recarrega as reservas da data atual
-    } catch (error) {
-      console.error("Erro ao sincronizar aulas:", error);
-      showToast("Erro ao sincronizar aulas", "error");
-    } finally {
-      setSincronizando(false);
-    }
-  };
-
-  // Limpar todas as aulas sincronizadas
-  const handleLimparAulas = async () => {
-    if (
-      !confirm(
-        "Deseja realmente EXCLUIR todas as aulas sincronizadas? Esta ação não pode ser desfeita!"
-      )
-    ) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const totalRemovido = await limparAulasSincronizadas();
-      showToast(`${totalRemovido} aulas removidas com sucesso!`, "success");
-      carregarReservas();
-    } catch (error) {
-      console.error("Erro ao limpar aulas:", error);
-      showToast("Erro ao limpar aulas", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Carregar quadras e slots ao montar
   useEffect(() => {
