@@ -241,16 +241,19 @@ export default function DashboardAluno() {
 
             {/* Botões Desktop */}
             <div className="hidden md:flex flex-row gap-3 items-center">
-              <Link
+              {/*<Link
                 to="/cadastrar-torneio"
                 className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm"
               >
                 <FaTrophy />
                 Inscrever No Torneio
               </Link>
+              */}
               <button
                 className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm"
-                onClick={() => window.open("https://wa.me/5519981924006", "_blank")}
+                onClick={() =>
+                  window.open("https://wa.me/5519981924006", "_blank")
+                }
               >
                 <FaWhatsapp />
                 Contato
