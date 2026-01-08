@@ -2,7 +2,11 @@
 import { useState, useEffect } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import type { Reserva, Quadra } from "../../types/agenda";
-import { criarReserva, atualizarReserva } from "../../services/agendaService";
+import {
+  criarReserva,
+  atualizarReserva,
+  criarReservaMensal,
+} from "../../services/agendaService";
 import { FaTimes, FaPlus } from "react-icons/fa";
 import Toast from "./Toast";
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -63,6 +67,8 @@ export default function ReservaModal({
   const [alunos, setAlunos] = useState<string[]>([]);
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [turmaManual, setTurmaManual] = useState(false);
+  const [reservaMensal, setReservaMensal] = useState(false);
+  const [diasSemana, setDiasSemana] = useState<number[]>([]);
 
   // Carregar turmas quando o modal abrir
   useEffect(() => {
@@ -84,7 +90,7 @@ export default function ReservaModal({
       }));
       setTurmas(turmasData);
     } catch (error) {
-      console.error("Erro ao carregar turmas:", error);
+      // Ignora erros silenciosamente
     }
   }
 
@@ -133,6 +139,12 @@ export default function ReservaModal({
       return;
     }
 
+    // Se for reserva mensal, verifica se selecionou dias
+    if (reservaMensal && diasSemana.length === 0) {
+      showToast("Selecione pelo menos um dia da semana", "error");
+      return;
+    }
+
     setLoading(true);
     try {
       const quadra = quadras.find((q) => q.id === formData.quadraId);
@@ -164,6 +176,14 @@ export default function ReservaModal({
       if (reserva?.id) {
         await atualizarReserva(reserva.id, dados);
         showToast("Reserva atualizada com sucesso!", "success");
+      } else if (reservaMensal) {
+        // Criar reservas mensais
+        const totalCriadas = await criarReservaMensal(
+          dados,
+          dataSelecionada,
+          diasSemana
+        );
+        showToast(`${totalCriadas} reservas criadas para o mês!`, "success");
       } else {
         await criarReserva(dados);
         showToast("Reserva criada com sucesso!", "success");
@@ -172,7 +192,6 @@ export default function ReservaModal({
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Erro ao salvar reserva:", error);
       showToast("Erro ao salvar reserva", "error");
     } finally {
       setLoading(false);
@@ -420,6 +439,80 @@ export default function ReservaModal({
               )}
             </div>
 
+            {/* Reserva Mensal - Apenas para novas reservas */}
+            {!reserva && (
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="reservaMensal"
+                    checked={reservaMensal}
+                    onChange={(e) => {
+                      setReservaMensal(e.target.checked);
+                      if (!e.target.checked) setDiasSemana([]);
+                    }}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="reservaMensal"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Reserva Mensal (criar para todos os dias selecionados do
+                    mês)
+                  </label>
+                </div>
+
+                {reservaMensal && (
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-3">
+                      Selecione os dias da semana em que a reserva deve ser
+                      criada:
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: "Dom", value: 0 },
+                        { label: "Seg", value: 1 },
+                        { label: "Ter", value: 2 },
+                        { label: "Qua", value: 3 },
+                        { label: "Qui", value: 4 },
+                        { label: "Sex", value: 5 },
+                        { label: "Sáb", value: 6 },
+                      ].map((dia) => (
+                        <button
+                          key={dia.value}
+                          type="button"
+                          onClick={() => {
+                            if (diasSemana.includes(dia.value)) {
+                              setDiasSemana(
+                                diasSemana.filter((d) => d !== dia.value)
+                              );
+                            } else {
+                              setDiasSemana([...diasSemana, dia.value]);
+                            }
+                          }}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                            diasSemana.includes(dia.value)
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                          }`}
+                        >
+                          {dia.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      A reserva será criada em todas as ocorrências dos dias
+                      selecionados no mês de{" "}
+                      {dataSelecionada.toLocaleDateString("pt-BR", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Observações */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -450,7 +543,13 @@ export default function ReservaModal({
               disabled={loading}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Salvando..." : reserva ? "Atualizar" : "Criar"}
+              {loading
+                ? "Salvando..."
+                : reserva
+                ? "Atualizar"
+                : reservaMensal
+                ? "Criar Reservas do Mês"
+                : "Criar"}
             </button>
           </div>
         </div>
