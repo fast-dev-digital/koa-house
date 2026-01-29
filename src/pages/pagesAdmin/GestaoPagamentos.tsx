@@ -39,7 +39,7 @@ export default function GestaoPagamentos() {
   // ✅ ESTADOS CONSOLIDADOS
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [pagamentosFiltrados, setPagamentosFiltrados] = useState<Pagamento[]>(
-    []
+    [],
   );
   const [showHistoricoModal, setShowHistoricoModal] = useState(false);
   const [selectedAlunoId, setSelectedAlunoId] = useState<string>("");
@@ -54,14 +54,14 @@ export default function GestaoPagamentos() {
   // ✅ ESTADOS DO MODAL DE EDIÇÃO
   const [showEditarModal, setShowEditarModal] = useState(false);
   const [selectedAluno, setSelectedAluno] = useState<AlunoComPagamentos | null>(
-    null
+    null,
   );
   const [editandoAlunoId, setEditandoAlunoId] = useState<string>("");
 
   // ✅ FUNÇÃO ÚNICA - Toast helper
   const mostrarToast = (
     mensagem: string,
-    tipo: "success" | "error" = "success"
+    tipo: "success" | "error" = "success",
   ) => {
     setToastMessage(mensagem);
     setToastType(tipo);
@@ -90,13 +90,13 @@ export default function GestaoPagamentos() {
     try {
       const resultado = await atualizarDadosAlunoPagamento(
         editandoAlunoId,
-        dados
+        dados,
       );
 
       if (resultado.sucesso) {
         mostrarToast(
           resultado.mensagem || "Dados atualizados com sucesso",
-          "success"
+          "success",
         );
         setShowEditarModal(false);
         setSelectedAluno(null);
@@ -144,7 +144,7 @@ export default function GestaoPagamentos() {
 
       // Antes de setar pagamentos:
       const pagamentosFiltrados = pagamentosFormatados.filter(
-        (p) => p && typeof p === "object" && "status" in p
+        (p) => p && typeof p === "object" && "status" in p,
       );
       setPagamentos(pagamentosFiltrados);
     } catch (error) {
@@ -220,7 +220,7 @@ export default function GestaoPagamentos() {
       await marcarPagamentoPagoArray(
         pagamentoLimpo.alunoId,
         pagamentoLimpo.mesReferencia,
-        new Date()
+        new Date(),
       );
       await adicionarProximoPagamentoArray(pagamentoLimpo.alunoId);
 
@@ -237,7 +237,7 @@ export default function GestaoPagamentos() {
   const handleFecharMes = async () => {
     if (
       !confirm(
-        "Deseja fechar o próximo mês disponível? Lembre-se de EXPORTAR CSV"
+        "Deseja fechar o próximo mês disponível? Lembre-se de EXPORTAR CSV",
       )
     )
       return;
@@ -296,7 +296,7 @@ export default function GestaoPagamentos() {
     const pendentes = pagamentos.filter((p) => p.status === "Pendente");
     const pagos = pagamentos.filter((p) => p.status === "Pago");
     const atrasados = pendentes.filter(
-      (p) => new Date(p.dataVencimento) < hoje
+      (p) => new Date(p.dataVencimento) < hoje,
     );
 
     return {
@@ -498,12 +498,12 @@ export default function GestaoPagamentos() {
   useEffect(() => {
     const hoje = new Date();
     let filtrados = pagamentos.filter((p) =>
-      p.alunoNome.toLowerCase().includes(searchText.toLowerCase())
+      p.alunoNome.toLowerCase().includes(searchText.toLowerCase()),
     );
 
     if (statusFilter === "Atrasado") {
       filtrados = filtrados.filter(
-        (p) => p.status === "Pendente" && new Date(p.dataVencimento) < hoje
+        (p) => p.status === "Pendente" && new Date(p.dataVencimento) < hoje,
       );
     } else if (statusFilter) {
       filtrados = filtrados.filter((p) => p.status === statusFilter);
@@ -627,7 +627,7 @@ export default function GestaoPagamentos() {
       <div className="bg-white rounded-lg shadow">
         <DataTable
           data={pagamentosFiltrados.filter(
-            (p) => p && typeof p === "object" && typeof p.status === "string"
+            (p) => p && typeof p === "object" && typeof p.status === "string",
           )}
           columns={pagamentosColumns}
           loading={loading}

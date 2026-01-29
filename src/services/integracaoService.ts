@@ -19,7 +19,7 @@ interface AlunoData {
   valorMensalidade: number;
   status: string;
   dataMatricula?: string;
-  telefone?: string;
+  telefone: string;
 }
 
 interface PagamentoExistente {
@@ -107,7 +107,7 @@ function cacheValidoIndividual(alunoId: string): boolean {
 
 // Criar aluno na nova estrutura com primeiro pagamento
 export async function criarAlunoComPagamentosArray(
-  alunoData: AlunoData
+  alunoData: AlunoData,
 ): Promise<void> {
   try {
     if (alunoData.status !== "Ativo") {
@@ -118,7 +118,7 @@ export async function criarAlunoComPagamentosArray(
     // Verificar se já existe na nova estrutura
     const existeQuery = query(
       collection(db, "alunosPagamentos"),
-      where("alunoId", "==", alunoData.id)
+      where("alunoId", "==", alunoData.id),
     );
     const existeSnapshot = await getDocs(existeQuery);
 
@@ -145,7 +145,7 @@ export async function criarAlunoComPagamentosArray(
       valorMensalidade: alunoData.valorMensalidade,
       status: alunoData.status,
       dataMatricula: Timestamp.fromDate(
-        alunoData.dataMatricula ? new Date(alunoData.dataMatricula) : hoje
+        alunoData.dataMatricula ? new Date(alunoData.dataMatricula) : hoje,
       ),
       telefone: alunoData.telefone || "",
       pagamentos: [
@@ -177,7 +177,7 @@ export async function criarAlunoComPagamentosArray(
 // ✅ FUNÇÃO 5 - Buscar aluno específico com pagamentos
 
 export async function buscarAlunoComPagamentos(
-  alunoId: string
+  alunoId: string,
 ): Promise<AlunoComPagamentos | null> {
   try {
     // ✅ VERIFICAR CACHE INDIVIDUAL PRIMEIRO
@@ -187,7 +187,7 @@ export async function buscarAlunoComPagamentos(
 
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
-      where("alunoId", "==", alunoId)
+      where("alunoId", "==", alunoId),
     );
 
     const alunoSnapshot = await getDocs(alunoQuery);
@@ -317,7 +317,7 @@ export function limparObjetoUndefined(obj: any): any {
 
 // ✅ FUNÇÃO ULTRA-DEFENSIVA - Adicionar próximo pagamento ao array de um aluno
 export async function adicionarProximoPagamentoArray(
-  alunoId: string
+  alunoId: string,
 ): Promise<void> {
   try {
     const alunoComPagamentos = await buscarAlunoComPagamentos(alunoId);
@@ -339,7 +339,7 @@ export async function adicionarProximoPagamentoArray(
 
     // Verificar se já tem pagamento pendente
     const temPendente = alunoComPagamentos.pagamentos.some(
-      (p) => p.status === "Pendente"
+      (p) => p.status === "Pendente",
     );
     if (temPendente) {
       `⏸️ ${alunoComPagamentos.nome} já possui pagamento pendente`;
@@ -353,7 +353,7 @@ export async function adicionarProximoPagamentoArray(
     const proximoVencimento = new Date(
       ultimoVencimento.getFullYear(),
       ultimoVencimento.getMonth() + 1,
-      10
+      10,
     ); // Sempre dia 10
 
     const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
@@ -370,7 +370,7 @@ export async function adicionarProximoPagamentoArray(
         dataVencimento: Timestamp.fromDate(
           pagamento.dataVencimento
             ? new Date(pagamento.dataVencimento)
-            : new Date()
+            : new Date(),
         ),
         valor: typeof pagamento.valor === "number" ? pagamento.valor : 0,
         status: pagamento.status || "Pendente",
@@ -379,7 +379,7 @@ export async function adicionarProximoPagamentoArray(
       // Adicionar campos opcionais apenas se válidos
       if (pagamento.dataPagamento && pagamento.dataPagamento instanceof Date) {
         pagamentoBase.dataPagamento = Timestamp.fromDate(
-          pagamento.dataPagamento
+          pagamento.dataPagamento,
         );
       }
 
@@ -412,8 +412,8 @@ export async function adicionarProximoPagamentoArray(
       typeof ultimoPagamento?.valor === "number"
         ? ultimoPagamento.valor
         : typeof alunoComPagamentos.valorMensalidade === "number"
-        ? alunoComPagamentos.valorMensalidade
-        : 0;
+          ? alunoComPagamentos.valorMensalidade
+          : 0;
 
     // ✅ ADICIONAR novo pagamento (sem campos undefined)
     // ✅ Plano atual do alunosPagamentos, com fallback opcional ao último pagamento
@@ -422,8 +422,8 @@ export async function adicionarProximoPagamentoArray(
       alunoComPagamentos.plano.trim()
         ? alunoComPagamentos.plano.trim()
         : typeof ultimoPagamento?.plano === "string"
-        ? ultimoPagamento.plano
-        : undefined;
+          ? ultimoPagamento.plano
+          : undefined;
 
     const novoPagamento = limparObjetoUndefined({
       mesReferencia,
@@ -452,7 +452,7 @@ export async function adicionarProximoPagamentoArray(
 
     await updateDoc(
       doc(db, "alunosPagamentos", alunoComPagamentos.id!),
-      dadosLimpos
+      dadosLimpos,
     );
 
     `✅ Próximo pagamento adicionado para ${alunoComPagamentos.nome}`;
@@ -466,7 +466,7 @@ export async function adicionarProximoPagamentoArray(
 
 // ✅ FUNÇÃO 7.5 - Verificar e gerar pagamento para aluno que voltou a ser ativo
 export async function verificarEGerarPagamentoAlunoAtivo(
-  alunoId: string
+  alunoId: string,
 ): Promise<{ sucesso: boolean; mensagem?: string; erro?: string }> {
   try {
     `🔍 Verificando necessidade de gerar pagamento para aluno ${alunoId}`;
@@ -474,7 +474,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
     // Buscar aluno em alunosPagamentos
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
-      where("alunoId", "==", alunoId)
+      where("alunoId", "==", alunoId),
     );
     const alunoSnapshot = await getDocs(alunoQuery);
 
@@ -528,7 +528,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
       const proximoVencimento = new Date(
         ultimoVencimento.getFullYear(),
         ultimoVencimento.getMonth() + 1,
-        10
+        10,
       );
 
       const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
@@ -538,7 +538,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
 
       // Verificar se já existe
       const jaExiste = pagamentos.some(
-        (p: any) => p.mesReferencia === mesReferencia
+        (p: any) => p.mesReferencia === mesReferencia,
       );
 
       if (jaExiste) {
@@ -552,15 +552,15 @@ export async function verificarEGerarPagamentoAlunoAtivo(
         typeof ultimoPagamento.valor === "number"
           ? ultimoPagamento.valor
           : typeof alunoData.valorMensalidade === "number"
-          ? alunoData.valorMensalidade
-          : 0;
+            ? alunoData.valorMensalidade
+            : 0;
 
       const planoParaNovo =
         typeof alunoData.plano === "string" && alunoData.plano.trim()
           ? alunoData.plano.trim()
           : typeof ultimoPagamento?.plano === "string"
-          ? ultimoPagamento.plano
-          : undefined;
+            ? ultimoPagamento.plano
+            : undefined;
 
       const novoPagamento = limparObjetoUndefined({
         mesReferencia,
@@ -606,7 +606,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
       const proximoVencimento = new Date(
         hoje.getFullYear(),
         hoje.getMonth(),
-        10
+        10,
       );
       if (proximoVencimento < hoje) {
         proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
@@ -667,7 +667,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
 export async function marcarPagamentoPagoArray(
   alunoId: string,
   mesReferencia: string,
-  dataPagamento: Date = new Date()
+  dataPagamento: Date = new Date(),
 ): Promise<void> {
   try {
     const alunoComPagamentos = await buscarAlunoComPagamentos(alunoId);
@@ -689,12 +689,12 @@ export async function marcarPagamentoPagoArray(
 
     // ✅ Verificar se o pagamento existe e está pendente
     const pagamentoEncontrado = alunoComPagamentos.pagamentos.find(
-      (p) => p.mesReferencia === mesReferencia && p.status === "Pendente"
+      (p) => p.mesReferencia === mesReferencia && p.status === "Pendente",
     );
 
     if (!pagamentoEncontrado) {
       throw new Error(
-        `Pagamento não encontrado ou não está pendente para o mês ${mesReferencia}`
+        `Pagamento não encontrado ou não está pendente para o mês ${mesReferencia}`,
       );
     }
 
@@ -708,7 +708,7 @@ export async function marcarPagamentoPagoArray(
           dataVencimento: Timestamp.fromDate(
             pagamento.dataVencimento instanceof Date
               ? pagamento.dataVencimento
-              : new Date(pagamento.dataVencimento)
+              : new Date(pagamento.dataVencimento),
           ),
           valor: typeof pagamento.valor === "number" ? pagamento.valor : 0,
           status: pagamento.status || "Pendente",
@@ -774,19 +774,19 @@ export async function marcarPagamentoPagoArray(
         .filter((p) => p.status === "Pago")
         .reduce(
           (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-          0
+          0,
         );
       const totalPendente = novosPagamentos
         .filter((p) => p.status === "Pendente")
         .reduce(
           (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-          0
+          0,
         );
       const totalArquivado = novosPagamentos
         .filter((p) => p.status === "Arquivado")
         .reduce(
           (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-          0
+          0,
         );
 
       await updateDoc(doc(db, "alunosPagamentos", alunoComPagamentos.id!), {
@@ -813,7 +813,7 @@ export async function marcarPagamentoPagoArray(
         dataVencimento: Timestamp.fromDate(
           pagamento.dataVencimento instanceof Date
             ? pagamento.dataVencimento
-            : new Date(pagamento.dataVencimento)
+            : new Date(pagamento.dataVencimento),
         ),
         valor: typeof pagamento.valor === "number" ? pagamento.valor : 0,
         status: pagamento.status || "Pendente",
@@ -907,7 +907,7 @@ export async function marcarPagamentoPagoArray(
 
     await updateDoc(
       doc(db, "alunosPagamentos", alunoComPagamentos.id!),
-      dadosLimpos
+      dadosLimpos,
     );
 
     `✅ Pagamento marcado como pago para ${alunoComPagamentos.nome}`;
@@ -983,7 +983,7 @@ export async function fecharMesComArray(): Promise<{
         let statusAluno = "";
         try {
           const docAluno = await getDoc(
-            doc(db, "Alunos", alunoData.alunoId || alunoDoc.id)
+            doc(db, "Alunos", alunoData.alunoId || alunoDoc.id),
           );
           if (docAluno.exists()) {
             statusAluno = (docAluno.data().status || "").trim();
@@ -1048,7 +1048,7 @@ export async function fecharMesComArray(): Promise<{
         // ✅ Aluno ATIVO: NÃO restaurar pagamentos arquivados por inatividade
         // ✅ Se aluno está ativo e NÃO tem nenhum pagamento pendente, gerar um
         const temPendente = pagamentos.some(
-          (p: any) => p.status === "Pendente"
+          (p: any) => p.status === "Pendente",
         );
 
         if (!temPendente) {
@@ -1064,17 +1064,17 @@ export async function fecharMesComArray(): Promise<{
             const proximoVencimento = new Date(
               ultimoVencimento.getFullYear(),
               ultimoVencimento.getMonth() + 1,
-              10
+              10,
             );
 
             const mesReferencia = proximoVencimento.toLocaleDateString(
               "pt-BR",
-              { month: "2-digit", year: "numeric" }
+              { month: "2-digit", year: "numeric" },
             );
 
             // Verificar se já existe pagamento para este mês
             const jaExiste = pagamentos.some(
-              (p: any) => p.mesReferencia === mesReferencia
+              (p: any) => p.mesReferencia === mesReferencia,
             );
 
             if (!jaExiste) {
@@ -1082,15 +1082,15 @@ export async function fecharMesComArray(): Promise<{
                 typeof ultimoPagamento.valor === "number"
                   ? ultimoPagamento.valor
                   : typeof alunoData.valorMensalidade === "number"
-                  ? alunoData.valorMensalidade
-                  : 0;
+                    ? alunoData.valorMensalidade
+                    : 0;
 
               const planoParaNovo =
                 typeof alunoData.plano === "string" && alunoData.plano.trim()
                   ? alunoData.plano.trim()
                   : typeof ultimoPagamento?.plano === "string"
-                  ? ultimoPagamento.plano
-                  : undefined;
+                    ? ultimoPagamento.plano
+                    : undefined;
 
               const novoPagamento = limparObjetoUndefined({
                 mesReferencia,
@@ -1117,7 +1117,7 @@ export async function fecharMesComArray(): Promise<{
 
               await updateDoc(alunoDoc.ref, {
                 pagamentos: pagamentos.map((p: any) =>
-                  limparObjetoUndefined(p)
+                  limparObjetoUndefined(p),
                 ),
                 totais: {
                   pago: totalPagoNovo,
@@ -1135,7 +1135,7 @@ export async function fecharMesComArray(): Promise<{
             const proximoVencimento = new Date(
               hoje.getFullYear(),
               hoje.getMonth(),
-              10
+              10,
             );
             if (proximoVencimento < hoje) {
               proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
@@ -1146,7 +1146,7 @@ export async function fecharMesComArray(): Promise<{
               {
                 month: "2-digit",
                 year: "numeric",
-              }
+              },
             );
 
             const valorPagamento =
@@ -1191,14 +1191,14 @@ export async function fecharMesComArray(): Promise<{
 
         // ✅ Processar normalmente o fechamento do mês
         const pagamentosDoMes = pagamentos.filter(
-          (p: any) => p.mesReferencia === mesParaFechar
+          (p: any) => p.mesReferencia === mesParaFechar,
         );
         if (pagamentosDoMes.length === 0) {
           alunosSemPagamentosDoMes++;
           continue;
         }
         const todosArquivados = pagamentosDoMes.every(
-          (p: any) => p.status === "Arquivado"
+          (p: any) => p.status === "Arquivado",
         );
         if (todosArquivados) {
           alunosComPagamentosJaArquivados++;
@@ -1252,7 +1252,7 @@ export async function fecharMesComArray(): Promise<{
 
         // Só gera novo pagamento se todos os pagamentos do maior mês estiverem arquivados e não existir pagamento para o próximo mês
         const existePagamentoProximoMes = pagamentosAtualizados.some(
-          (p: any) => p.mesReferencia === proximoMes
+          (p: any) => p.mesReferencia === proximoMes,
         );
 
         // ✅ DUPLA VERIFICAÇÃO: Só gera se o aluno CONTINUA ativo
@@ -1268,16 +1268,16 @@ export async function fecharMesComArray(): Promise<{
             typeof ultimoPagamento?.valor === "number"
               ? ultimoPagamento.valor
               : typeof alunoData.valorMensalidade === "number"
-              ? alunoData.valorMensalidade
-              : 0;
+                ? alunoData.valorMensalidade
+                : 0;
 
           // ✅ Plano atual do alunosPagamentos, com fallback opcional ao último pagamento
           const planoParaNovo =
             typeof alunoData.plano === "string" && alunoData.plano.trim()
               ? alunoData.plano.trim()
               : typeof ultimoPagamento?.plano === "string"
-              ? ultimoPagamento.plano
-              : undefined;
+                ? ultimoPagamento.plano
+                : undefined;
 
           const novoPagamento = limparObjetoUndefined({
             mesReferencia: proximoMes,
@@ -1306,7 +1306,7 @@ export async function fecharMesComArray(): Promise<{
           .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
 
         const pagamentosPendentes = pagamentosAtualizados.filter(
-          (p: any) => p.status === "Pendente"
+          (p: any) => p.status === "Pendente",
         );
         const proximoVencimentoField =
           pagamentosPendentes.length > 0
@@ -1336,7 +1336,7 @@ export async function fecharMesComArray(): Promise<{
       } catch (error) {
         console.error(
           `[fecharMesComArray] Erro ao processar aluno ${alunoDoc.id}:`,
-          error
+          error,
         );
       }
     }
@@ -1415,14 +1415,14 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
       const dataPagamento = data.dataPagamento?.toDate
         ? data.dataPagamento.toDate()
         : data.dataPagamento
-        ? new Date(data.dataPagamento)
-        : undefined;
+          ? new Date(data.dataPagamento)
+          : undefined;
 
       const arquivadoEm = data.arquivadoEm?.toDate
         ? data.arquivadoEm.toDate()
         : data.arquivadoEm
-        ? new Date(data.arquivadoEm)
-        : undefined;
+          ? new Date(data.arquivadoEm)
+          : undefined;
 
       pagamentosPorAluno[alunoId].push({
         mesReferencia: data.mesReferencia || "",
@@ -1445,7 +1445,7 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
         // Verificar se já existe na nova estrutura
         const existeQuery = query(
           collection(db, "alunosPagamentos"),
-          where("alunoId", "==", alunoId)
+          where("alunoId", "==", alunoId),
         );
         const existeSnapshot = await getDocs(existeQuery);
 
@@ -1468,30 +1468,30 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
           .filter((p) => p.status === "Pago")
           .reduce(
             (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-            0
+            0,
           );
         const totalPendente = pagamentos
           .filter((p) => p.status === "Pendente")
           .reduce(
             (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-            0
+            0,
           );
         const totalArquivado = pagamentos
           .filter((p) => p.status === "Arquivado")
           .reduce(
             (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-            0
+            0,
           );
 
         // Próximo vencimento
         const pagamentosPendentes = pagamentos.filter(
-          (p) => p.status === "Pendente"
+          (p) => p.status === "Pendente",
         );
         const proximoVencimento =
           pagamentosPendentes.length > 0
             ? pagamentosPendentes.sort(
                 (a, b) =>
-                  a.dataVencimento.getTime() - b.dataVencimento.getTime()
+                  a.dataVencimento.getTime() - b.dataVencimento.getTime(),
               )[0].dataVencimento
             : null;
 
@@ -1589,7 +1589,7 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
 // ✅ FUNÇÃO - Atualizar dados editáveis do aluno em alunosPagamentos
 export async function atualizarDadosAlunoPagamento(
   alunoId: string,
-  dadosEditaveis: DadosEditaveisAluno
+  dadosEditaveis: DadosEditaveisAluno,
 ): Promise<{ sucesso: boolean; mensagem?: string; erro?: string }> {
   try {
     // 1️⃣ Validar dados
@@ -1613,7 +1613,7 @@ export async function atualizarDadosAlunoPagamento(
     // 2️⃣ Buscar documento em alunosPagamentos pela query
     const alunoQuery = query(
       collection(db, "alunosPagamentos"),
-      where("alunoId", "==", alunoId)
+      where("alunoId", "==", alunoId),
     );
     const alunoSnapshot = await getDocs(alunoQuery);
 
@@ -1676,7 +1676,7 @@ export async function atualizarDadosAlunoPagamento(
           limparObjetoUndefined({
             ...p,
             valor: novoValor,
-          })
+          }),
         );
 
         // Recalcula totais com os novos valores
@@ -1685,7 +1685,7 @@ export async function atualizarDadosAlunoPagamento(
           .reduce(
             (sum: number, p: any) =>
               sum + (typeof p.valor === "number" ? p.valor : 0),
-            0
+            0,
           );
 
         const totalPendente = pagamentosAtualizados
@@ -1693,7 +1693,7 @@ export async function atualizarDadosAlunoPagamento(
           .reduce(
             (sum: number, p: any) =>
               sum + (typeof p.valor === "number" ? p.valor : 0),
-            0
+            0,
           );
 
         const totalArquivado = pagamentosAtualizados
@@ -1701,7 +1701,7 @@ export async function atualizarDadosAlunoPagamento(
           .reduce(
             (sum: number, p: any) =>
               sum + (typeof p.valor === "number" ? p.valor : 0),
-            0
+            0,
           );
 
         const payload = {
@@ -1715,7 +1715,7 @@ export async function atualizarDadosAlunoPagamento(
         };
 
         await updateDoc(doc(db, "alunosPagamentos", docSnap.id), payload);
-      })
+      }),
     );
 
     `✅ Dados atualizados para ${alunoId} em ${alunoDocIds.length} documento(s)`;
@@ -1745,7 +1745,7 @@ export async function atualizarDadosAlunoPagamento(
     } catch (syncError) {
       console.warn(
         "⚠️ Erro ao sincronizar para Alunos (não crítico):",
-        syncError
+        syncError,
       );
     }
 

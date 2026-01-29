@@ -9,7 +9,6 @@ import { criarAlunoComPagamentosArray } from "../../services/integracaoService";
 import type { Aluno } from "../../types/alunos";
 import {
   calcularDataFinalMatricula,
-  
   planoTemDataFinal,
   formatarDataParaInput,
 } from "../../utils/dateUtils";
@@ -44,7 +43,7 @@ const INITIAL_STATE: FormDataType = {
   telefone: "",
   genero: "",
   plano: "",
-  status: "Ativo", 
+  status: "Ativo",
   valorMensalidade: 150,
   dataFinalMatricula: "",
 };
@@ -72,7 +71,7 @@ export default function AlunoModal({
         status: alunoData.status,
         valorMensalidade: alunoData.valorMensalidade || 150,
         dataFinalMatricula: formatarDataParaInput(
-          alunoData.dataFinalMatricula || ""
+          alunoData.dataFinalMatricula || "",
         ),
       });
     } else {
@@ -85,7 +84,7 @@ export default function AlunoModal({
 
   const updateField = <K extends keyof FormDataType>(
     field: K,
-    value: FormDataType[K]
+    value: FormDataType[K],
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -119,7 +118,7 @@ export default function AlunoModal({
     try {
       if (mode === "create") {
         const emailExistente = buscarAlunoPorEmail(
-          formData.email.trim().toLowerCase()
+          formData.email.trim().toLowerCase(),
         );
         if (emailExistente) {
           setError("Este email já está cadastrado");
@@ -136,7 +135,7 @@ export default function AlunoModal({
         const dataMatricula = new Date().toISOString().split("T")[0];
         const dataFinalMatricula = calcularDataFinalMatricula(
           dataMatricula,
-          formData.plano as PlanoType
+          formData.plano as PlanoType,
         );
 
         const novoAluno: Omit<Aluno, "id"> = {
@@ -167,6 +166,7 @@ export default function AlunoModal({
           valorMensalidade: formData.valorMensalidade,
           status: formData.status,
           dataMatricula: new Date().toISOString().split("T")[0],
+          telefone: formData.telefone.trim(),
         });
 
         setSuccessMessage(`Aluno ${formData.nome} cadastrado com sucesso!`);
@@ -206,7 +206,7 @@ export default function AlunoModal({
             // Se não tem data final no input, calcular automaticamente
             dadosAtualizacao.dataFinalMatricula = calcularDataFinalMatricula(
               alunoData.dataMatricula,
-              formData.plano
+              formData.plano,
             );
           } else if (!planoTemDataFinal(formData.plano)) {
             // Para planos mensais, remover data final
@@ -454,8 +454,8 @@ export default function AlunoModal({
                     ? "Cadastrando..."
                     : "Salvando..."
                   : mode === "create"
-                  ? "Cadastrar Aluno"
-                  : "Salvar Alterações"}
+                    ? "Cadastrar Aluno"
+                    : "Salvar Alterações"}
               </span>
             </button>
           </div>
