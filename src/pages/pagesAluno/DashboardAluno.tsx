@@ -97,7 +97,7 @@ export default function DashboardAluno() {
         // Buscar dados do aluno por email
         const alunosQuery = query(
           collection(db, "Alunos"),
-          where("email", "==", user.email)
+          where("email", "==", user.email),
         );
 
         const querySnapshot = await getDocs(alunosQuery);
@@ -179,7 +179,7 @@ export default function DashboardAluno() {
       } catch (error) {
         if (isMounted) {
           setError(
-            error instanceof Error ? error.message : "Erro ao carregar dados"
+            error instanceof Error ? error.message : "Erro ao carregar dados",
           );
         }
       } finally {
@@ -327,10 +327,10 @@ export default function DashboardAluno() {
               turmas.length === 0
                 ? "Nenhuma turma"
                 : turmas.length === 1
-                ? turmas[0].modalidade
-                : `${turmas[0].modalidade} ${
-                    turmas.length > 1 ? `+${turmas.length - 1} mais` : ""
-                  }`
+                  ? turmas[0].modalidade
+                  : `${turmas[0].modalidade} ${
+                      turmas.length > 1 ? `+${turmas.length - 1} mais` : ""
+                    }`
             }
             color="blue"
           />
