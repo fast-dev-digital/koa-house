@@ -29,7 +29,7 @@ export default function GestaoAgenda() {
   // Modal Estados
   const [showReservaModal, setShowReservaModal] = useState(false);
   const [reservaSelecionada, setReservaSelecionada] = useState<Reserva | null>(
-    null
+    null,
   );
   const [quadraSelecionada, setQuadraSelecionada] = useState<string>("");
   const [horarioSelecionado, setHorarioSelecionado] = useState<string>("");
@@ -37,7 +37,7 @@ export default function GestaoAgenda() {
   // Delete Modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [reservaParaDeletar, setReservaParaDeletar] = useState<Reserva | null>(
-    null
+    null,
   );
 
   // Toast
@@ -71,7 +71,7 @@ export default function GestaoAgenda() {
       const quadrasData = await buscarQuadras();
       // Aceita tanto 'ativa' quanto 'status' (para compatibilidade)
       const quadrasFiltradas = quadrasData.filter(
-        (q: any) => q.ativa === true || q.status === true
+        (q: any) => q.ativa === true || q.status === true,
       );
       setQuadras(quadrasFiltradas);
     } catch (error) {
@@ -105,7 +105,7 @@ export default function GestaoAgenda() {
   // Verificar se existe reserva em um slot (aceita qualquer horário)
   const obterReserva = (
     quadraId: string,
-    horarioInicio: string
+    horarioInicio: string,
   ): Reserva | null => {
     // Pega o horário em formato hora:minuto e converte para minutos do dia
     const converterParaMinutos = (hora: string): number => {
@@ -291,7 +291,7 @@ export default function GestaoAgenda() {
                             // Slot com reserva
                             <div
                               className={`${obterCorTipo(
-                                reserva.tipo
+                                reserva.tipo,
                               )} border-2 rounded-lg p-3 min-h-[80px] cursor-pointer hover:shadow-md transition group relative`}
                               onClick={() => abrirModalEditar(reserva)}
                             >
