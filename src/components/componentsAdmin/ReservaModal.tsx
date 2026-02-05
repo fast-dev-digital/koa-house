@@ -140,7 +140,7 @@ export default function ReservaModal({
       return;
     }
 
-    // Se for reserva mensal, verifica se selecionou as datas e validação mínima de 28 dias
+    // Se for reserva mensal, verifica se selecionou as datas
     if (reservaMensal) {
       if (!dataInicioMensal || !dataFimMensal) {
         showToast(
@@ -152,11 +152,9 @@ export default function ReservaModal({
 
       const inicio = new Date(dataInicioMensal);
       const fim = new Date(dataFimMensal);
-      const diferenca = fim.getTime() - inicio.getTime();
-      const dias = Math.ceil(diferenca / (1000 * 3600 * 24)) + 1;
 
-      if (dias < 28) {
-        showToast("Locação mensal requer no mínimo 28 dias", "error");
+      if (fim < inicio) {
+        showToast("A data de fim deve ser posterior à data de início", "error");
         return;
       }
     }
@@ -479,7 +477,7 @@ export default function ReservaModal({
                     htmlFor="reservaMensal"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Locação Mensal (período mínimo de 28 dias)
+                    Locação Mensal
                   </label>
                 </div>
 
@@ -531,29 +529,17 @@ export default function ReservaModal({
                         const diferenca = fim.getTime() - inicio.getTime();
                         const dias =
                           Math.ceil(diferenca / (1000 * 3600 * 24)) + 1;
-                        const isValido = dias >= 28;
 
                         return (
-                          <div
-                            className={`${
-                              isValido ? "bg-green-50" : "bg-yellow-50"
-                            } p-3 rounded-lg`}
-                          >
-                            <p
-                              className={`font-medium ${
-                                isValido ? "text-green-700" : "text-yellow-700"
-                              }`}
-                            >
-                              {dias} dias selecionados
+                          <div className="bg-blue-50 p-3 rounded-lg">
+                            <p className="font-medium text-blue-700">
+                              {dias} dia{dias !== 1 ? "s" : ""} selecionado
+                              {dias !== 1 ? "s" : ""}
                             </p>
-                            <p
-                              className={`text-sm mt-1 ${
-                                isValido ? "text-green-600" : "text-yellow-600"
-                              }`}
-                            >
-                              {isValido
-                                ? "✓ Período válido para locação mensal"
-                                : `⚠️ Faltam ${28 - dias} dias para completar o período mínimo`}
+                            <p className="text-sm mt-1 text-blue-600">
+                              {dias} reserva{dias !== 1 ? "s" : ""} será
+                              {dias !== 1 ? "ão" : ""} criada
+                              {dias !== 1 ? "s" : ""}
                             </p>
                           </div>
                         );
