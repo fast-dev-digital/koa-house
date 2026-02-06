@@ -423,8 +423,8 @@ export default function TurmaModal({
                     ? "Criando..."
                     : "Salvando..."
                   : mode === "create"
-                  ? "Criar Turma"
-                  : "Salvar Alterações"}
+                    ? "Criar Turma"
+                    : "Salvar Alterações"}
               </span>
             </button>
           </div>
