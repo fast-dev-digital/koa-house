@@ -68,8 +68,7 @@ export default function ReservaModal({
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [turmaManual, setTurmaManual] = useState(false);
   const [reservaMensal, setReservaMensal] = useState(false);
-  const [dataInicioMensal, setDataInicioMensal] = useState<string>("");
-  const [dataFimMensal, setDataFimMensal] = useState<string>("");
+  const [diasSemana, setDiasSemana] = useState<number[]>([]);
 
   // Carregar turmas quando o modal abrir
   useEffect(() => {
@@ -140,23 +139,10 @@ export default function ReservaModal({
       return;
     }
 
-    // Se for reserva mensal, verifica se selecionou as datas
-    if (reservaMensal) {
-      if (!dataInicioMensal || !dataFimMensal) {
-        showToast(
-          "Selecione a data de início e fim da locação mensal",
-          "error",
-        );
-        return;
-      }
-
-      const inicio = new Date(dataInicioMensal);
-      const fim = new Date(dataFimMensal);
-
-      if (fim < inicio) {
-        showToast("A data de fim deve ser posterior à data de início", "error");
-        return;
-      }
+    // Se for reserva mensal, verifica se selecionou dias da semana
+    if (reservaMensal && diasSemana.length === 0) {
+      showToast("Selecione pelo menos um dia da semana", "error");
+      return;
     }
 
     setLoading(true);
@@ -191,14 +177,14 @@ export default function ReservaModal({
         await atualizarReserva(reserva.id, dados);
         showToast("Reserva atualizada com sucesso!", "success");
       } else if (reservaMensal) {
-        // Criar reservas mensais com período de datas
+        // Criar reservas mensais para dias específicos da semana
         const totalCriadas = await criarReservaMensal(
           dados,
-          new Date(dataInicioMensal),
-          new Date(dataFimMensal),
+          dataSelecionada,
+          diasSemana,
         );
         showToast(
-          `${totalCriadas} reservas criadas para o período!`,
+          `${totalCriadas} reservas criadas para o mês!`,
           "success",
         );
       } else {
@@ -467,8 +453,7 @@ export default function ReservaModal({
                     onChange={(e) => {
                       setReservaMensal(e.target.checked);
                       if (!e.target.checked) {
-                        setDataInicioMensal("");
-                        setDataFimMensal("");
+                        setDiasSemana([]);
                       }
                     }}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
@@ -482,68 +467,53 @@ export default function ReservaModal({
                 </div>
 
                 {reservaMensal && (
-                  <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600 mb-3">
-                      Selecione o período da locação mensal:
+                      Selecione os dias da semana em que a reserva deve ser
+                      criada:
                     </p>
-
-                    {/* Data de Início */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Data de Início *
-                      </label>
-                      <input
-                        type="date"
-                        value={dataInicioMensal}
-                        onChange={(e) => setDataInicioMensal(e.target.value)}
-                        min={new Date().toISOString().split("T")[0]}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        required={reservaMensal}
-                      />
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: "Dom", value: 0 },
+                        { label: "Seg", value: 1 },
+                        { label: "Ter", value: 2 },
+                        { label: "Qua", value: 3 },
+                        { label: "Qui", value: 4 },
+                        { label: "Sex", value: 5 },
+                        { label: "Sáb", value: 6 },
+                      ].map((dia) => (
+                        <button
+                          key={dia.value}
+                          type="button"
+                          onClick={() => {
+                            if (diasSemana.includes(dia.value)) {
+                              setDiasSemana(
+                                diasSemana.filter((d) => d !== dia.value),
+                              );
+                            } else {
+                              setDiasSemana([...diasSemana, dia.value]);
+                            }
+                          }}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                            diasSemana.includes(dia.value)
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
+                          }`}
+                        >
+                          {dia.label}
+                        </button>
+                      ))}
                     </div>
-
-                    {/* Data de Término */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Data de Término *
-                      </label>
-                      <input
-                        type="date"
-                        value={dataFimMensal}
-                        onChange={(e) => setDataFimMensal(e.target.value)}
-                        min={
-                          dataInicioMensal ||
-                          new Date().toISOString().split("T")[0]
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        required={reservaMensal}
-                      />
-                    </div>
-
-                    {/* Resumo de Dias */}
-                    {dataInicioMensal &&
-                      dataFimMensal &&
-                      (() => {
-                        const inicio = new Date(dataInicioMensal);
-                        const fim = new Date(dataFimMensal);
-                        const diferenca = fim.getTime() - inicio.getTime();
-                        const dias =
-                          Math.ceil(diferenca / (1000 * 3600 * 24)) + 1;
-
-                        return (
-                          <div className="bg-blue-50 p-3 rounded-lg">
-                            <p className="font-medium text-blue-700">
-                              {dias} dia{dias !== 1 ? "s" : ""} selecionado
-                              {dias !== 1 ? "s" : ""}
-                            </p>
-                            <p className="text-sm mt-1 text-blue-600">
-                              {dias} reserva{dias !== 1 ? "s" : ""} será
-                              {dias !== 1 ? "ão" : ""} criada
-                              {dias !== 1 ? "s" : ""}
-                            </p>
-                          </div>
-                        );
-                      })()}
+                    {diasSemana.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        A reserva será criada em todas as ocorrências dos dias
+                        selecionados no mês de{" "}
+                        {dataSelecionada.toLocaleDateString("pt-BR", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

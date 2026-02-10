@@ -175,45 +175,57 @@ export function formatarDataCurta(data: Date): string {
 // ==================== RESERVAS MENSAIS ====================
 
 /**
- * Cria reservas mensais para um período específico
+ * Cria reservas mensais para dias específicos da semana
  * @param dadosReserva - Dados base da reserva
- * @param dataInicio - Data de início do período
- * @param dataFim - Data de fim do período
+ * @param dataReferencia - Data de referência (mês que será usado)
+ * @param diasSemana - Array com números dos dias da semana (0=Dom, 1=Seg, ..., 6=Sáb)
  * @returns Número total de reservas criadas
  */
 export async function criarReservaMensal(
   dadosReserva: Omit<Reserva, "id" | "createdAt" | "updatedAt" | "data">,
-  dataInicio: Date,
-  dataFim: Date,
+  dataReferencia: Date,
+  diasSemana: number[],
 ): Promise<number> {
+  const ano = dataReferencia.getFullYear();
+  const mes = dataReferencia.getMonth();
+
+  // Primeiro e último dia do mês
+  const primeiroDia = new Date(ano, mes, 1);
+  const ultimoDia = new Date(ano, mes + 1, 0);
+
   let reservasCriadas = 0;
 
-  // Itera por todos os dias do período
-  const dataAtual = new Date(dataInicio);
-  while (dataAtual <= dataFim) {
-    try {
-      // Verifica se já existe reserva neste horário
-      const reservasExistentes = await buscarReservasPorData(dataAtual);
-      const jaExiste = reservasExistentes.some(
-        (r) =>
-          r.quadraId === dadosReserva.quadraId &&
-          r.horarioInicio === dadosReserva.horarioInicio &&
-          r.horarioFim === dadosReserva.horarioFim,
-      );
+  // Itera por todos os dias do mês
+  for (
+    let dia = new Date(primeiroDia);
+    dia <= ultimoDia;
+    dia.setDate(dia.getDate() + 1)
+  ) {
+    const diaSemana = dia.getDay();
 
-      if (!jaExiste) {
-        await criarReserva({
-          ...dadosReserva,
-          data: new Date(dataAtual),
-        });
-        reservasCriadas++;
+    // Se este dia da semana está selecionado, cria a reserva
+    if (diasSemana.includes(diaSemana)) {
+      try {
+        // Verifica se já existe reserva neste horário
+        const reservasExistentes = await buscarReservasPorData(dia);
+        const jaExiste = reservasExistentes.some(
+          (r) =>
+            r.quadraId === dadosReserva.quadraId &&
+            r.horarioInicio === dadosReserva.horarioInicio &&
+            r.horarioFim === dadosReserva.horarioFim,
+        );
+
+        if (!jaExiste) {
+          await criarReserva({
+            ...dadosReserva,
+            data: new Date(dia),
+          });
+          reservasCriadas++;
+        }
+      } catch (error) {
+        // Ignora erros silenciosamente
       }
-    } catch (error) {
-      // Ignora erros silenciosamente
     }
-
-    // Avança para o próximo dia
-    dataAtual.setDate(dataAtual.getDate() + 1);
   }
 
   return reservasCriadas;
