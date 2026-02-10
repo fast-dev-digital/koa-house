@@ -47,6 +47,8 @@ export default function GestaoPagamentos() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [planoFilter, setPlanoFilter] = useState("");
+  const [dataInicial, setDataInicial] = useState("");
+  const [dataFinal, setDataFinal] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
@@ -513,8 +515,29 @@ export default function GestaoPagamentos() {
       filtrados = filtrados.filter((p) => p.planoTipo === planoFilter);
     }
 
+    // Filtro por data inicial
+    if (dataInicial) {
+      filtrados = filtrados.filter(
+        (p) => new Date(p.dataVencimento) >= new Date(dataInicial),
+      );
+    }
+
+    // Filtro por data final
+    if (dataFinal) {
+      filtrados = filtrados.filter(
+        (p) => new Date(p.dataVencimento) <= new Date(dataFinal),
+      );
+    }
+
     setPagamentosFiltrados(filtrados);
-  }, [pagamentos, searchText, statusFilter, planoFilter]);
+  }, [
+    pagamentos,
+    searchText,
+    statusFilter,
+    planoFilter,
+    dataInicial,
+    dataFinal,
+  ]);
 
   useEffect(() => {
     if (showToast) {
@@ -622,6 +645,45 @@ export default function GestaoPagamentos() {
         searchPlaceholder="Buscar por nome do aluno..."
         searchLabel="Buscar Aluno"
       />
+
+      {/* FILTROS DE DATA */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Data Inicial
+            </label>
+            <input
+              type="date"
+              value={dataInicial}
+              onChange={(e) => setDataInicial(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Data Final
+            </label>
+            <input
+              type="date"
+              value={dataFinal}
+              onChange={(e) => setDataFinal(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        {(dataInicial || dataFinal) && (
+          <button
+            onClick={() => {
+              setDataInicial("");
+              setDataFinal("");
+            }}
+            className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Limpar filtros de data
+          </button>
+        )}
+      </div>
 
       {/* TABELA */}
       <div className="bg-white rounded-lg shadow">
