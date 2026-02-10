@@ -69,6 +69,8 @@ export default function ReservaModal({
   const [turmaManual, setTurmaManual] = useState(false);
   const [reservaMensal, setReservaMensal] = useState(false);
   const [diasSemana, setDiasSemana] = useState<number[]>([]);
+  const [dataInicial, setDataInicial] = useState("");
+  const [dataFinal, setDataFinal] = useState("");
 
   // Carregar turmas quando o modal abrir
   useEffect(() => {
@@ -119,6 +121,10 @@ export default function ReservaModal({
         observacoes: "",
       });
       setAlunos([]);
+      setDiasSemana([]);
+      setDataInicial("");
+      setDataFinal("");
+      setReservaMensal(false);
     }
   }, [reserva, quadraSelecionada, horarioSelecionado]);
 
@@ -139,10 +145,20 @@ export default function ReservaModal({
       return;
     }
 
-    // Se for reserva mensal, verifica se selecionou dias da semana
-    if (reservaMensal && diasSemana.length === 0) {
-      showToast("Selecione pelo menos um dia da semana", "error");
-      return;
+    // Se for reserva mensal, verifica se selecionou dias da semana e datas
+    if (reservaMensal) {
+      if (diasSemana.length === 0) {
+        showToast("Selecione pelo menos um dia da semana", "error");
+        return;
+      }
+      if (!dataInicial || !dataFinal) {
+        showToast("Informe a data inicial e final da locação", "error");
+        return;
+      }
+      if (new Date(dataFinal) < new Date(dataInicial)) {
+        showToast("A data final deve ser posterior à data inicial", "error");
+        return;
+      }
     }
 
     setLoading(true);
@@ -178,15 +194,22 @@ export default function ReservaModal({
         showToast("Reserva atualizada com sucesso!", "success");
       } else if (reservaMensal) {
         // Criar reservas mensais para dias específicos da semana
+        // Cria as datas em horário local para evitar problemas de timezone
+        const [anoInicial, mesInicial, diaInicial] = dataInicial
+          .split("-")
+          .map(Number);
+        const [anoFinal, mesFinal, diaFinal] = dataFinal.split("-").map(Number);
+
+        const dataInicialObj = new Date(anoInicial, mesInicial - 1, diaInicial);
+        const dataFinalObj = new Date(anoFinal, mesFinal - 1, diaFinal);
+
         const totalCriadas = await criarReservaMensal(
           dados,
-          dataSelecionada,
+          dataInicialObj,
+          dataFinalObj,
           diasSemana,
         );
-        showToast(
-          `${totalCriadas} reservas criadas para o mês!`,
-          "success",
-        );
+        showToast(`${totalCriadas} reservas criadas no período!`, "success");
       } else {
         await criarReserva(dados);
         showToast("Reserva criada com sucesso!", "success");
@@ -454,6 +477,8 @@ export default function ReservaModal({
                       setReservaMensal(e.target.checked);
                       if (!e.target.checked) {
                         setDiasSemana([]);
+                        setDataInicial("");
+                        setDataFinal("");
                       }
                     }}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
@@ -468,6 +493,35 @@ export default function ReservaModal({
 
                 {reservaMensal && (
                   <div className="bg-blue-50 p-4 rounded-lg">
+                    {/* Data Inicial e Final */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Data Inicial *
+                        </label>
+                        <input
+                          type="date"
+                          value={dataInicial}
+                          onChange={(e) => setDataInicial(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Data Final *
+                        </label>
+                        <input
+                          type="date"
+                          value={dataFinal}
+                          onChange={(e) => setDataFinal(e.target.value)}
+                          min={dataInicial}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+                    </div>
+
                     <p className="text-sm text-gray-600 mb-3">
                       Selecione os dias da semana em que a reserva deve ser
                       criada:
@@ -504,14 +558,35 @@ export default function ReservaModal({
                         </button>
                       ))}
                     </div>
-                    {diasSemana.length > 0 && (
+                    {diasSemana.length > 0 && dataInicial && dataFinal && (
                       <p className="text-xs text-gray-500 mt-2">
                         A reserva será criada em todas as ocorrências dos dias
-                        selecionados no mês de{" "}
-                        {dataSelecionada.toLocaleDateString("pt-BR", {
-                          month: "long",
-                          year: "numeric",
-                        })}
+                        selecionados entre{" "}
+                        <strong>
+                          {(() => {
+                            const [ano, mes, dia] = dataInicial
+                              .split("-")
+                              .map(Number);
+                            return new Date(
+                              ano,
+                              mes - 1,
+                              dia,
+                            ).toLocaleDateString("pt-BR");
+                          })()}
+                        </strong>{" "}
+                        e{" "}
+                        <strong>
+                          {(() => {
+                            const [ano, mes, dia] = dataFinal
+                              .split("-")
+                              .map(Number);
+                            return new Date(
+                              ano,
+                              mes - 1,
+                              dia,
+                            ).toLocaleDateString("pt-BR");
+                          })()}
+                        </strong>
                       </p>
                     )}
                   </div>

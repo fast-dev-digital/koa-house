@@ -177,28 +177,23 @@ export function formatarDataCurta(data: Date): string {
 /**
  * Cria reservas mensais para dias específicos da semana
  * @param dadosReserva - Dados base da reserva
- * @param dataReferencia - Data de referência (mês que será usado)
+ * @param dataInicial - Data inicial do período
+ * @param dataFinal - Data final do período
  * @param diasSemana - Array com números dos dias da semana (0=Dom, 1=Seg, ..., 6=Sáb)
  * @returns Número total de reservas criadas
  */
 export async function criarReservaMensal(
   dadosReserva: Omit<Reserva, "id" | "createdAt" | "updatedAt" | "data">,
-  dataReferencia: Date,
+  dataInicial: Date,
+  dataFinal: Date,
   diasSemana: number[],
 ): Promise<number> {
-  const ano = dataReferencia.getFullYear();
-  const mes = dataReferencia.getMonth();
-
-  // Primeiro e último dia do mês
-  const primeiroDia = new Date(ano, mes, 1);
-  const ultimoDia = new Date(ano, mes + 1, 0);
-
   let reservasCriadas = 0;
 
-  // Itera por todos os dias do mês
+  // Itera por todos os dias entre dataInicial e dataFinal
   for (
-    let dia = new Date(primeiroDia);
-    dia <= ultimoDia;
+    let dia = new Date(dataInicial);
+    dia <= dataFinal;
     dia.setDate(dia.getDate() + 1)
   ) {
     const diaSemana = dia.getDay();
