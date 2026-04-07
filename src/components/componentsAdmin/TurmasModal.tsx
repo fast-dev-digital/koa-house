@@ -172,7 +172,7 @@ export default function TurmaModal({
         };
 
         const turmaId = await criarTurma(turmaDataToSave);
-        console.log(turmaId);
+        turmaId;
       } else {
         // ✅ DADOS PARA ATUALIZAÇÃO
         if (turmaData?.id) {
@@ -196,7 +196,7 @@ export default function TurmaModal({
           };
 
           await atualizarTurma(turmaData.id, updateData);
-          console.log(turmaData.id);
+          turmaData.id;
         }
       }
 
@@ -311,7 +311,7 @@ export default function TurmaModal({
             {/* PROFESSOR - OPCIONAL PARA TESTE */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Professor 
+                Professor
               </label>
               <select
                 value={formData.professorId || ""}
@@ -330,7 +330,7 @@ export default function TurmaModal({
             {/* DIAS - OPCIONAL PARA TESTE */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Dias da Semana 
+                Dias da Semana
               </label>
               <select
                 value={formData.dias || ""}
@@ -345,13 +345,14 @@ export default function TurmaModal({
                 <option value="Qua">Quarta-Feira</option>
                 <option value="Qui">Quinta-Feira</option>
                 <option value="Sex">Sexta-Feira</option>
+                <option value="Sab">Sábado</option>
               </select>
             </div>
 
             {/* HORÁRIO - OPCIONAL PARA TESTE */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Horário 
+                Horário
               </label>
               <input
                 type="text"
@@ -378,7 +379,7 @@ export default function TurmaModal({
             {/* CAPACIDADE - OPCIONAL PARA TESTE */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Capacidade 
+                Capacidade
               </label>
               <input
                 type="number"
@@ -422,8 +423,8 @@ export default function TurmaModal({
                     ? "Criando..."
                     : "Salvando..."
                   : mode === "create"
-                  ? "Criar Turma"
-                  : "Salvar Alterações"}
+                    ? "Criar Turma"
+                    : "Salvar Alterações"}
               </span>
             </button>
           </div>

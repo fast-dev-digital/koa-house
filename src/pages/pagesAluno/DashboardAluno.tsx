@@ -97,7 +97,7 @@ export default function DashboardAluno() {
         // Buscar dados do aluno por email
         const alunosQuery = query(
           collection(db, "Alunos"),
-          where("email", "==", user.email)
+          where("email", "==", user.email),
         );
 
         const querySnapshot = await getDocs(alunosQuery);
@@ -179,7 +179,7 @@ export default function DashboardAluno() {
       } catch (error) {
         if (isMounted) {
           setError(
-            error instanceof Error ? error.message : "Erro ao carregar dados"
+            error instanceof Error ? error.message : "Erro ao carregar dados",
           );
         }
       } finally {
@@ -241,16 +241,19 @@ export default function DashboardAluno() {
 
             {/* Botões Desktop */}
             <div className="hidden md:flex flex-row gap-3 items-center">
-              <Link
+              {/*<Link
                 to="/cadastrar-torneio"
                 className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm"
               >
                 <FaTrophy />
                 Inscrever No Torneio
               </Link>
+              */}
               <button
                 className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm"
-                onClick={() => window.open("https://wa.me/5519981924006", "_blank")}
+                onClick={() =>
+                  window.open("https://wa.me/5519981924006", "_blank")
+                }
               >
                 <FaWhatsapp />
                 Contato
@@ -324,10 +327,10 @@ export default function DashboardAluno() {
               turmas.length === 0
                 ? "Nenhuma turma"
                 : turmas.length === 1
-                ? turmas[0].modalidade
-                : `${turmas[0].modalidade} ${
-                    turmas.length > 1 ? `+${turmas.length - 1} mais` : ""
-                  }`
+                  ? turmas[0].modalidade
+                  : `${turmas[0].modalidade} ${
+                      turmas.length > 1 ? `+${turmas.length - 1} mais` : ""
+                    }`
             }
             color="blue"
           />

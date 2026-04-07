@@ -20,7 +20,7 @@
   sortable: true,
   render: (value: string) => {
     // 📝 LOG PARA ESTUDO: Valor do horário antes da renderização
-    console.log("🕐 [HORÁRIO RENDER]", { value, type: typeof value });
+    ("🕐 [HORÁRIO RENDER]", { value, type: typeof value });
     return value || "A definir";
   },
 }
@@ -36,7 +36,7 @@
   sortable: true, // ← NOVA FUNCIONALIDADE
   render: (value: string) => {
     // 📝 LOG PARA ESTUDO: Valor dos horários antes da renderização
-    console.log("🕐 [HORÁRIOS RENDER]", { value, type: typeof value });
+    ("🕐 [HORÁRIOS RENDER]", { value, type: typeof value });
     return value || "Não informado";
   },
 }
@@ -59,7 +59,7 @@ const [sortConfig, setSortConfig] = useState<{
 ```typescript
 // 🔄 FUNÇÃO DE ORDENAÇÃO COM LOGS PARA ESTUDO
 const handleSort = (columnKey: string) => {
-  console.log("🔄 [SORT CLICK]", { columnKey, currentSortConfig: sortConfig });
+  "🔄 [SORT CLICK]", { columnKey, currentSortConfig: sortConfig };
 
   let direction: "asc" | "desc" = "asc";
 
@@ -72,7 +72,7 @@ const handleSort = (columnKey: string) => {
     direction = "desc";
   }
 
-  console.log("🔄 [SORT CONFIG UPDATED]", { key: columnKey, direction });
+  "🔄 [SORT CONFIG UPDATED]", { key: columnKey, direction };
   setSortConfig({ key: columnKey, direction });
 };
 ```
@@ -82,14 +82,15 @@ const handleSort = (columnKey: string) => {
 ```typescript
 // 🔄 DADOS ORDENADOS COM LOGS DETALHADOS
 const sortedData = useMemo(() => {
-  console.log("🔄 [SORTING DATA]", {
-    dataLength: data.length,
-    sortConfig,
-    sampleData: data.slice(0, 2), // Mostra apenas 2 primeiros para não poluir
-  });
+  "🔄 [SORTING DATA]",
+    {
+      dataLength: data.length,
+      sortConfig,
+      sampleData: data.slice(0, 2), // Mostra apenas 2 primeiros para não poluir
+    };
 
   if (!sortConfig) {
-    console.log("🔄 [NO SORT] Retornando dados originais");
+    ("🔄 [NO SORT] Retornando dados originais");
     return data;
   }
 
@@ -97,18 +98,19 @@ const sortedData = useMemo(() => {
     const aValue = a[sortConfig.key];
     const bValue = b[sortConfig.key];
 
-    console.log("🔄 [COMPARING]", {
-      field: sortConfig.key,
-      aValue,
-      bValue,
-      direction: sortConfig.direction,
-    });
+    "🔄 [COMPARING]",
+      {
+        field: sortConfig.key,
+        aValue,
+        bValue,
+        direction: sortConfig.direction,
+      };
 
     // Conversão para string para comparação alfabética
     const aStr = String(aValue || "").toLowerCase();
     const bStr = String(bValue || "").toLowerCase();
 
-    console.log("🔄 [STRING COMPARISON]", { aStr, bStr });
+    "🔄 [STRING COMPARISON]", { aStr, bStr };
 
     if (aStr < bStr) {
       return sortConfig.direction === "asc" ? -1 : 1;
@@ -119,11 +121,12 @@ const sortedData = useMemo(() => {
     return 0;
   });
 
-  console.log("🔄 [SORTED RESULT]", {
-    originalFirst: data[0]?.[sortConfig.key],
-    sortedFirst: sorted[0]?.[sortConfig.key],
-    direction: sortConfig.direction,
-  });
+  "🔄 [SORTED RESULT]",
+    {
+      originalFirst: data[0]?.[sortConfig.key],
+      sortedFirst: sorted[0]?.[sortConfig.key],
+      direction: sortConfig.direction,
+    };
 
   return sorted;
 }, [data, sortConfig]);
@@ -284,7 +287,7 @@ DEPOIS: ["07:00-08:00", "08:00-09:00", "10:00-11:00"]
 
 ```typescript
 // Em vez de:
-console.log("🔄 [SORT CLICK]", ...);
+("🔄 [SORT CLICK]", ...);
 
 // Deixar apenas:
 // handleSort funcionando sem logs

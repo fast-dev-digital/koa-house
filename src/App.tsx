@@ -24,6 +24,7 @@ import DashboardAluno from "./pages/pagesAluno/DashboardAluno";
 import GestaoTurmas from "./pages/pagesAdmin/GestaoTurmas";
 import GestaoProfessores from "./pages/pagesAdmin/GestaoProfessores";
 import GestaoPagamentos from "./pages/pagesAdmin/GestaoPagamentos";
+import GestaoAgenda from "./pages/pagesAdmin/GestaoAgenda";
 import TermosDeServico from "./pages/TermosDeServico";
 import PoliticaDePrivacidade from "./pages/PoliticaDePrivacidade";
 import CadastrarTorneio from "./pages/pagesAluno/CadastrarTorneio";
@@ -144,6 +145,16 @@ function App() {
             }
           >
             <Route index element={<GestaoPagamentos />} />
+          </Route>
+          <Route
+            path="/gestao-agenda"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<GestaoAgenda />} />
           </Route>
         </Routes>
       </Router>

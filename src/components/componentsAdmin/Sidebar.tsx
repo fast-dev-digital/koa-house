@@ -12,6 +12,7 @@ import {
   FaTimes,
   FaUserShield,
   FaDollarSign,
+  FaCalendarAlt,
 } from "react-icons/fa";
 
 interface SidebarProps {
@@ -56,6 +57,12 @@ const menuItems: MenuItem[] = [
     label: "Gestão de Pagamentos",
     icon: <FaDollarSign />,
     path: "/gestao-pagamentos",
+  },
+  {
+    id: "agenda",
+    label: "Gestão de Agenda",
+    icon: <FaCalendarAlt />,
+    path: "/gestao-agenda",
   },
   {
     id: "cadastrar-admin",

@@ -192,6 +192,23 @@ export default function GestaoAlunos() {
   }, []);
 
   // ✅ CORRIGIDO - REMOVIDO showToastMessage DAS DEPENDÊNCIAS
+  // Normaliza possíveis Timestamp do Firestore para strings legíveis
+  const normalizeDate = (value: any): string => {
+    if (!value) return "";
+    try {
+      if (typeof value === "object" && value && "seconds" in value) {
+        const d = new Date(value.seconds * 1000);
+        if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+        return "";
+      }
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+      return String(value);
+    } catch {
+      return "";
+    }
+  };
+
   const fetchAlunos = useCallback(async () => {
     try {
       setLoading(true);
@@ -201,11 +218,21 @@ export default function GestaoAlunos() {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         if (data && typeof data === "object") {
-          alunosData.push({
+          const normalizado = {
             id: doc.id,
             ...DEFAULT_ALUNO_VALUES,
             ...data,
-          } as Aluno);
+          } as any;
+
+          // Normalizar campos de data que podem vir como Timestamp
+          normalizado.dataMatricula = normalizeDate(normalizado.dataMatricula);
+          normalizado.dataFinalMatricula = normalizeDate(
+            normalizado.dataFinalMatricula
+          );
+          // Garantir tipos básicos
+          normalizado.telefone = normalizado.telefone || "";
+
+          alunosData.push(normalizado as Aluno);
         }
       });
 

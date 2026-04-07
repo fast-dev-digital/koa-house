@@ -18,8 +18,15 @@ import {
   //criarAlunoComPagamentosArray,
   listarAlunosComPagamentos,
   limparObjetoUndefined,
+  atualizarDadosAlunoPagamento,
+  buscarAlunoComPagamentos,
 } from "../../services/integracaoService";
 import HistoricoModal from "../../components/HistoricoModal";
+import EditarAlunoModal from "../../components/componentsAdmin/EditarAlunoModal";
+import type {
+  DadosEditaveisAluno,
+  AlunoComPagamentos,
+} from "../../types/pagamentos";
 import { exportarPagamentosComFiltros } from "../../utils/exportarCsv";
 import {
   formatarDataBR,
@@ -32,7 +39,7 @@ export default function GestaoPagamentos() {
   // ✅ ESTADOS CONSOLIDADOS
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [pagamentosFiltrados, setPagamentosFiltrados] = useState<Pagamento[]>(
-    []
+    [],
   );
   const [showHistoricoModal, setShowHistoricoModal] = useState(false);
   const [selectedAlunoId, setSelectedAlunoId] = useState<string>("");
@@ -40,18 +47,70 @@ export default function GestaoPagamentos() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [planoFilter, setPlanoFilter] = useState("");
+  const [dataInicial, setDataInicial] = useState("");
+  const [dataFinal, setDataFinal] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
+  // ✅ ESTADOS DO MODAL DE EDIÇÃO
+  const [showEditarModal, setShowEditarModal] = useState(false);
+  const [selectedAluno, setSelectedAluno] = useState<AlunoComPagamentos | null>(
+    null,
+  );
+  const [editandoAlunoId, setEditandoAlunoId] = useState<string>("");
+
   // ✅ FUNÇÃO ÚNICA - Toast helper
   const mostrarToast = (
     mensagem: string,
-    tipo: "success" | "error" = "success"
+    tipo: "success" | "error" = "success",
   ) => {
     setToastMessage(mensagem);
     setToastType(tipo);
     setShowToast(true);
+  };
+
+  // ✅ FUNÇÃO - Abrir modal de edição
+  const handleAbrirEditarModal = async (alunoId: string) => {
+    try {
+      const aluno = await buscarAlunoComPagamentos(alunoId);
+      if (aluno) {
+        setSelectedAluno(aluno);
+        setEditandoAlunoId(alunoId);
+        setShowEditarModal(true);
+      } else {
+        mostrarToast("Aluno não encontrado", "error");
+      }
+    } catch (error) {
+      console.error("Erro ao abrir modal:", error);
+      mostrarToast("Erro ao carregar dados do aluno", "error");
+    }
+  };
+
+  // ✅ FUNÇÃO - Salvar dados editados
+  const handleSalvarDadosAluno = async (dados: DadosEditaveisAluno) => {
+    try {
+      const resultado = await atualizarDadosAlunoPagamento(
+        editandoAlunoId,
+        dados,
+      );
+
+      if (resultado.sucesso) {
+        mostrarToast(
+          resultado.mensagem || "Dados atualizados com sucesso",
+          "success",
+        );
+        setShowEditarModal(false);
+        setSelectedAluno(null);
+        setEditandoAlunoId("");
+        await fetchPagamentos(); // Recarregar tabela
+      } else {
+        mostrarToast(resultado.erro || "Erro ao atualizar", "error");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar dados:", error);
+      mostrarToast("Erro ao salvar dados do aluno", "error");
+    }
   };
 
   // ✅ FUNÇÃO PRINCIPAL - Buscar pagamentos
@@ -61,11 +120,6 @@ export default function GestaoPagamentos() {
       const alunosComPagamentos = await listarAlunosComPagamentos();
 
       // 🔍 DEBUG - Verificar se dataFinalMatricula está vindo
-      console.log("📊 Primeiro aluno:", {
-        nome: alunosComPagamentos[0]?.nome,
-        plano: alunosComPagamentos[0]?.plano,
-        dataFinalMatricula: alunosComPagamentos[0]?.dataFinalMatricula,
-      });
 
       const pagamentosFormatados: Pagamento[] = [];
       alunosComPagamentos.forEach((aluno) => {
@@ -92,7 +146,7 @@ export default function GestaoPagamentos() {
 
       // Antes de setar pagamentos:
       const pagamentosFiltrados = pagamentosFormatados.filter(
-        (p) => p && typeof p === "object" && "status" in p
+        (p) => p && typeof p === "object" && "status" in p,
       );
       setPagamentos(pagamentosFiltrados);
     } catch (error) {
@@ -146,6 +200,9 @@ export default function GestaoPagamentos() {
   }
   // ✅ FUNÇÃO - Marcar como pago
   const handleMarcarComoPago = async (pagamento: Pagamento) => {
+    if (!confirm(`Confirmar o pagamento de ${pagamento.alunoNome}?`)) {
+      return;
+    }
     try {
       setLoading(true);
       const pagamentoLimpo = limparObjetoUndefined({
@@ -165,7 +222,7 @@ export default function GestaoPagamentos() {
       await marcarPagamentoPagoArray(
         pagamentoLimpo.alunoId,
         pagamentoLimpo.mesReferencia,
-        new Date()
+        new Date(),
       );
       await adicionarProximoPagamentoArray(pagamentoLimpo.alunoId);
 
@@ -180,7 +237,12 @@ export default function GestaoPagamentos() {
 
   // ✅ FUNÇÃO - Fechar mês
   const handleFecharMes = async () => {
-    if (!confirm("Deseja fechar o próximo mês disponível?")) return;
+    if (
+      !confirm(
+        "Deseja fechar o próximo mês disponível? Lembre-se de EXPORTAR CSV",
+      )
+    )
+      return;
 
     try {
       setLoading(true);
@@ -236,7 +298,7 @@ export default function GestaoPagamentos() {
     const pendentes = pagamentos.filter((p) => p.status === "Pendente");
     const pagos = pagamentos.filter((p) => p.status === "Pago");
     const atrasados = pendentes.filter(
-      (p) => new Date(p.dataVencimento) < hoje
+      (p) => new Date(p.dataVencimento) < hoje,
     );
 
     return {
@@ -369,6 +431,14 @@ export default function GestaoPagamentos() {
         return (
           <div className="flex items-center gap-2">
             <button
+              onClick={() => handleAbrirEditarModal(row.alunoId)}
+              className="bg-yellow-600 text-white px-3 py-1 rounded-md text-xs hover:bg-purple-700 transition-colors flex items-center gap-1"
+              title="Editar dados do aluno"
+            >
+              <FaEdit className="text-xs" />
+              Editar
+            </button>
+            <button
               onClick={() => {
                 setSelectedAlunoId(row.alunoId);
                 setShowHistoricoModal(true);
@@ -430,12 +500,12 @@ export default function GestaoPagamentos() {
   useEffect(() => {
     const hoje = new Date();
     let filtrados = pagamentos.filter((p) =>
-      p.alunoNome.toLowerCase().includes(searchText.toLowerCase())
+      p.alunoNome.toLowerCase().includes(searchText.toLowerCase()),
     );
 
     if (statusFilter === "Atrasado") {
       filtrados = filtrados.filter(
-        (p) => p.status === "Pendente" && new Date(p.dataVencimento) < hoje
+        (p) => p.status === "Pendente" && new Date(p.dataVencimento) < hoje,
       );
     } else if (statusFilter) {
       filtrados = filtrados.filter((p) => p.status === statusFilter);
@@ -445,8 +515,29 @@ export default function GestaoPagamentos() {
       filtrados = filtrados.filter((p) => p.planoTipo === planoFilter);
     }
 
+    // Filtro por data inicial
+    if (dataInicial) {
+      filtrados = filtrados.filter(
+        (p) => new Date(p.dataVencimento) >= new Date(dataInicial),
+      );
+    }
+
+    // Filtro por data final
+    if (dataFinal) {
+      filtrados = filtrados.filter(
+        (p) => new Date(p.dataVencimento) <= new Date(dataFinal),
+      );
+    }
+
     setPagamentosFiltrados(filtrados);
-  }, [pagamentos, searchText, statusFilter, planoFilter]);
+  }, [
+    pagamentos,
+    searchText,
+    statusFilter,
+    planoFilter,
+    dataInicial,
+    dataFinal,
+  ]);
 
   useEffect(() => {
     if (showToast) {
@@ -555,11 +646,50 @@ export default function GestaoPagamentos() {
         searchLabel="Buscar Aluno"
       />
 
+      {/* FILTROS DE DATA */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Data Inicial
+            </label>
+            <input
+              type="date"
+              value={dataInicial}
+              onChange={(e) => setDataInicial(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Data Final
+            </label>
+            <input
+              type="date"
+              value={dataFinal}
+              onChange={(e) => setDataFinal(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        {(dataInicial || dataFinal) && (
+          <button
+            onClick={() => {
+              setDataInicial("");
+              setDataFinal("");
+            }}
+            className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Limpar filtros de data
+          </button>
+        )}
+      </div>
+
       {/* TABELA */}
       <div className="bg-white rounded-lg shadow">
         <DataTable
           data={pagamentosFiltrados.filter(
-            (p) => p && typeof p === "object" && typeof p.status === "string"
+            (p) => p && typeof p === "object" && typeof p.status === "string",
           )}
           columns={pagamentosColumns}
           loading={loading}
@@ -578,6 +708,18 @@ export default function GestaoPagamentos() {
           userType="admin"
         />
       )}
+
+      {/* MODAL DE EDIÇÃO */}
+      <EditarAlunoModal
+        isOpen={showEditarModal}
+        onClose={() => {
+          setShowEditarModal(false);
+          setSelectedAluno(null);
+          setEditandoAlunoId("");
+        }}
+        aluno={selectedAluno}
+        onSave={handleSalvarDadosAluno}
+      />
 
       {/* TOAST */}
       {showToast && (
