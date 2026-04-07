@@ -9,33 +9,30 @@ type EventsSectionProps = {
 
 const eventos = [
   {
-    id: "interno-dez-2025",
+    id: "interno-maio-2026",
     tipo: "Evento",
-    titulo: "Torneio Interno Dezembro",
-    data: "Sábado e domingo, 13 e 14 de Dezembro a partir das 8h",
-    imagem: "interno-dezembro-2025-koa.png",
+    titulo: "Koa Cup",
+    data: "Sexta, Sábado e Domingo",
+    imagem: "interno-maio-koa.png",
     link: "/eventos/inauguracao-koa",
     local:
       "R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180",
     descricao:
-      `Participe do nosso grande Torneio Interno de Futevôlei que acontecerá nos dias 12, 13 e 14 de Dezembro a partir das 8h com muita diversão e competitividade saudável!`,
+      `Participe do KOA CUP, nosso grande Torneio Interno de Futevôlei que acontecerá nos dias 15, 16 e 17 de Maio com muita diversão e competitividade saudável!`,
     horario: "08:00 às 18:00",
   },
   {
-    id: "happy-hour",
-    tipo: "Happy Hour",
-    titulo: "Happy Hour",
-    data: "Toda Sexta-feira, das 17h às 20h",
-    imagem: "happyhour-koa.png",
-    link: "/eventos/happy-hour",
+    id: "pagode-koa",
+    tipo: "Pagode",
+    titulo: "Koa Sunset",
+    data: "Domingo",
+    imagem: "evento-12-abril.png",
+    link: "/eventos/pagode-koa",
     local: "R. Papa João XXIII, 45 - Parque Ortolândia, Hortolândia - SP, 13184-180",
     descricao: `
-      Eu ouvi happy hour? Agora é oficial: toda sexta-feira, das 17h às 20h, tem Happy Hour na arena!🔥
-      🍻 Chopp em dobro
-      🫒 Cardápio exclusivo
-      ✌️ Aquela vibe pra você relaxar depois de um dia puxado 💼
+      No dia 12 de Abril, vem aí 1° edição do Koa Sunset com eles, que vai fazer a galera cantar do começo ao fim: PAGODE DO ADAME E GRUPO PRESENÇA no palco! 🎤🔥
     `,
-    horario: "17:00 às 20:00",
+    horario: "13:00 às 18:00",
   },
 ];
 
@@ -136,7 +133,7 @@ function EventsSection({ mode = "page" }: EventsSectionProps) {
                         clipRule="evenodd"
                       />
                     </svg>
-                    Koa House
+                    R. Papa João XXIII, 45 - Parque Ortolândia
                   </div>
                 </div>
               </div>
