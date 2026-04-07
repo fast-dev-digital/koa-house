@@ -11,6 +11,7 @@ import TurmasModal from "../../components/componentsAdmin/TurmasModal";
 import type { Turma } from "../../types/turmas";
 import ManageAlunosModal from "../../components/componentsAdmin/ManageAlunosModal";
 import { exportarTurmasCSV } from "../../utils/exportarCsv";
+import { recarregarCache } from "../../services/alunoService";
 
 // 🗓️ FUNÇÃO HELPER PARA ORDENAR DIAS DA SEMANA
 const obterOrdemDia = (diaTexto: string): number => {
@@ -266,8 +267,7 @@ export default function GestaoTurmas() {
   // ✅ NOVA FUNÇÃO - Carregar alunos de todas as turmas
   const carregarAlunosDasTurmas = async (turmasData: Turma[]) => {
     try {
-      const { buscarTodosAlunos } = await import("../../services/alunoService");
-      const todosAlunos = await buscarTodosAlunos();
+      const todosAlunos = await recarregarCache();
 
       const mapaAlunosPorTurma = new Map<string, string[]>();
 
