@@ -7,7 +7,7 @@ import PricingCard from "../components/PricingCard";
 import { planos } from "../data/planosData";
 import Modal from "../components/Modal";
 import WhatsappFloat from "../components/WhatsappFloat";
-import modalPrincipal from "../assets/aulas-bt-koa.png";
+import modalPrincipal from "../assets/interno-koa-maio-full.png";
 import bgHawaiiMobile from "../assets/bg-hawaii-mobile.png";
 
 // Teste novo bg
