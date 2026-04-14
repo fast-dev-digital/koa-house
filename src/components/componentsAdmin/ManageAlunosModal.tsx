@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   buscarTodosAlunos,
   atualizarAluno,
@@ -35,6 +36,7 @@ export default function ManageAlunosModal({
   onSuccess,
   turma,
 }: ManageAlunosModalProps) {
+  const { currentTenantId } = useAuth();
   // ✅ ESTADOS CONSOLIDADOS
   const [activeTab, setActiveTab] = useState<"matriculados" | "disponiveis">(
     "matriculados",
@@ -70,6 +72,11 @@ export default function ManageAlunosModal({
 
   // Carregar todos os dados
   const carregarDadosCompletos = async () => {
+    if (!currentTenantId) {
+      showToast("Tenant não encontrado na sessão", "error");
+      return;
+    }
+
     if (todosAlunos.length > 0 && todasTurmas.size > 0) return; // Cache já carregado
 
     try {
@@ -77,9 +84,9 @@ export default function ManageAlunosModal({
       ("📡 Carregando dados completos com SERVICES...");
 
       const [alunosData, turmasData] = await Promise.all([
-        buscarTodosAlunos(), // ✅ SERVICE COM CACHE
+        buscarTodosAlunos(currentTenantId), // ✅ SERVICE COM CACHE
         buscarTodasTurmas(), // ✅ SERVICE COM CACHE
-        recarregarCache(), // ✅ FORÇA ATUALIZAÇÃO DO CACHE (opcional, dependendo da validade do cache)
+        recarregarCache(currentTenantId), // ✅ FORÇA ATUALIZAÇÃO DO CACHE (opcional, dependendo da validade do cache)
       ]);
 
       const alunosAtivos = alunosData.filter(
@@ -149,6 +156,11 @@ export default function ManageAlunosModal({
 
   // ✅ SUBSTITUIR removerAlunoDaTurma - MANTER LÓGICAS DE VALIDAÇÃO
   const removerAlunoDaTurma = async (aluno: Aluno) => {
+    if (!currentTenantId) {
+      showToast("Tenant não encontrado na sessão", "error");
+      return;
+    }
+
     if (
       !turma?.id ||
       !confirm(`Tem certeza que deseja remover ${aluno.nome} desta turma?`)
@@ -168,7 +180,7 @@ export default function ManageAlunosModal({
         atualizarAluno(aluno.id, {
           turmasIds: novasTurmas,
           ...(novasTurmas.length === 0 && { turmaId: "" }),
-        }),
+        }, currentTenantId),
         // Atualizar contador da turma via service
         atualizarTurma(turma.id, {
           alunosInscritos: Math.max(0, alunos.length - 1),
@@ -200,6 +212,11 @@ export default function ManageAlunosModal({
 
   // ✅ FUNÇÃO - Adicionar alunos (otimizada com batch)
   const adicionarAlunosNaTurma = async () => {
+    if (!currentTenantId) {
+      showToast("Tenant não encontrado na sessão", "error");
+      return;
+    }
+
     if (!turma?.id || selectedAlunosIds.length === 0) return;
 
     const vagasDisponiveis = (turma.capacidade || 0) - alunos.length;
@@ -220,7 +237,7 @@ export default function ManageAlunosModal({
           const novasTurmas = [...(aluno.turmasIds || []), turma.id!];
           return atualizarAluno(alunoId, {
             turmasIds: novasTurmas,
-          });
+          }, currentTenantId);
         }
       });
 

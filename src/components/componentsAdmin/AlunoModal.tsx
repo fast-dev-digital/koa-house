@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { FaTimes, FaSave, FaUser } from "react-icons/fa";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   criarAluno,
   atualizarAluno,
@@ -55,6 +56,7 @@ export default function AlunoModal({
   mode,
   alunoData,
 }: AlunoModalProps) {
+  const { currentTenantId } = useAuth();
   const [formData, setFormData] = useState<FormDataType>(INITIAL_STATE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -116,8 +118,15 @@ export default function AlunoModal({
     setError("");
 
     try {
+      if (!currentTenantId) {
+        setError("Tenant não encontrado na sessão");
+        setLoading(false);
+        return;
+      }
+
       if (mode === "create") {
         const emailExistente = buscarAlunoPorEmail(
+          currentTenantId,
           formData.email.trim().toLowerCase(),
         );
         if (emailExistente) {
@@ -141,6 +150,7 @@ export default function AlunoModal({
         const novoAluno: Omit<Aluno, "id"> = {
           nome: formData.nome.trim(),
           email: formData.email.trim().toLowerCase(),
+          tenantId: currentTenantId,
           telefone: formData.telefone.trim(),
           genero: formData.genero as GeneroType,
           plano: formData.plano as PlanoType,
@@ -157,7 +167,7 @@ export default function AlunoModal({
           updatedAt: new Date().toISOString(),
         };
 
-        const novoAlunoId = await criarAluno(novoAluno);
+        const novoAlunoId = await criarAluno(currentTenantId, novoAluno);
 
         await criarAlunoComPagamentosArray({
           id: novoAlunoId,
@@ -214,7 +224,7 @@ export default function AlunoModal({
           }
         }
 
-        await atualizarAluno(alunoData.id, dadosAtualizacao);
+        await atualizarAluno(alunoData.id, dadosAtualizacao, currentTenantId);
 
         setSuccessMessage(`Aluno ${formData.nome} atualizado com sucesso!`);
         setTimeout(() => {

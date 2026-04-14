@@ -7,15 +7,17 @@ import {
   FaEdit,
   FaTrash,
 } from "react-icons/fa";
-import type { Quadra, Reserva, SlotHorario } from "../../types/agenda";
+import { buscarQuadras } from "../../services/quadrasServices";
+import type { Quadra } from "../../types/quadra";
+import type { Reserva, SlotHorario } from "../../types/agenda";
 import {
-  buscarQuadras,
   buscarReservasPorData,
   excluirReserva,
   gerarSlotsHorarios,
   formatarData,
 } from "../../services/agendaService";
 import ReservaModal from "../../components/componentsAdmin/ReservaModal";
+import QuadraModal from "../../components/componentsAdmin/QuadraModal";
 import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmModal";
 import Toast from "../../components/componentsAdmin/Toast";
 
@@ -33,6 +35,8 @@ export default function GestaoAgenda() {
   );
   const [quadraSelecionada, setQuadraSelecionada] = useState<string>("");
   const [horarioSelecionado, setHorarioSelecionado] = useState<string>("");
+  const [showQuadraModal, setShowQuadraModal] = useState(false);
+  const [quadraParaEditar, setQuadraParaEditar] = useState<Quadra | null>(null);
 
   // Delete Modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -71,7 +75,8 @@ export default function GestaoAgenda() {
       const quadrasData = await buscarQuadras();
       // Aceita tanto 'ativa' quanto 'status' (para compatibilidade)
       const quadrasFiltradas = quadrasData.filter(
-        (q: any) => q.ativa === true || q.status === true,
+        (q: any) =>
+          q.ativa === true || q.status === true || q.status === "Ativa",
       );
       setQuadras(quadrasFiltradas);
     } catch (error) {
@@ -149,6 +154,16 @@ export default function GestaoAgenda() {
     setShowReservaModal(true);
   };
 
+  const abrirModalCriarQuadra = () => {
+    setQuadraParaEditar(null);
+    setShowQuadraModal(true);
+  };
+
+  const abrirModalEditarQuadra = (quadra: Quadra) => {
+    setQuadraParaEditar(quadra);
+    setShowQuadraModal(true);
+  };
+
   // Abrir modal de confirmação de exclusão
   const abrirModalDeletar = (reserva: Reserva) => {
     setReservaParaDeletar(reserva);
@@ -182,6 +197,21 @@ export default function GestaoAgenda() {
     return cores[tipo] || "bg-gray-100 border-gray-300 text-gray-800";
   };
 
+  const obterCorQuadra = (cor?: string): string => {
+    if (!cor) return "#f3f4f6";
+
+    const mapaCores: Record<string, string> = {
+      "blue.100": "#BEE3F8",
+      "green.100": "#C6F6D5",
+      "yellow.100": "#FEEBC8",
+      "orange.100": "#FED7D7",
+      "purple.100": "#E9D8FD",
+      "pink.100": "#FED7E2",
+    };
+
+    return mapaCores[cor] || cor;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <Toast
@@ -201,13 +231,22 @@ export default function GestaoAgenda() {
             Gerencie as reservas das quadras por horário
           </p>
         </div>
-        <button
-          onClick={() => abrirModalCriar("", "")}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md"
-        >
-          <FaPlus size={16} />
-          Nova Reserva
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={abrirModalCriarQuadra}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-md"
+          >
+            <FaPlus size={16} />
+            Nova Quadra
+          </button>
+          <button
+            onClick={() => abrirModalCriar("", "")}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md"
+          >
+            <FaPlus size={16} />
+            Nova Reserva
+          </button>
+        </div>
       </div>
 
       {/* Controles de Data */}
@@ -251,6 +290,13 @@ export default function GestaoAgenda() {
             <p className="text-sm">
               Cadastre quadras no Firestore para começar
             </p>
+            <button
+              onClick={abrirModalCriarQuadra}
+              className="mt-4 flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            >
+              <FaPlus size={14} />
+              Criar primeira quadra
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -263,10 +309,21 @@ export default function GestaoAgenda() {
                   {quadras.map((quadra) => (
                     <th
                       key={quadra.id}
-                      className="p-2 text-center text-xs font-semibold text-white min-w-[140px]"
-                      style={{ backgroundColor: quadra.cor || "#f3f4f6" }}
+                      className="p-2 text-center text-xs font-semibold text-gray-800 min-w-[140px]"
+                      style={{ backgroundColor: obterCorQuadra(quadra.cor) }}
                     >
-                      {quadra.nome}
+                      <div className="flex items-center justify-center gap-2">
+                        <span>{quadra.nome}</span>
+                        <button
+                          type="button"
+                          onClick={() => abrirModalEditarQuadra(quadra)}
+                          className="inline-flex items-center justify-center p-1.5 rounded bg-white text-gray-800 hover:bg-gray-100 border border-gray-300 shadow-sm transition"
+                          title="Editar quadra"
+                          aria-label={`Editar ${quadra.nome}`}
+                        >
+                          <FaEdit size={12} />
+                        </button>
+                      </div>
                     </th>
                   ))}
                 </tr>
@@ -432,6 +489,27 @@ export default function GestaoAgenda() {
           } (${reservaParaDeletar.horarioInicio} - ${
             reservaParaDeletar.horarioFim
           })?`}
+        />
+      )}
+
+      {showQuadraModal && (
+        <QuadraModal
+          isOpen={showQuadraModal}
+          onClose={() => {
+            setShowQuadraModal(false);
+            setQuadraParaEditar(null);
+          }}
+          mode={quadraParaEditar ? "edit" : "create"}
+          quadraData={quadraParaEditar}
+          onSuccess={async () => {
+            await carregarQuadras();
+            showToast(
+              quadraParaEditar
+                ? "Quadra atualizada com sucesso!"
+                : "Quadra criada com sucesso!",
+              "success",
+            );
+          }}
         />
       )}
     </div>

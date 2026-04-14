@@ -8,27 +8,47 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase-config";
 import type { Aluno } from "../types/alunos";
+import { normalizeEmail } from "../utils/tenant";
 
-// 📦 SISTEMA DE CACHE GLOBAL
-export let cacheAlunos: Aluno[] | null = null;
-export let ultimaBusca: number = 0;
-const TEMPO_CACHE = 5 * 60 * 1000;
+type CacheEntry = {
+  alunos: Aluno[];
+  ultimaBusca: number;
+};
 
-export async function buscarTodosAlunos(): Promise<Aluno[]> {
-  const agora = Date.now(); // ⏰ Pega timestamp atual
+const cacheAlunosPorTenant = new Map<string, CacheEntry>();
+const TEMPO_CACHE = 5 * 60 * 1000; // 5 minutos
 
-  // ✅ VERIFICA SE CACHE É VÁLIDO (existe + não expirou)
-  if (cacheAlunos && agora - ultimaBusca < TEMPO_CACHE) {
-    ("📦 Cache válido! Retornando alunos salvos (RÁPIDO)");
-    return cacheAlunos;
+const assertTenantId = (tenantId: string) => {
+  if (!tenantId?.trim()) {
+    throw new Error("Tenant ID é obrigatório");
+  }
+};
+
+const getAlunosRef = (tenantId: string) => {
+  assertTenantId(tenantId);
+  return collection(db, `tenants/${tenantId}/alunos`);
+};
+
+const getAlunoDocRef = (tenantId: string, alunoId: string) => {
+  assertTenantId(tenantId);
+  if (!alunoId?.trim()) {
+    throw new Error("Aluno ID é obrigatório");
   }
 
-  // 🔥 CACHE EXPIROU OU NÃO EXISTE - BUSCAR NO FIREBASE
-  ("🔥 Buscando alunos no Firebase... (pode demorar)");
+  return doc(db, `tenants/${tenantId}/alunos`, alunoId);
+};
+
+export async function buscarTodosAlunos(tenantId: string): Promise<Aluno[]> {
+  assertTenantId(tenantId);
+  const cache = cacheAlunosPorTenant.get(tenantId);
+  const agora = Date.now();
+  //  VERIFICA SE CACHE É VÁLIDO (existe + não expirou)
+  if (cache && agora - cache.ultimaBusca < TEMPO_CACHE) {
+    return cache.alunos;
+  }
 
   try {
-    // 🗂️ REFERÊNCIA À COLEÇÃO "Alunos" no Firebase
-    const alunosRef = collection(db, "Alunos");
+    const alunosRef = getAlunosRef(tenantId);
 
     // 📖 EXECUTA A BUSCA (operação assíncrona)
     const snapshot = await getDocs(alunosRef);
@@ -36,18 +56,16 @@ export async function buscarTodosAlunos(): Promise<Aluno[]> {
     // 🔄 CONVERTE DOCUMENTOS FIREBASE PARA ARRAY DE ALUNOS
     const alunos: Aluno[] = [];
     snapshot.forEach((documento) => {
-      const dadosDoDocumento = documento.data();
       alunos.push({
         id: documento.id, // 🆔 ID único do Firebase
-        ...dadosDoDocumento, // 📝 Spread: copia todos os campos
+        tenantId,
+        ...documento.data(), // 📝 Spread: copia todos os campos
       } as Aluno);
     });
 
     // 💾 ATUALIZA O CACHE PARA PRÓXIMAS CHAMADAS
-    cacheAlunos = alunos;
-    ultimaBusca = agora;
+    cacheAlunosPorTenant.set(tenantId, { alunos, ultimaBusca: agora });
 
-    `✅ ${alunos.length} alunos carregados e cachados com sucesso!`;
     return alunos;
   } catch (error) {
     console.error("❌ Erro ao buscar alunos no Firebase:", error);
@@ -56,18 +74,25 @@ export async function buscarTodosAlunos(): Promise<Aluno[]> {
 }
 
 //  FUNÇÃO 2: BUSCAR ALUNO POR EMAIL (USA CACHE)
-export function buscarAlunoPorEmail(email: string): Aluno | null {
-  // 🎓 EXPLICAÇÃO: Esta função é SÍNCRONA (sem await)
-  // porque usa apenas o cache em memória, não acesa Firebase
+export function buscarAlunoPorEmail(
+  tenantId: string,
+  email: string,
+): Aluno | null {
+  assertTenantId(tenantId);
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) {
+    return null;
+  }
 
-  if (!cacheAlunos) {
+  const cache = cacheAlunosPorTenant.get(tenantId);
+  if (!cache) {
     console.warn("⚠️ Cache vazio! Execute buscarTodosAlunos() primeiro");
     return null;
   }
 
   // BUSCA NO ARRAY EM MEMÓRIA (SUPER RÁPIDO)
-  const alunoEncontrado = cacheAlunos.find(
-    (aluno) => aluno.email.toLowerCase() === email.toLowerCase()
+  const alunoEncontrado = cache.alunos.find(
+    (aluno) => normalizeEmail(aluno.email) === normalizedEmail,
   );
 
   if (alunoEncontrado) {
@@ -81,21 +106,24 @@ export function buscarAlunoPorEmail(email: string): Aluno | null {
 
 // ➕ FUNÇÃO 3: CRIAR NOVO ALUNO
 export async function criarAluno(
-  dadosAluno: Omit<Aluno, "id">
+  tenantId: string,
+  dadosAluno: Omit<Aluno, "id">,
 ): Promise<string> {
+  assertTenantId(tenantId);
   try {
     // 📝 ADICIONA TIMESTAMPS AUTOMÁTICOS
     const alunoCompleto = {
       ...dadosAluno, // 📋 Dados informados
+      tenantId,
       createdAt: new Date().toISOString(), // 📅 Data criação
       updatedAt: new Date().toISOString(), // 📅 Data atualização
     };
 
     // 🔥 SALVA NO FIREBASE
-    const docRef = await addDoc(collection(db, "Alunos"), alunoCompleto);
+    const docRef = await addDoc(getAlunosRef(tenantId), alunoCompleto);
 
     // 🧹 INVALIDA O CACHE (força nova busca na próxima vez)
-    limparCache();
+    limparCacheDeUmTenant(tenantId);
     ("🧹 Cache invalidado - próxima busca será atualizada");
 
     `✅ Aluno criado com ID: ${docRef.id}`;
@@ -109,19 +137,19 @@ export async function criarAluno(
 // ✏️ FUNÇÃO 4: ATUALIZAR ALUNO EXISTENTE
 export async function atualizarAluno(
   id: string,
-  dadosAtualizacao: Partial<Aluno>
+  dadosAtualizacao: Partial<Aluno>,
+  tenantId: string,
 ): Promise<void> {
-  // 🎓 EXPLICAÇÃO DO Partial<Aluno>:
-  // "Todos os campos de Aluno são OPCIONAIS"
-  // Assim podemos atualizar só nome, ou só email, etc.
+  assertTenantId(tenantId);
 
   try {
     //  REFERÊNCIA AO DOCUMENTO ESPECÍFICO
-    const docRef = doc(db, "Alunos", id);
+    const docRef = getAlunoDocRef(tenantId, id);
 
     //  ADICIONA TIMESTAMP DE ATUALIZAÇÃO
     const dadosCompletos = {
       ...dadosAtualizacao, // 📋 Campos a atualizar
+      tenantId,
       updatedAt: new Date().toISOString(), // ⏰ Marca quando foi atualizado
     };
 
@@ -131,21 +159,20 @@ export async function atualizarAluno(
     // ✅ Se mudou o status para Ativo, verificar e gerar pagamento
     if (dadosAtualizacao.status === "Ativo") {
       try {
-        const { verificarEGerarPagamentoAlunoAtivo } = await import(
-          "./integracaoService"
-        );
+        const { verificarEGerarPagamentoAlunoAtivo } =
+          await import("./integracaoService");
         await verificarEGerarPagamentoAlunoAtivo(id);
       } catch (erro) {
         console.warn(
           "⚠️ Erro ao tentar gerar pagamento para aluno ativo:",
-          erro
+          erro,
         );
         // Não throw - deixa a atualização do aluno continuar mesmo se falhar a geração do pagamento
       }
     }
 
     // 🧹 INVALIDA CACHE
-    limparCache();
+    limparCacheDeUmTenant(tenantId);
   } catch (error) {
     console.error("❌ Erro ao atualizar aluno:", error);
     throw new Error(`Falha ao atualizar aluno: ${error}`);
@@ -153,18 +180,22 @@ export async function atualizarAluno(
 }
 
 //  FUNÇÃO 5: DELETAR ALUNO
-export async function deletarAluno(id: string): Promise<void> {
+export async function deletarAluno(
+  id: string,
+  tenantId: string,
+): Promise<void> {
+  assertTenantId(tenantId);
   try {
     `🗑️ Deletando aluno ID: ${id}`;
 
     // REFERÊNCIA AO DOCUMENTO
-    const docRef = doc(db, "Alunos", id);
+    const docRef = getAlunoDocRef(tenantId, id);
 
     // REMOVE DO FIREBASE
     await deleteDoc(docRef);
 
     //  INVALIDA CACHE
-    limparCache();
+    limparCacheDeUmTenant(tenantId);
     ("✅ Aluno deletado e cache invalidado");
   } catch (error) {
     console.error("❌ Erro ao deletar aluno:", error);
@@ -173,14 +204,16 @@ export async function deletarAluno(id: string): Promise<void> {
 }
 
 //  FUNÇÃO 6: BUSCAR ALUNOS POR TURMA (USA CACHE)
-export function buscarAlunosPorTurma(turma: string): Aluno[] {
-  if (!cacheAlunos) {
+export function buscarAlunosPorTurma(tenantId: string, turma: string): Aluno[] {
+  assertTenantId(tenantId);
+  const cache = cacheAlunosPorTenant.get(tenantId);
+  if (!cache) {
     console.warn("⚠️ Cache vazio! Execute buscarTodosAlunos() primeiro");
     return [];
   }
 
   // 🔍 FILTRA ARRAY EM MEMÓRIA
-  const alunosDaTurma = cacheAlunos.filter((aluno) => aluno.turmas === turma);
+  const alunosDaTurma = cache.alunos.filter((aluno) => aluno.turmas === turma);
 
   // 🎓 EXPLICAÇÃO DO .filter():
   // Percorre o array e retorna um NOVO ARRAY com elementos que satisfazem a condição
@@ -191,32 +224,31 @@ export function buscarAlunosPorTurma(turma: string): Aluno[] {
 }
 
 // 📊 FUNÇÃO 7: BUSCAR ALUNOS ATIVOS (USA CACHE)
-export function buscarAlunosAtivos(): Aluno[] {
-  if (!cacheAlunos) {
+export function buscarAlunosAtivos(tenantId: string): Aluno[] {
+  assertTenantId(tenantId);
+  const cache = cacheAlunosPorTenant.get(tenantId);
+  if (!cache) {
     console.warn("⚠️ Cache vazio! Execute buscarTodosAlunos() primeiro");
     return [];
   }
 
-  const alunosAtivos = cacheAlunos.filter((aluno) => aluno.status === "Ativo");
+  const alunosAtivos = cache.alunos.filter((aluno) => aluno.status === "Ativo");
 
   `✅ ${alunosAtivos.length} alunos ativos encontrados`;
   return alunosAtivos;
 }
 
 // 🧹 FUNÇÃO AUXILIAR: LIMPAR CACHE
-function limparCache(): void {
-  // 🎓 EXPLICAÇÃO: Esta função é PRIVADA (não exportada)
-  // Só pode ser usada dentro deste arquivo
-
-  cacheAlunos = null; // 🗑️ Remove dados da memória
-  ultimaBusca = 0; // ⏰ Zera timestamp
-
-  ("🧹 Cache limpo - próxima busca será no Firebase");
+function limparCacheDeUmTenant(tenantId: string): void {
+  assertTenantId(tenantId);
+  cacheAlunosPorTenant.delete(tenantId); // 🗑️ Remove dados da memória
 }
 
 // 📊 FUNÇÃO 8: ESTATÍSTICAS RÁPIDAS (USA CACHE)
-export function obterEstatisticasAlunos() {
-  if (!cacheAlunos) {
+export function obterEstatisticasAlunos(tenantId: string) {
+  assertTenantId(tenantId);
+  const cache = cacheAlunosPorTenant.get(tenantId);
+  if (!cache) {
     return {
       total: 0,
       ativos: 0,
@@ -226,31 +258,33 @@ export function obterEstatisticasAlunos() {
 
   // 🔢 CONTA DIFERENTES STATUS
   const stats = {
-    total: cacheAlunos.length,
-    ativos: cacheAlunos.filter((a) => a.status === "Ativo").length,
-    inativos: cacheAlunos.filter((a) => a.status === "Inativo").length,
+    total: cache.alunos.length,
+    ativos: cache.alunos.filter((a) => a.status === "Ativo").length,
+    inativos: cache.alunos.filter((a) => a.status === "Inativo").length,
   };
 
   return stats;
 }
 
 // 🔄 FUNÇÃO 9: FORÇAR REFRESH DO CACHE
-export async function recarregarCache(): Promise<Aluno[]> {
-  ("🔄 Forçando atualização do cache...");
+export async function recarregarCache(tenantId: string): Promise<Aluno[]> {
+  assertTenantId(tenantId);
 
   // 🧹 LIMPA CACHE ATUAL
-  limparCache();
+  limparCacheDeUmTenant(tenantId);
 
   // 🔥 BUSCA NOVAMENTE (vai direto pro Firebase)
-  return await buscarTodosAlunos();
+  return await buscarTodosAlunos(tenantId);
 }
 
 // 📝 FUNÇÃO 10: VERIFICAR SE CACHE ESTÁ VÁLIDO
-export function cacheEstaValido(): boolean {
-  if (!cacheAlunos) return false;
+export function cacheEstaValido(tenantId: string): boolean {
+  assertTenantId(tenantId);
+  const cache = cacheAlunosPorTenant.get(tenantId);
+  if (!cache) return false;
 
   const agora = Date.now();
-  const cacheValido = agora - ultimaBusca < TEMPO_CACHE;
+  const cacheValido = agora - cache.ultimaBusca < TEMPO_CACHE;
 
   `🔍 Cache ${cacheValido ? "VÁLIDO" : "EXPIRADO"}`;
   return cacheValido;
@@ -264,12 +298,33 @@ export const buscarAlunoPorEmail_OLD = buscarAlunoPorEmail;
 // EXPORTS DE COMPATIBILIDADE (para não quebrar seu código atual)
 export { buscarTodosAlunos as buscarTodosAlunos_CACHED };
 
-// ...existing code...
-
 // Funções para testes unitários
-export function __setCacheAlunos(alunos: Aluno[] | null) {
-  cacheAlunos = alunos;
+export function __setCacheAlunos(tenantId: string, alunos: Aluno[] | null) {
+  assertTenantId(tenantId);
+  if (!alunos) {
+    cacheAlunosPorTenant.delete(tenantId);
+    return;
+  }
+
+  cacheAlunosPorTenant.set(tenantId, {
+    alunos,
+    ultimaBusca: Date.now(),
+  });
 }
-export function __setUltimaBusca(ts: number) {
-  ultimaBusca = ts;
+
+export function __setUltimaBusca(tenantId: string, ts: number) {
+  assertTenantId(tenantId);
+  const cache = cacheAlunosPorTenant.get(tenantId);
+  if (cache) {
+    cache.ultimaBusca = ts;
+  }
+}
+
+export function __clearCacheDeTenant(tenantId: string) {
+  assertTenantId(tenantId);
+  cacheAlunosPorTenant.delete(tenantId);
+}
+
+export function __clearCacheCompleto() {
+  cacheAlunosPorTenant.clear();
 }

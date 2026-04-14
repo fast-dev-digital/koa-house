@@ -3,6 +3,7 @@ export interface Aluno {
 
   nome: string;
   email: string;
+  tenantId?: string;
   telefone: string;
   genero?: "Masculino" | "Feminino";
 

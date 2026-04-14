@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../firebase-config";
+import { useAuth } from "../../contexts/AuthContext";
 import { buscarTodosProfessores } from "../../services/professorService";
 import {
   buscarTodasTurmas,
@@ -21,6 +22,7 @@ import {
 import { buscarTodosAlunos } from "../../services/alunoService";
 
 export default function AdminDashboard() {
+  const { currentTenantId } = useAuth();
   const [nome, setNome] = useState<string>("");
   const [totalAlunos, setTotalAlunos] = useState<number>(0);
   const [totalProfessores, setTotalProfessores] = useState<number>(0);
@@ -54,10 +56,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (!currentTenantId) {
+          setLoading(false);
+          return;
+        }
+
         setLoading(true);
         const [alunosData, professoresData, turmasData, estatisticas] =
           await Promise.all([
-            buscarTodosAlunos(), // Cache automático
+            buscarTodosAlunos(currentTenantId), // Cache automático
             buscarTodosProfessores(), // Cache automático
             buscarTodasTurmas(), // Cache automático
             obterEstatisticasTurmas(), // Estatísticas calculadas
@@ -78,7 +85,7 @@ export default function AdminDashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [currentTenantId]);
 
   if (loading) {
     return (

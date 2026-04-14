@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { FaPlus, FaDownload, FaUsers } from "react-icons/fa";
+import { useAuth } from "../../contexts/AuthContext";
 import DataTable from "../../components/componentsAdmin/DataTable";
 import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters";
 import {
@@ -205,6 +206,7 @@ const getColunasTurmas = (alunosPorTurmaMap: Map<string, string[]>) => [
 ];
 
 export default function GestaoTurmas() {
+  const { currentTenantId } = useAuth();
   // ESTADOS PRINCIPAIS
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [loading, setLoading] = useState(false);
@@ -267,7 +269,11 @@ export default function GestaoTurmas() {
   // ✅ NOVA FUNÇÃO - Carregar alunos de todas as turmas
   const carregarAlunosDasTurmas = async (turmasData: Turma[]) => {
     try {
-      const todosAlunos = await recarregarCache();
+      if (!currentTenantId) {
+        return;
+      }
+
+      const todosAlunos = await recarregarCache(currentTenantId);
 
       const mapaAlunosPorTurma = new Map<string, string[]>();
 

@@ -4,6 +4,7 @@ export type { AlunoComPagamentos };
 
 export interface Pagamento {
   id?: string;
+  tenantId?: string;
   alunoId: string; // Referência ao aluno
   alunoNome: string; // Nome para facilitar exibição
   valor: number; // Valor do plano

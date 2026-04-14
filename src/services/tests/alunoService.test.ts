@@ -10,6 +10,7 @@ import {
   cacheEstaValido,
   __setCacheAlunos,
   __setUltimaBusca,
+  __clearCacheCompleto,
 } from "../alunoService";
 
 import type { Aluno } from "../../types/alunos";
@@ -50,40 +51,43 @@ const mockAlunos: Aluno[] = [
   },
 ];
 
+const TENANT_TESTE = "tenant_teste";
+
 beforeEach(() => {
-  __setCacheAlunos(mockAlunos);
-  __setUltimaBusca(Date.now());
+  __clearCacheCompleto();
+  __setCacheAlunos(TENANT_TESTE, mockAlunos);
+  __setUltimaBusca(TENANT_TESTE, Date.now());
 });
 
 describe("buscarAlunoPorEmail", () => {
   it("retorna aluno correto pelo email", () => {
-    const aluno = buscarAlunoPorEmail("joao@email.com");
+    const aluno = buscarAlunoPorEmail(TENANT_TESTE, "joao@email.com");
     expect(aluno?.nome).toBe("João");
   });
 
   it("retorna null se email não existe", () => {
-    const aluno = buscarAlunoPorEmail("naoexiste@email.com");
+    const aluno = buscarAlunoPorEmail(TENANT_TESTE, "naoexiste@email.com");
     expect(aluno).toBeNull();
   });
 });
 
 describe("buscarAlunosPorTurma", () => {
   it("retorna alunos da turma correta", () => {
-    const alunos = buscarAlunosPorTurma("A");
+    const alunos = buscarAlunosPorTurma(TENANT_TESTE, "A");
     expect(alunos.length).toBe(2);
     expect(alunos[0].nome).toBe("João");
     expect(alunos[1].nome).toBe("Pedro");
   });
 
   it("retorna array vazio se turma não existe", () => {
-    const alunos = buscarAlunosPorTurma("Z");
+    const alunos = buscarAlunosPorTurma(TENANT_TESTE, "Z");
     expect(alunos.length).toBe(0);
   });
 });
 
 describe("buscarAlunosAtivos", () => {
   it("retorna apenas alunos ativos", () => {
-    const ativos = buscarAlunosAtivos();
+    const ativos = buscarAlunosAtivos(TENANT_TESTE);
     expect(ativos.length).toBe(2);
     expect(ativos.every((a) => a.status === "Ativo")).toBe(true);
   });
@@ -91,15 +95,15 @@ describe("buscarAlunosAtivos", () => {
 
 describe("obterEstatisticasAlunos", () => {
   it("retorna estatísticas corretas", () => {
-    const stats = obterEstatisticasAlunos();
+    const stats = obterEstatisticasAlunos(TENANT_TESTE);
     expect(stats.total).toBe(3);
     expect(stats.ativos).toBe(2);
     expect(stats.inativos).toBe(1);
   });
 
   it("retorna estatísticas zeradas se cache vazio", () => {
-    __setCacheAlunos(null);
-    const stats = obterEstatisticasAlunos();
+    __setCacheAlunos(TENANT_TESTE, null);
+    const stats = obterEstatisticasAlunos(TENANT_TESTE);
     expect(stats.total).toBe(0);
     expect(stats.ativos).toBe(0);
     expect(stats.inativos).toBe(0);
@@ -108,19 +112,19 @@ describe("obterEstatisticasAlunos", () => {
 
 describe("cacheEstaValido", () => {
   it("retorna true se cache está válido", () => {
-    __setCacheAlunos(mockAlunos);
-    __setUltimaBusca(Date.now());
-    expect(cacheEstaValido()).toBe(true);
+    __setCacheAlunos(TENANT_TESTE, mockAlunos);
+    __setUltimaBusca(TENANT_TESTE, Date.now());
+    expect(cacheEstaValido(TENANT_TESTE)).toBe(true);
   });
 
   it("retorna false se cache está vazio", () => {
-    __setCacheAlunos(null);
-    expect(cacheEstaValido()).toBe(false);
+    __setCacheAlunos(TENANT_TESTE, null);
+    expect(cacheEstaValido(TENANT_TESTE)).toBe(false);
   });
 
   it("retorna false se cache expirou", () => {
-    __setCacheAlunos(mockAlunos);
-    __setUltimaBusca(Date.now() - 10 * 60 * 1000); // 10 minutos atrás
-    expect(cacheEstaValido()).toBe(false);
+    __setCacheAlunos(TENANT_TESTE, mockAlunos);
+    __setUltimaBusca(TENANT_TESTE, Date.now() - 10 * 60 * 1000); // 10 minutos atrás
+    expect(cacheEstaValido(TENANT_TESTE)).toBe(false);
   });
 });
