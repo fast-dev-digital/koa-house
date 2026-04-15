@@ -1,5 +1,6 @@
 export interface Professor {
   id: string;
+  tenantId?: string;
   nome: string;
   email: string;
   telefone: string;

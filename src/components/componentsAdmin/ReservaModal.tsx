@@ -1,7 +1,8 @@
 // src/components/componentsAdmin/ReservaModal.tsx
 import { useState, useEffect } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import type { Reserva, Quadra } from "../../types/agenda";
+import type { Reserva } from "../../types/agenda";
+import type { Quadra } from "../../types/quadra";
 import {
   criarReserva,
   atualizarReserva,
@@ -9,14 +10,14 @@ import {
 } from "../../services/agendaService";
 import { FaTimes, FaPlus } from "react-icons/fa";
 import Toast from "./Toast";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../../firebase-config";
+import { useAuth } from "../../contexts/AuthContext";
+import { buscarTurmasAtivas } from "../../services/turmaService";
 
 interface Turma {
-  id: string;
+  id?: string;
   nome: string;
   horario: string;
-  dias: string[];
+  dias: string | string[];
   professorNome: string;
 }
 
@@ -41,6 +42,7 @@ export default function ReservaModal({
   quadraSelecionada,
   onSuccess,
 }: ReservaModalProps) {
+  const { currentTenantId } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState<{
@@ -81,15 +83,8 @@ export default function ReservaModal({
 
   async function carregarTurmas() {
     try {
-      const q = query(collection(db, "turmas"), where("status", "==", "Ativa"));
-      const snapshot = await getDocs(q);
-      const turmasData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        nome: doc.data().nome,
-        horario: doc.data().horario,
-        dias: doc.data().dias || [],
-        professorNome: doc.data().professorNome || "",
-      }));
+      if (!currentTenantId) return;
+      const turmasData = await buscarTurmasAtivas(currentTenantId);
       setTurmas(turmasData);
     } catch (error) {
       // Ignora erros silenciosamente
@@ -163,6 +158,11 @@ export default function ReservaModal({
 
     setLoading(true);
     try {
+      if (!currentTenantId) {
+        showToast("Tenant não encontrado na sessão", "error");
+        return;
+      }
+
       const quadra = quadras.find((q) => q.id === formData.quadraId);
 
       const dados: any = {
@@ -190,7 +190,7 @@ export default function ReservaModal({
       }
 
       if (reserva?.id) {
-        await atualizarReserva(reserva.id, dados);
+        await atualizarReserva(currentTenantId, reserva.id, dados);
         showToast("Reserva atualizada com sucesso!", "success");
       } else if (reservaMensal) {
         // Criar reservas mensais para dias específicos da semana
@@ -204,6 +204,7 @@ export default function ReservaModal({
         const dataFinalObj = new Date(anoFinal, mesFinal - 1, diaFinal);
 
         const totalCriadas = await criarReservaMensal(
+          currentTenantId,
           dados,
           dataInicialObj,
           dataFinalObj,
@@ -211,7 +212,7 @@ export default function ReservaModal({
         );
         showToast(`${totalCriadas} reservas criadas no período!`, "success");
       } else {
-        await criarReserva(dados);
+        await criarReserva(currentTenantId, dados);
         showToast("Reserva criada com sucesso!", "success");
       }
 

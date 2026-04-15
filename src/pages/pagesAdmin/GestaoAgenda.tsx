@@ -7,7 +7,8 @@ import {
   FaEdit,
   FaTrash,
 } from "react-icons/fa";
-import { buscarQuadras } from "../../services/quadrasServices";
+import { useAuth } from "../../contexts/AuthContext";
+import { buscarQuadras } from "../../services/quadrasServices.ts";
 import type { Quadra } from "../../types/quadra";
 import type { Reserva, SlotHorario } from "../../types/agenda";
 import {
@@ -22,6 +23,7 @@ import DeleteConfirmModal from "../../components/componentsAdmin/DeleteConfirmMo
 import Toast from "../../components/componentsAdmin/Toast";
 
 export default function GestaoAgenda() {
+  const { currentTenantId } = useAuth();
   const [dataSelecionada, setDataSelecionada] = useState<Date>(new Date());
   const [quadras, setQuadras] = useState<Quadra[]>([]);
   const [reservas, setReservas] = useState<Reserva[]>([]);
@@ -63,7 +65,7 @@ export default function GestaoAgenda() {
   useEffect(() => {
     carregarQuadras();
     setSlots(gerarSlotsHorarios());
-  }, []);
+  }, [currentTenantId]);
 
   // Carregar reservas quando mudar a data
   useEffect(() => {
@@ -72,7 +74,8 @@ export default function GestaoAgenda() {
 
   const carregarQuadras = async () => {
     try {
-      const quadrasData = await buscarQuadras();
+      if (!currentTenantId) return;
+      const quadrasData = await buscarQuadras(currentTenantId);
       // Aceita tanto 'ativa' quanto 'status' (para compatibilidade)
       const quadrasFiltradas = quadrasData.filter(
         (q: any) =>
@@ -85,9 +88,13 @@ export default function GestaoAgenda() {
   };
 
   const carregarReservas = async () => {
+    if (!currentTenantId) return;
     setLoading(true);
     try {
-      const reservasData = await buscarReservasPorData(dataSelecionada);
+      const reservasData = await buscarReservasPorData(
+        currentTenantId,
+        dataSelecionada,
+      );
       setReservas(reservasData);
     } catch (error) {
       showToast("Erro ao carregar reservas", "error");
@@ -175,7 +182,8 @@ export default function GestaoAgenda() {
     if (!reservaParaDeletar?.id) return;
 
     try {
-      await excluirReserva(reservaParaDeletar.id);
+      if (!currentTenantId) return;
+      await excluirReserva(currentTenantId, reservaParaDeletar.id);
       showToast("Reserva excluída com sucesso!", "success");
       carregarReservas();
     } catch (error) {

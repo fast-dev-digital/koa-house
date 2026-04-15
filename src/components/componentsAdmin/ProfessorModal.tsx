@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   criarProfessor,
   atualizarProfessor,
   type ProfessorCreate,
   type ProfessorUpdate,
-} from "../../services/professorService";
+} from "../../services/professorService.ts";
 import { FaTimes, FaChalkboardTeacher, FaSave } from "react-icons/fa";
 import type { Professor } from "../../types/professor";
 
@@ -23,6 +24,7 @@ export default function ProfessorModal({
   mode,
   professorData,
 }: ProfessorModalProps) {
+  const { currentTenantId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
@@ -55,7 +57,7 @@ export default function ProfessorModal({
   }, [mode, professorData, isOpen]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -67,6 +69,10 @@ export default function ProfessorModal({
     setLoading(true);
 
     try {
+      if (!currentTenantId) {
+        throw new Error("Tenant não encontrado na sessão");
+      }
+
       if (mode === "create") {
         // ✅ CRIAR VIA SERVICE
         const professorDataToSave: ProfessorCreate = {
@@ -79,7 +85,7 @@ export default function ProfessorModal({
             | "Vôlei",
           status: formData.status as "Ativo" | "Inativo",
         };
-        await criarProfessor(professorDataToSave);
+        await criarProfessor(currentTenantId, professorDataToSave);
       } else {
         // ✅ ATUALIZAR VIA SERVICE
         if (!professorData?.id)
@@ -95,7 +101,7 @@ export default function ProfessorModal({
           status: formData.status as "Ativo" | "Inativo",
         };
 
-        await atualizarProfessor(professorData.id, updateData);
+        await atualizarProfessor(currentTenantId, professorData.id, updateData);
       }
 
       ("🎉 Sucesso! Chamando onSuccess()");

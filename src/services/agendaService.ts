@@ -1,4 +1,3 @@
-// src/services/agendaService.ts
 import {
   collection,
   addDoc,
@@ -12,90 +11,36 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { db } from "../firebase-config";
-import type { Reserva, Quadra } from "../types/agenda";
+import type { Reserva } from "../types/agenda";
 
-// ==================== QUADRAS ====================
+const assertTenantId = (tenantId: string) => {
+  if (!tenantId?.trim()) {
+    throw new Error("Tenant ID é obrigatório");
+  }
+};
 
-export async function buscarQuadras(): Promise<Quadra[]> {
-  const snapshot = await getDocs(
-    query(collection(db, "quadras"), orderBy("numero")),
-  );
-  const quadras = snapshot.docs.map(
-    (doc) => ({ id: doc.id, ...doc.data() }) as Quadra,
-  );
-  return quadras;
-}
+const getReservasRef = (tenantId: string) => {
+  assertTenantId(tenantId);
+  return collection(db, `tenants/${tenantId}/reservas`);
+};
 
-export async function criarQuadra(quadra: Omit<Quadra, "id">): Promise<string> {
-  const docRef = await addDoc(collection(db, "quadras"), quadra);
-  return docRef.id;
-}
+const getAgendaRef = (tenantId: string) => {
+  assertTenantId(tenantId);
+  return collection(db, `tenants/${tenantId}/agenda`);
+};
 
-export async function atualizarQuadra(
-  id: string,
-  quadra: Partial<Quadra>,
-): Promise<void> {
-  const { id: _, ...resto } = quadra;
-  await updateDoc(doc(db, "quadras", id), resto);
-}
+const getReservaDocRef = (tenantId: string, id: string) => {
+  assertTenantId(tenantId);
+  if (!id?.trim()) {
+    throw new Error("ID da reserva é obrigatório");
+  }
 
-export async function excluirQuadra(id: string): Promise<void> {
-  await deleteDoc(doc(db, "quadras", id));
-}
+  return doc(db, `tenants/${tenantId}/reservas`, id);
+};
 
-// ==================== RESERVAS ====================
-
-export async function buscarReservasPorData(data: Date): Promise<Reserva[]> {
-  // Cria data em UTC para garantir consistência
-  const ano = data.getFullYear();
-  const mes = data.getMonth();
-  const dia = data.getDate();
-
-  const inicioDia = new Date(Date.UTC(ano, mes, dia, 0, 0, 0, 0));
-  const fimDia = new Date(Date.UTC(ano, mes, dia, 23, 59, 59, 999));
-
-  const snapshot = await getDocs(
-    query(
-      collection(db, "reservas"),
-      where("data", ">=", Timestamp.fromDate(inicioDia)),
-      where("data", "<=", Timestamp.fromDate(fimDia)),
-      orderBy("data"), // ← Removido orderBy("horarioInicio")
-    ),
-  );
-
-  // Ordena manualmente no código
-  const reservas = snapshot.docs.map((doc) => {
-    const data = doc.data();
-    const reserva = {
-      id: doc.id,
-      ...data,
-      data: data.data?.toDate ? data.data.toDate() : new Date(data.data),
-      createdAt: data.createdAt?.toDate
-        ? data.createdAt.toDate()
-        : new Date(data.createdAt),
-      updatedAt: data.updatedAt?.toDate
-        ? data.updatedAt.toDate()
-        : new Date(data.updatedAt),
-    } as Reserva;
-
-    return reserva;
-  });
-
-  // Ordena por horarioInicio manualmente
-  return reservas.sort((a, b) =>
-    a.horarioInicio.localeCompare(b.horarioInicio),
-  );
-}
-
-export async function criarReserva(
-  reserva: Omit<Reserva, "id" | "createdAt" | "updatedAt">,
-): Promise<string> {
-  const agora = Timestamp.now();
-
-  // Normaliza a data para UTC 12:00 para evitar problemas de timezone
-  const dataOriginal =
-    reserva.data instanceof Date ? reserva.data : reserva.data.toDate();
-  const dataUTC = new Date(
+const converterDataUTC = (data: Date | Timestamp): Date => {
+  const dataOriginal = data instanceof Date ? data : data.toDate();
+  return new Date(
     Date.UTC(
       dataOriginal.getFullYear(),
       dataOriginal.getMonth(),
@@ -106,34 +51,109 @@ export async function criarReserva(
       0,
     ),
   );
+};
 
-  const docRef = await addDoc(collection(db, "reservas"), {
+const mapReservaDoc = (docSnap: any, tenantId: string): Reserva => {
+  const data = docSnap.data();
+
+  return {
+    id: docSnap.id,
+    tenantId,
+    quadraId: data.quadraId,
+    quadraNome: data.quadraNome,
+    data: data.data?.toDate ? data.data.toDate() : new Date(data.data),
+    horarioInicio: data.horarioInicio,
+    horarioFim: data.horarioFim,
+    turmaNome: data.turmaNome,
+    professorNome: data.professorNome,
+    alunos: data.alunos || [],
+    tipo: data.tipo,
+    status: data.status,
+    observacoes: data.observacoes,
+    createdAt: data.createdAt?.toDate
+      ? data.createdAt.toDate()
+      : new Date(data.createdAt),
+    updatedAt: data.updatedAt?.toDate
+      ? data.updatedAt.toDate()
+      : new Date(data.updatedAt),
+  };
+};
+
+// ==================== RESERVAS ====================
+
+export async function buscarReservasPorData(
+  tenantId: string,
+  data: Date,
+): Promise<Reserva[]> {
+  assertTenantId(tenantId);
+
+  const ano = data.getFullYear();
+  const mes = data.getMonth();
+  const dia = data.getDate();
+
+  const inicioDia = new Date(Date.UTC(ano, mes, dia, 0, 0, 0, 0));
+  const fimDia = new Date(Date.UTC(ano, mes, dia, 23, 59, 59, 999));
+
+  const snapshot = await getDocs(
+    query(
+      getReservasRef(tenantId),
+      where("data", ">=", Timestamp.fromDate(inicioDia)),
+      where("data", "<=", Timestamp.fromDate(fimDia)),
+      orderBy("data"),
+    ),
+  );
+
+  const reservas = snapshot.docs.map((docSnap) =>
+    mapReservaDoc(docSnap, tenantId),
+  );
+
+  return reservas.sort((a, b) =>
+    a.horarioInicio.localeCompare(b.horarioInicio),
+  );
+}
+
+export async function criarReserva(
+  tenantId: string,
+  reserva: Omit<Reserva, "id" | "createdAt" | "updatedAt" | "tenantId">,
+): Promise<string> {
+  assertTenantId(tenantId);
+  const agora = Timestamp.now();
+  const dataUTC = converterDataUTC(reserva.data);
+
+  const docRef = await addDoc(getReservasRef(tenantId), {
     ...reserva,
+    tenantId,
     data: Timestamp.fromDate(dataUTC),
     createdAt: agora,
     updatedAt: agora,
   });
+
   return docRef.id;
 }
 
 export async function atualizarReserva(
+  tenantId: string,
   id: string,
   reserva: Partial<Reserva>,
 ): Promise<void> {
+  assertTenantId(tenantId);
   const { id: _, createdAt, ...resto } = reserva;
-  await updateDoc(doc(db, "reservas", id), {
+  await updateDoc(getReservaDocRef(tenantId, id), {
     ...resto,
+    tenantId,
     ...(resto.data && {
-      data: Timestamp.fromDate(
-        resto.data instanceof Date ? resto.data : resto.data.toDate(),
-      ),
+      data: Timestamp.fromDate(converterDataUTC(resto.data)),
     }),
     updatedAt: Timestamp.now(),
   });
 }
 
-export async function excluirReserva(id: string): Promise<void> {
-  await deleteDoc(doc(db, "reservas", id));
+export async function excluirReserva(
+  tenantId: string,
+  id: string,
+): Promise<void> {
+  assertTenantId(tenantId);
+  await deleteDoc(getReservaDocRef(tenantId, id));
 }
 
 // ==================== HELPERS ====================
@@ -174,23 +194,19 @@ export function formatarDataCurta(data: Date): string {
 
 // ==================== RESERVAS MENSAIS ====================
 
-/**
- * Cria reservas mensais para dias específicos da semana
- * @param dadosReserva - Dados base da reserva
- * @param dataInicial - Data inicial do período
- * @param dataFinal - Data final do período
- * @param diasSemana - Array com números dos dias da semana (0=Dom, 1=Seg, ..., 6=Sáb)
- * @returns Número total de reservas criadas
- */
 export async function criarReservaMensal(
-  dadosReserva: Omit<Reserva, "id" | "createdAt" | "updatedAt" | "data">,
+  tenantId: string,
+  dadosReserva: Omit<
+    Reserva,
+    "id" | "createdAt" | "updatedAt" | "tenantId" | "data"
+  >,
   dataInicial: Date,
   dataFinal: Date,
   diasSemana: number[],
 ): Promise<number> {
+  assertTenantId(tenantId);
   let reservasCriadas = 0;
 
-  // Itera por todos os dias entre dataInicial e dataFinal
   for (
     let dia = new Date(dataInicial);
     dia <= dataFinal;
@@ -198,11 +214,9 @@ export async function criarReservaMensal(
   ) {
     const diaSemana = dia.getDay();
 
-    // Se este dia da semana está selecionado, cria a reserva
     if (diasSemana.includes(diaSemana)) {
       try {
-        // Verifica se já existe reserva neste horário
-        const reservasExistentes = await buscarReservasPorData(dia);
+        const reservasExistentes = await buscarReservasPorData(tenantId, dia);
         const jaExiste = reservasExistentes.some(
           (r) =>
             r.quadraId === dadosReserva.quadraId &&
@@ -211,7 +225,7 @@ export async function criarReservaMensal(
         );
 
         if (!jaExiste) {
-          await criarReserva({
+          await criarReserva(tenantId, {
             ...dadosReserva,
             data: new Date(dia),
           });
@@ -225,3 +239,5 @@ export async function criarReservaMensal(
 
   return reservasCriadas;
 }
+
+export { getAgendaRef };

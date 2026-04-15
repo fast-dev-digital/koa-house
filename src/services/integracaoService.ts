@@ -7,6 +7,7 @@ import {
   getDoc,
   doc,
   updateDoc,
+  runTransaction,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../firebase-config";
@@ -70,18 +71,47 @@ interface CacheIntegracao {
   timestampIndividual: Map<string, number>;
 }
 
-const cacheIntegracao: CacheIntegracao = {
-  todosAlunos: null,
-  alunoIndividual: new Map(),
-  timestampTodos: 0,
-  timestampIndividual: new Map(),
-};
+interface TotaisPagamentos {
+  pago: number;
+  pendente: number;
+  arquivado: number;
+}
+
+const cacheIntegracaoPorTenant = new Map<string, CacheIntegracao>();
 
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutos
 
+function assertTenantId(tenantId: string): string {
+  const tenantNormalizado = tenantId?.trim();
+  if (!tenantNormalizado) {
+    throw new Error("tenantId é obrigatório");
+  }
+  return tenantNormalizado;
+}
+
+function getOrCreateTenantCache(tenantId: string): CacheIntegracao {
+  const tenantNormalizado = assertTenantId(tenantId);
+  const cacheExistente = cacheIntegracaoPorTenant.get(tenantNormalizado);
+
+  if (cacheExistente) {
+    return cacheExistente;
+  }
+
+  const novoCache: CacheIntegracao = {
+    todosAlunos: null,
+    alunoIndividual: new Map(),
+    timestampTodos: 0,
+    timestampIndividual: new Map(),
+  };
+
+  cacheIntegracaoPorTenant.set(tenantNormalizado, novoCache);
+  return novoCache;
+}
+
 //  FUNÇÃO PARA INVALIDAR CACHE
-function invalidarCacheIntegracao(): void {
+function invalidarCacheIntegracao(tenantId: string): void {
   ("🧹 Invalidando cache de integração...");
+  const cacheIntegracao = getOrCreateTenantCache(tenantId);
   cacheIntegracao.todosAlunos = null;
   cacheIntegracao.timestampTodos = 0;
   cacheIntegracao.alunoIndividual.clear();
@@ -89,27 +119,89 @@ function invalidarCacheIntegracao(): void {
 }
 
 //  FUNÇÃO PARA VERIFICAR SE CACHE ESTÁ VÁLIDO
-function cacheValidoTodos(): boolean {
+function cacheValidoTodos(tenantId: string): boolean {
   const now = Date.now();
+  const cacheIntegracao = getOrCreateTenantCache(tenantId);
   return (
     cacheIntegracao.todosAlunos !== null &&
     now - cacheIntegracao.timestampTodos < CACHE_TTL
   );
 }
 
-function cacheValidoIndividual(alunoId: string): boolean {
+function cacheValidoIndividual(tenantId: string, alunoId: string): boolean {
   const now = Date.now();
+  const cacheIntegracao = getOrCreateTenantCache(tenantId);
   const timestamp = cacheIntegracao.timestampIndividual.get(alunoId) || 0;
   return (
     cacheIntegracao.alunoIndividual.has(alunoId) && now - timestamp < CACHE_TTL
   );
 }
 
+// Helpers
+const getAlunosPagamentosRef = (tenantId: string) => {
+  const t = assertTenantId(tenantId);
+  return collection(db, `tenants/${t}/alunosPagamentos`);
+};
+
+const getAlunoPagamentoDocRef = (tenantId: string, docId: string) => {
+  const t = assertTenantId(tenantId);
+  return doc(db, `tenants/${t}/alunosPagamentos`, docId);
+};
+
+const getAlunoDocRef = (tenantId: string, alunoId: string) => {
+  const t = assertTenantId(tenantId);
+  return doc(db, `tenants/${t}/alunos`, alunoId);
+};
+
+const getPagamentosRef = (tenantId: string) => {
+  const t = assertTenantId(tenantId);
+  return collection(db, `tenants/${t}/pagamentos`);
+};
+
+const gerarMesReferencia = (data: Date): string =>
+  data.toLocaleDateString("pt-BR", {
+    month: "2-digit",
+    year: "numeric",
+  });
+
+const calcularTotaisPagamentos = (pagamentos: any[]): TotaisPagamentos => {
+  return pagamentos.reduce(
+    (acc, pagamento) => {
+      const valor = typeof pagamento?.valor === "number" ? pagamento.valor : 0;
+      const status = pagamento?.status;
+
+      if (status === "Pago") acc.pago += valor;
+      else if (status === "Pendente") acc.pendente += valor;
+      else if (status === "Arquivado") acc.arquivado += valor;
+
+      return acc;
+    },
+    { pago: 0, pendente: 0, arquivado: 0 } as TotaisPagamentos,
+  );
+};
+
+const obterStatusAluno = async (
+  tenantId: string,
+  alunoId: string,
+): Promise<string> => {
+  try {
+    const docAluno = await getDoc(getAlunoDocRef(tenantId, alunoId));
+    if (!docAluno.exists()) return "";
+    return (docAluno.data().status || "").trim();
+  } catch (e) {
+    console.warn("⚠️ Não foi possível ler status em Alunos:", e);
+    return "";
+  }
+};
+
 // Criar aluno na nova estrutura com primeiro pagamento
 export async function criarAlunoComPagamentosArray(
   alunoData: AlunoData,
+  tenantId: string,
 ): Promise<void> {
   try {
+    const tenantNormalizado = assertTenantId(tenantId);
+
     if (alunoData.status !== "Ativo") {
       `⏸️ Aluno ${alunoData.nome} não está ativo`;
       return;
@@ -117,7 +209,7 @@ export async function criarAlunoComPagamentosArray(
 
     // Verificar se já existe na nova estrutura
     const existeQuery = query(
-      collection(db, "alunosPagamentos"),
+      getAlunosPagamentosRef(tenantId),
       where("alunoId", "==", alunoData.id),
     );
     const existeSnapshot = await getDocs(existeQuery);
@@ -138,7 +230,7 @@ export async function criarAlunoComPagamentosArray(
     });
 
     // Criar documento na nova estrutura
-    await addDoc(collection(db, "alunosPagamentos"), {
+    await addDoc(getAlunosPagamentosRef(tenantId), {
       alunoId: alunoData.id,
       nome: alunoData.nome,
       plano: alunoData.plano,
@@ -167,7 +259,7 @@ export async function criarAlunoComPagamentosArray(
     });
 
     `✅ ${alunoData.nome} criado na nova estrutura`;
-    invalidarCacheIntegracao();
+    invalidarCacheIntegracao(tenantNormalizado);
   } catch (error) {
     console.error("❌ Erro ao criar aluno na nova estrutura:", error);
     throw error;
@@ -178,15 +270,19 @@ export async function criarAlunoComPagamentosArray(
 
 export async function buscarAlunoComPagamentos(
   alunoId: string,
+  tenantId: string,
 ): Promise<AlunoComPagamentos | null> {
   try {
+    const tenantNormalizado = assertTenantId(tenantId);
+    const cacheIntegracao = getOrCreateTenantCache(tenantNormalizado);
+
     // ✅ VERIFICAR CACHE INDIVIDUAL PRIMEIRO
-    if (cacheValidoIndividual(alunoId)) {
+    if (cacheValidoIndividual(tenantNormalizado, alunoId)) {
       return cacheIntegracao.alunoIndividual.get(alunoId) || null;
     }
 
     const alunoQuery = query(
-      collection(db, "alunosPagamentos"),
+      getAlunosPagamentosRef(tenantId),
       where("alunoId", "==", alunoId),
     );
 
@@ -235,16 +331,19 @@ export async function buscarAlunoComPagamentos(
 }
 // ✅ FUNÇÃO 6 - Listar todos alunos com pagamentos
 // ✅ SUBSTITUIR A FUNÇÃO COMPLETA (LINHA 169):
-export async function listarAlunosComPagamentos(): Promise<
-  AlunoComPagamentos[]
-> {
+export async function listarAlunosComPagamentos(
+  tenantId: string,
+): Promise<AlunoComPagamentos[]> {
   try {
+    const tenantNormalizado = assertTenantId(tenantId);
+    const cacheIntegracao = getOrCreateTenantCache(tenantNormalizado);
+
     // VERIFICAR CACHE PRIMEIRO
-    if (cacheValidoTodos()) {
+    if (cacheValidoTodos(tenantNormalizado)) {
       return cacheIntegracao.todosAlunos!;
     }
 
-    const snapshot = await getDocs(collection(db, "alunosPagamentos"));
+    const snapshot = await getDocs(getAlunosPagamentosRef(tenantId));
     const alunos: AlunoComPagamentos[] = [];
 
     snapshot.forEach((docSnapshot) => {
@@ -318,23 +417,20 @@ export function limparObjetoUndefined(obj: any): any {
 // ✅ FUNÇÃO ULTRA-DEFENSIVA - Adicionar próximo pagamento ao array de um aluno
 export async function adicionarProximoPagamentoArray(
   alunoId: string,
+  tenantId: string,
 ): Promise<void> {
   try {
-    const alunoComPagamentos = await buscarAlunoComPagamentos(alunoId);
+    const tenantNormalizado = assertTenantId(tenantId);
+    const alunoComPagamentos = await buscarAlunoComPagamentos(
+      alunoId,
+      tenantNormalizado,
+    );
     if (!alunoComPagamentos) {
       throw new Error("Aluno não encontrado na nova estrutura");
     }
 
     // ✅ Status SEMPRE da collection Alunos
-    let statusAluno = "";
-    try {
-      const docAluno = await getDoc(doc(db, "Alunos", alunoId));
-      if (docAluno.exists()) {
-        statusAluno = (docAluno.data().status || "").trim();
-      }
-    } catch (e) {
-      console.warn("⚠️ Não foi possível ler status em Alunos:", e);
-    }
+    const statusAluno = await obterStatusAluno(tenantId, alunoId);
     if (statusAluno.toLowerCase() !== "ativo") return;
 
     // Verificar se já tem pagamento pendente
@@ -356,10 +452,7 @@ export async function adicionarProximoPagamentoArray(
       10,
     ); // Sempre dia 10
 
-    const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
-      month: "2-digit",
-      year: "numeric",
-    });
+    const mesReferencia = gerarMesReferencia(proximoVencimento);
 
     const novosPagamentos: any[] = [];
 
@@ -451,12 +544,12 @@ export async function adicionarProximoPagamentoArray(
     };
 
     await updateDoc(
-      doc(db, "alunosPagamentos", alunoComPagamentos.id!),
+      getAlunoPagamentoDocRef(tenantId, alunoComPagamentos.id!),
       dadosLimpos,
     );
 
     `✅ Próximo pagamento adicionado para ${alunoComPagamentos.nome}`;
-    invalidarCacheIntegracao();
+    invalidarCacheIntegracao(tenantNormalizado);
     ("invalidar cache funcionando");
   } catch (error) {
     console.error("❌ Erro ao adicionar próximo pagamento:", error);
@@ -467,13 +560,15 @@ export async function adicionarProximoPagamentoArray(
 // ✅ FUNÇÃO 7.5 - Verificar e gerar pagamento para aluno que voltou a ser ativo
 export async function verificarEGerarPagamentoAlunoAtivo(
   alunoId: string,
+  tenantId: string,
 ): Promise<{ sucesso: boolean; mensagem?: string; erro?: string }> {
   try {
+    const tenantNormalizado = assertTenantId(tenantId);
     `🔍 Verificando necessidade de gerar pagamento para aluno ${alunoId}`;
 
     // Buscar aluno em alunosPagamentos
     const alunoQuery = query(
-      collection(db, "alunosPagamentos"),
+      getAlunosPagamentosRef(tenantId),
       where("alunoId", "==", alunoId),
     );
     const alunoSnapshot = await getDocs(alunoQuery);
@@ -490,15 +585,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
     const pagamentos = alunoData.pagamentos || [];
 
     // Verificar status na collection Alunos
-    let statusAluno = "";
-    try {
-      const docAluno = await getDoc(doc(db, "Alunos", alunoId));
-      if (docAluno.exists()) {
-        statusAluno = (docAluno.data().status || "").trim();
-      }
-    } catch (e) {
-      console.warn("⚠️ Não foi possível ler status em Alunos:", e);
-    }
+    const statusAluno = await obterStatusAluno(tenantId, alunoId);
 
     // Se não está ativo, não gerar
     if (statusAluno.toLowerCase() !== "ativo") {
@@ -531,10 +618,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
         10,
       );
 
-      const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
-        month: "2-digit",
-        year: "numeric",
-      });
+      const mesReferencia = gerarMesReferencia(proximoVencimento);
 
       // Verificar se já existe
       const jaExiste = pagamentos.some(
@@ -572,29 +656,21 @@ export async function verificarEGerarPagamentoAlunoAtivo(
 
       pagamentos.push(novoPagamento);
 
-      const totalPago = pagamentos
-        .filter((p: any) => p.status === "Pago")
-        .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-      const totalPendente = pagamentos
-        .filter((p: any) => p.status === "Pendente")
-        .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-      const totalArquivado = pagamentos
-        .filter((p: any) => p.status === "Arquivado")
-        .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+      const totais = calcularTotaisPagamentos(pagamentos);
 
       await updateDoc(alunoDoc.ref, {
         pagamentos: pagamentos.map((p: any) => limparObjetoUndefined(p)),
         totais: {
-          pago: totalPago,
-          pendente: totalPendente,
-          arquivado: totalArquivado,
+          pago: totais.pago,
+          pendente: totais.pendente,
+          arquivado: totais.arquivado,
         },
         proximoVencimento: Timestamp.fromDate(proximoVencimento),
         updatedAt: Timestamp.now(),
       });
 
       `   ✅ Pagamento gerado: ${mesReferencia} - R$ ${valorPagamento}`;
-      invalidarCacheIntegracao();
+      invalidarCacheIntegracao(tenantNormalizado);
 
       return {
         sucesso: true,
@@ -612,10 +688,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
         proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
       }
 
-      const mesReferencia = proximoVencimento.toLocaleDateString("pt-BR", {
-        month: "2-digit",
-        year: "numeric",
-      });
+      const mesReferencia = gerarMesReferencia(proximoVencimento);
 
       const valorPagamento =
         typeof alunoData.valorMensalidade === "number"
@@ -647,7 +720,7 @@ export async function verificarEGerarPagamentoAlunoAtivo(
       });
 
       `   ✅ Primeiro pagamento criado: ${mesReferencia} - R$ ${valorPagamento}`;
-      invalidarCacheIntegracao();
+      invalidarCacheIntegracao(tenantNormalizado);
 
       return {
         sucesso: true,
@@ -668,24 +741,21 @@ export async function marcarPagamentoPagoArray(
   alunoId: string,
   mesReferencia: string,
   dataPagamento: Date = new Date(),
+  tenantId: string,
 ): Promise<void> {
   try {
-    const alunoComPagamentos = await buscarAlunoComPagamentos(alunoId);
+    const tenantNormalizado = assertTenantId(tenantId);
+    const alunoComPagamentos = await buscarAlunoComPagamentos(
+      alunoId,
+      tenantNormalizado,
+    );
 
     if (!alunoComPagamentos) {
       throw new Error("Aluno não encontrado");
     }
 
     // ✅ Verificar status do aluno na collection Alunos
-    let statusAluno = "";
-    try {
-      const docAluno = await getDoc(doc(db, "Alunos", alunoId));
-      if (docAluno.exists()) {
-        statusAluno = (docAluno.data().status || "").trim();
-      }
-    } catch (e) {
-      console.warn("⚠️ Não foi possível ler status em Alunos:", e);
-    }
+    const statusAluno = await obterStatusAluno(tenantId, alunoId);
 
     // ✅ Verificar se o pagamento existe e está pendente
     const pagamentoEncontrado = alunoComPagamentos.pagamentos.find(
@@ -770,36 +840,22 @@ export async function marcarPagamentoPagoArray(
       }
 
       // Recalcular totais
-      const totalPago = novosPagamentos
-        .filter((p) => p.status === "Pago")
-        .reduce(
-          (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-          0,
-        );
-      const totalPendente = novosPagamentos
-        .filter((p) => p.status === "Pendente")
-        .reduce(
-          (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-          0,
-        );
-      const totalArquivado = novosPagamentos
-        .filter((p) => p.status === "Arquivado")
-        .reduce(
-          (sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0),
-          0,
-        );
+      const totais = calcularTotaisPagamentos(novosPagamentos);
 
-      await updateDoc(doc(db, "alunosPagamentos", alunoComPagamentos.id!), {
-        pagamentos: novosPagamentos,
-        totais: {
-          pago: totalPago,
-          pendente: totalPendente,
-          arquivado: totalArquivado,
+      await updateDoc(
+        getAlunoPagamentoDocRef(tenantId, alunoComPagamentos.id!),
+        {
+          pagamentos: novosPagamentos,
+          totais: {
+            pago: totais.pago,
+            pendente: totais.pendente,
+            arquivado: totais.arquivado,
+          },
+          updatedAt: Timestamp.now(),
         },
-        updatedAt: Timestamp.now(),
-      });
+      );
 
-      invalidarCacheIntegracao();
+      invalidarCacheIntegracao(tenantNormalizado);
       return; // Sair da função aqui
     }
 
@@ -877,49 +933,157 @@ export async function marcarPagamentoPagoArray(
     }
 
     // ✅ RECALCULAR totais com segurança
-    const totalPago = novosPagamentos
-      .filter((p) => p.status === "Pago")
-      .reduce((sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0), 0);
-
-    const totalPendente = novosPagamentos
-      .filter((p) => p.status === "Pendente")
-      .reduce((sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0), 0);
-
-    const totalArquivado = novosPagamentos
-      .filter((p) => p.status === "Arquivado")
-      .reduce((sum, p) => sum + (typeof p.valor === "number" ? p.valor : 0), 0);
+    const totais = calcularTotaisPagamentos(novosPagamentos);
 
     `📊 Totais atualizados:`;
-    `   • Pago: R$ ${totalPago.toFixed(2)}`;
-    `   • Pendente: R$ ${totalPendente.toFixed(2)}`;
-    `   • Arquivado: R$ ${totalArquivado.toFixed(2)}`;
+    `   • Pago: R$ ${totais.pago.toFixed(2)}`;
+    `   • Pendente: R$ ${totais.pendente.toFixed(2)}`;
+    `   • Arquivado: R$ ${totais.arquivado.toFixed(2)}`;
 
     // ✅ DADOS PARA ATUALIZAR completamente limpos (sem undefined)
     const dadosLimpos = {
       pagamentos: novosPagamentos,
       totais: {
-        pago: totalPago,
-        pendente: totalPendente,
-        arquivado: totalArquivado,
+        pago: totais.pago,
+        pendente: totais.pendente,
+        arquivado: totais.arquivado,
       },
       updatedAt: Timestamp.now(),
     };
 
     await updateDoc(
-      doc(db, "alunosPagamentos", alunoComPagamentos.id!),
+      getAlunoPagamentoDocRef(tenantId, alunoComPagamentos.id!),
       dadosLimpos,
     );
 
     `✅ Pagamento marcado como pago para ${alunoComPagamentos.nome}`;
-    invalidarCacheIntegracao();
+    invalidarCacheIntegracao(tenantNormalizado);
   } catch (error) {
     console.error("❌ Erro ao marcar pagamento como pago:", error);
     throw error;
   }
 }
 
+// ✅ EXEMPLO DIDÁTICO - Versão transacional para aprendizado
+export async function marcarPagamentoPagoArrayComTransacaoExemplo(
+  alunoId: string,
+  mesReferencia: string,
+  dataPagamento: Date = new Date(),
+  tenantId: string,
+): Promise<void> {
+  const tenantNormalizado = assertTenantId(tenantId);
+
+  // 1) Status do aluno continua fora da transação
+  const statusAluno = await obterStatusAluno(tenantNormalizado, alunoId);
+
+  // 2) Descobre o doc do aluno em alunosPagamentos
+  const alunoQuery = query(
+    getAlunosPagamentosRef(tenantNormalizado),
+    where("alunoId", "==", alunoId),
+  );
+  const alunoSnapshot = await getDocs(alunoQuery);
+
+  if (alunoSnapshot.empty) {
+    throw new Error("Aluno não encontrado em alunosPagamentos");
+  }
+
+  const alunoDocId = alunoSnapshot.docs[0].id;
+  const alunoDocRef = getAlunoPagamentoDocRef(tenantNormalizado, alunoDocId);
+
+  // 3) Toda alteração crítica é atômica
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(alunoDocRef);
+    if (!snap.exists()) {
+      throw new Error("Documento de pagamento do aluno não encontrado");
+    }
+
+    const data = snap.data();
+    const pagamentosOriginais = Array.isArray(data.pagamentos)
+      ? data.pagamentos
+      : [];
+
+    const toDate = (value: any): Date => {
+      if (!value) return new Date();
+      if (value instanceof Date) return value;
+      if (typeof value?.toDate === "function") return value.toDate();
+      return new Date(value);
+    };
+
+    const pagamentosNormalizados = pagamentosOriginais.map((p: any) => ({
+      ...p,
+      mesReferencia: p.mesReferencia || "",
+      status: p.status || "Pendente",
+      valor: typeof p.valor === "number" ? p.valor : 0,
+      dataVencimento: toDate(p.dataVencimento),
+      dataPagamento: p.dataPagamento ? toDate(p.dataPagamento) : undefined,
+      arquivadoEm: p.arquivadoEm ? toDate(p.arquivadoEm) : undefined,
+    }));
+
+    const pagamentoAlvo = pagamentosNormalizados.find(
+      (p: any) => p.mesReferencia === mesReferencia && p.status === "Pendente",
+    );
+
+    if (!pagamentoAlvo) {
+      throw new Error(
+        `Pagamento não encontrado ou não está pendente para o mês ${mesReferencia}`,
+      );
+    }
+
+    const novosPagamentos = pagamentosNormalizados.map((pagamento: any) => {
+      const base: any = {
+        mesReferencia: pagamento.mesReferencia,
+        dataVencimento: Timestamp.fromDate(toDate(pagamento.dataVencimento)),
+        valor: typeof pagamento.valor === "number" ? pagamento.valor : 0,
+      };
+
+      if (
+        pagamento.mesReferencia === mesReferencia &&
+        pagamento.status === "Pendente"
+      ) {
+        if (statusAluno.toLowerCase() !== "ativo") {
+          base.status = "Arquivado";
+          base.statusAnterior = "Pendente";
+          base.arquivadoEm = Timestamp.now();
+          base.observacoes =
+            "Arquivado automaticamente - pagamento de aluno inativo";
+        } else {
+          base.status = "Pago";
+          base.dataPagamento = Timestamp.fromDate(dataPagamento);
+        }
+      } else {
+        base.status = pagamento.status || "Pendente";
+        if (pagamento.dataPagamento)
+          base.dataPagamento = Timestamp.fromDate(
+            toDate(pagamento.dataPagamento),
+          );
+        if (pagamento.arquivadoEm)
+          base.arquivadoEm = Timestamp.fromDate(toDate(pagamento.arquivadoEm));
+        if (pagamento.statusAnterior)
+          base.statusAnterior = pagamento.statusAnterior;
+        if (pagamento.observacoes) base.observacoes = pagamento.observacoes;
+      }
+
+      return limparObjetoUndefined(base);
+    });
+
+    const totais = calcularTotaisPagamentos(novosPagamentos);
+
+    tx.update(alunoDocRef, {
+      pagamentos: novosPagamentos,
+      totais: {
+        pago: totais.pago,
+        pendente: totais.pendente,
+        arquivado: totais.arquivado,
+      },
+      updatedAt: Timestamp.now(),
+    });
+  });
+
+  invalidarCacheIntegracao(tenantNormalizado);
+}
+
 // ✅ FUNÇÃO 9 - Fechar próximo mês disponível (PARA TESTES - SEM LÓGICA DE MÊS ATUAL)
-export async function fecharMesComArray(): Promise<{
+export async function fecharMesComArray(tenantId: string): Promise<{
   alunosProcessados: number;
   pagamentosArquivados: number;
   novosPagamentosGerados: number;
@@ -929,8 +1093,9 @@ export async function fecharMesComArray(): Promise<{
   mensagem?: string;
 }> {
   try {
+    const tenantNormalizado = assertTenantId(tenantId);
     // ✅ Buscar todos os alunos (filtraremos por status de Alunos)
-    const alunosSnapshot = await getDocs(collection(db, "alunosPagamentos"));
+    const alunosSnapshot = await getDocs(getAlunosPagamentosRef(tenantId));
     if (alunosSnapshot.empty) {
       return {
         alunosProcessados: 0,
@@ -980,17 +1145,10 @@ export async function fecharMesComArray(): Promise<{
         const alunoData = alunoDoc.data();
 
         // ✅ Status SEMPRE da collection Alunos
-        let statusAluno = "";
-        try {
-          const docAluno = await getDoc(
-            doc(db, "Alunos", alunoData.alunoId || alunoDoc.id),
-          );
-          if (docAluno.exists()) {
-            statusAluno = (docAluno.data().status || "").trim();
-          }
-        } catch (e) {
-          console.warn("⚠️ Não foi possível ler status em Alunos:", e);
-        }
+        const statusAluno = await obterStatusAluno(
+          tenantId,
+          alunoData.alunoId || alunoDoc.id,
+        );
 
         const pagamentos = alunoData.pagamentos || [];
 
@@ -1019,24 +1177,16 @@ export async function fecharMesComArray(): Promise<{
           // Pagamentos arquivados com sucesso
 
           // Recalcular totais
-          const totalPago = pagamentosAtualizados
-            .filter((p: any) => p.status === "Pago")
-            .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-          const totalPendente = pagamentosAtualizados
-            .filter((p: any) => p.status === "Pendente")
-            .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-          const totalArquivado = pagamentosAtualizados
-            .filter((p: any) => p.status === "Arquivado")
-            .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+          const totais = calcularTotaisPagamentos(pagamentosAtualizados);
 
           // Atualizar documento
 
           await updateDoc(alunoDoc.ref, {
             pagamentos: pagamentosAtualizados,
             totais: {
-              pago: totalPago,
-              pendente: totalPendente,
-              arquivado: totalArquivado,
+              pago: totais.pago,
+              pendente: totais.pendente,
+              arquivado: totais.arquivado,
             },
             updatedAt: Timestamp.now(),
           });
@@ -1067,10 +1217,7 @@ export async function fecharMesComArray(): Promise<{
               10,
             );
 
-            const mesReferencia = proximoVencimento.toLocaleDateString(
-              "pt-BR",
-              { month: "2-digit", year: "numeric" },
-            );
+            const mesReferencia = gerarMesReferencia(proximoVencimento);
 
             // Verificar se já existe pagamento para este mês
             const jaExiste = pagamentos.some(
@@ -1105,24 +1252,16 @@ export async function fecharMesComArray(): Promise<{
               novoPagamentoCriado = true;
 
               // Recalcular totais com novo pagamento
-              const totalPagoNovo = pagamentos
-                .filter((p: any) => p.status === "Pago")
-                .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-              const totalPendenteNovo = pagamentos
-                .filter((p: any) => p.status === "Pendente")
-                .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-              const totalArquivadoNovo = pagamentos
-                .filter((p: any) => p.status === "Arquivado")
-                .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+              const totaisNovoPagamento = calcularTotaisPagamentos(pagamentos);
 
               await updateDoc(alunoDoc.ref, {
                 pagamentos: pagamentos.map((p: any) =>
                   limparObjetoUndefined(p),
                 ),
                 totais: {
-                  pago: totalPagoNovo,
-                  pendente: totalPendenteNovo,
-                  arquivado: totalArquivadoNovo,
+                  pago: totaisNovoPagamento.pago,
+                  pendente: totaisNovoPagamento.pendente,
+                  arquivado: totaisNovoPagamento.arquivado,
                 },
                 proximoVencimento: Timestamp.fromDate(proximoVencimento),
                 updatedAt: Timestamp.now(),
@@ -1141,13 +1280,7 @@ export async function fecharMesComArray(): Promise<{
               proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
             }
 
-            const mesReferencia = proximoVencimento.toLocaleDateString(
-              "pt-BR",
-              {
-                month: "2-digit",
-                year: "numeric",
-              },
-            );
+            const mesReferencia = gerarMesReferencia(proximoVencimento);
 
             const valorPagamento =
               typeof alunoData.valorMensalidade === "number"
@@ -1295,15 +1428,9 @@ export async function fecharMesComArray(): Promise<{
           }
         }
 
-        const totalPago = pagamentosAtualizados
-          .filter((p: any) => p.status === "Pago")
-          .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-        const totalPendente = pagamentosAtualizados
-          .filter((p: any) => p.status === "Pendente")
-          .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
-        const totalArquivado = pagamentosAtualizados
-          .filter((p: any) => p.status === "Arquivado")
-          .reduce((sum: number, p: any) => sum + (p.valor || 0), 0);
+        const totaisPagamentosAtualizados = calcularTotaisPagamentos(
+          pagamentosAtualizados,
+        );
 
         const pagamentosPendentes = pagamentosAtualizados.filter(
           (p: any) => p.status === "Pendente",
@@ -1324,9 +1451,9 @@ export async function fecharMesComArray(): Promise<{
         const dadosParaAtualizar = limparObjetoUndefined({
           pagamentos: pagamentosAtualizados,
           totais: {
-            pago: totalPago,
-            pendente: totalPendente,
-            arquivado: totalArquivado,
+            pago: totaisPagamentosAtualizados.pago,
+            pendente: totaisPagamentosAtualizados.pendente,
+            arquivado: totaisPagamentosAtualizados.arquivado,
           },
           proximoVencimento: proximoVencimentoField,
           updatedAt: Timestamp.now(),
@@ -1358,7 +1485,7 @@ export async function fecharMesComArray(): Promise<{
         : `${msgInativos} durante o fechamento do mês.`;
     }
 
-    invalidarCacheIntegracao();
+    invalidarCacheIntegracao(tenantNormalizado);
     return {
       alunosProcessados,
       pagamentosArquivados,
@@ -1379,14 +1506,19 @@ export async function fecharMesComArray(): Promise<{
 }
 
 // ✅ FUNÇÃO 10 - Migração da estrutura antiga para nova (corrigida)
-export async function migrarPagamentosParaNovaEstrutura(): Promise<{
+export async function migrarPagamentosParaNovaEstrutura(
+  tenantId: string,
+): Promise<{
   alunosMigrados: number;
   pagamentosMigrados: number;
   erro?: string;
 }> {
   try {
+    const tenantNormalizado = assertTenantId(tenantId);
     // 1. Buscar todos os pagamentos da estrutura ANTIGA
-    const pagamentosSnapshot = await getDocs(collection(db, "pagamentos"));
+    const pagamentosSnapshot = await getDocs(
+      getPagamentosRef(tenantNormalizado),
+    );
     const pagamentosPorAluno: { [alunoId: string]: any[] } = {};
 
     // 2. Agrupar pagamentos por aluno
@@ -1444,7 +1576,7 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
       try {
         // Verificar se já existe na nova estrutura
         const existeQuery = query(
-          collection(db, "alunosPagamentos"),
+          getAlunosPagamentosRef(tenantNormalizado),
           where("alunoId", "==", alunoId),
         );
         const existeSnapshot = await getDocs(existeQuery);
@@ -1455,7 +1587,9 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
         }
 
         // Buscar dados do aluno
-        const alunoDoc = await getDoc(doc(db, "Alunos", alunoId));
+        const alunoDoc = await getDoc(
+          getAlunoDocRef(tenantNormalizado, alunoId),
+        );
         if (!alunoDoc.exists()) {
           `⚠️ Aluno ${alunoId} não encontrado`;
           continue;
@@ -1559,7 +1693,7 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
           dadosAluno.proximoVencimento = Timestamp.fromDate(proximoVencimento);
         }
 
-        await addDoc(collection(db, "alunosPagamentos"), dadosAluno);
+        await addDoc(getAlunosPagamentosRef(tenantNormalizado), dadosAluno);
 
         alunosMigrados++;
         pagamentosMigrados += pagamentos.length;
@@ -1590,8 +1724,10 @@ export async function migrarPagamentosParaNovaEstrutura(): Promise<{
 export async function atualizarDadosAlunoPagamento(
   alunoId: string,
   dadosEditaveis: DadosEditaveisAluno,
+  tenantId: string,
 ): Promise<{ sucesso: boolean; mensagem?: string; erro?: string }> {
   try {
+    const tenantNormalizado = assertTenantId(tenantId);
     // 1️⃣ Validar dados
     if (!dadosEditaveis.plano || dadosEditaveis.plano.trim() === "") {
       return {
@@ -1612,7 +1748,7 @@ export async function atualizarDadosAlunoPagamento(
 
     // 2️⃣ Buscar documento em alunosPagamentos pela query
     const alunoQuery = query(
-      collection(db, "alunosPagamentos"),
+      getAlunosPagamentosRef(tenantId),
       where("alunoId", "==", alunoId),
     );
     const alunoSnapshot = await getDocs(alunoQuery);
@@ -1680,41 +1816,21 @@ export async function atualizarDadosAlunoPagamento(
         );
 
         // Recalcula totais com os novos valores
-        const totalPago = pagamentosAtualizados
-          .filter((p: any) => p.status === "Pago")
-          .reduce(
-            (sum: number, p: any) =>
-              sum + (typeof p.valor === "number" ? p.valor : 0),
-            0,
-          );
-
-        const totalPendente = pagamentosAtualizados
-          .filter((p: any) => p.status === "Pendente")
-          .reduce(
-            (sum: number, p: any) =>
-              sum + (typeof p.valor === "number" ? p.valor : 0),
-            0,
-          );
-
-        const totalArquivado = pagamentosAtualizados
-          .filter((p: any) => p.status === "Arquivado")
-          .reduce(
-            (sum: number, p: any) =>
-              sum + (typeof p.valor === "number" ? p.valor : 0),
-            0,
-          );
+        const totaisAtualizados = calcularTotaisPagamentos(
+          pagamentosAtualizados,
+        );
 
         const payload = {
           ...dadosParaAtualizar,
           pagamentos: pagamentosAtualizados,
           totais: {
-            pago: totalPago,
-            pendente: totalPendente,
-            arquivado: totalArquivado,
+            pago: totaisAtualizados.pago,
+            pendente: totaisAtualizados.pendente,
+            arquivado: totaisAtualizados.arquivado,
           },
         };
 
-        await updateDoc(doc(db, "alunosPagamentos", docSnap.id), payload);
+        await updateDoc(getAlunoPagamentoDocRef(tenantId, docSnap.id), payload);
       }),
     );
 
@@ -1722,7 +1838,7 @@ export async function atualizarDadosAlunoPagamento(
 
     // ✅ Sincronizar de volta para collection Alunos
     try {
-      const alunoRef = doc(db, "Alunos", alunoId);
+      const alunoRef = getAlunoDocRef(tenantId, alunoId);
       const alunoDoc = await getDoc(alunoRef);
 
       if (alunoDoc.exists()) {
@@ -1749,7 +1865,7 @@ export async function atualizarDadosAlunoPagamento(
       );
     }
 
-    invalidarCacheIntegracao();
+    invalidarCacheIntegracao(tenantNormalizado);
 
     return {
       sucesso: true,

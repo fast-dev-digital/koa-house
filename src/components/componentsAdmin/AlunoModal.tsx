@@ -169,15 +169,18 @@ export default function AlunoModal({
 
         const novoAlunoId = await criarAluno(currentTenantId, novoAluno);
 
-        await criarAlunoComPagamentosArray({
-          id: novoAlunoId,
-          nome: formData.nome.trim(),
-          plano: formData.plano as PlanoType,
-          valorMensalidade: formData.valorMensalidade,
-          status: formData.status,
-          dataMatricula: new Date().toISOString().split("T")[0],
-          telefone: formData.telefone.trim(),
-        });
+        await criarAlunoComPagamentosArray(
+          {
+            id: novoAlunoId,
+            nome: formData.nome.trim(),
+            plano: formData.plano as PlanoType,
+            valorMensalidade: formData.valorMensalidade,
+            status: formData.status,
+            dataMatricula: new Date().toISOString().split("T")[0],
+            telefone: formData.telefone.trim(),
+          },
+          currentTenantId,
+        );
 
         setSuccessMessage(`Aluno ${formData.nome} cadastrado com sucesso!`);
         setTimeout(() => {

@@ -80,8 +80,8 @@ const getColunasTurmas = (alunosPorTurmaMap: Map<string, string[]>) => [
           value === "Futevôlei"
             ? "bg-blue-100 text-blue-800"
             : value === "Beach Tennis"
-            ? "bg-pink-100 text-pink-800"
-            : "bg-green-100 text-green-800"
+              ? "bg-pink-100 text-pink-800"
+              : "bg-green-100 text-green-800"
         }`}
       >
         {value}
@@ -121,8 +121,8 @@ const getColunasTurmas = (alunosPorTurmaMap: Map<string, string[]>) => [
           value === "Masculino"
             ? "bg-blue-100 text-blue-800"
             : value === "Feminino"
-            ? "bg-pink-100 text-pink-800"
-            : "bg-purple-100 text-purple-800"
+              ? "bg-pink-100 text-pink-800"
+              : "bg-purple-100 text-purple-800"
         }`}
       >
         {value}
@@ -245,14 +245,19 @@ export default function GestaoTurmas() {
   //  CARREGAR TURMAS COM DEBUG
   const fetchTurmas = async () => {
     try {
+      if (!currentTenantId) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
-      const turmasData = await buscarTodasTurmas();
+      const turmasData = await buscarTodasTurmas(currentTenantId);
 
       // ✅ FORÇAR NOVA REFERÊNCIA COM SPREAD
       setTurmas([...turmasData]); // Força React a detectar mudança
 
-      const estatisticasData = await obterEstatisticasTurmas();
+      const estatisticasData = await obterEstatisticasTurmas(currentTenantId);
       setEstatisticas({ ...estatisticasData }); // Spread nas estatísticas também
 
       // ✅ CARREGAR ALUNOS DE CADA TURMA
@@ -305,7 +310,7 @@ export default function GestaoTurmas() {
 
   // ✅ NOVO ESTADO - Alunos por turma
   const [alunosPorTurma, setAlunosPorTurma] = useState<Map<string, string[]>>(
-    new Map()
+    new Map(),
   );
 
   // FILTRAR TURMAS COM BUSCA POR ALUNO
@@ -314,7 +319,7 @@ export default function GestaoTurmas() {
       // Busca por aluno - verifica se o searchText corresponde a algum aluno da turma
       const alunosDaTurma = alunosPorTurma.get(turma.id || "") || [];
       const matchAluno = alunosDaTurma.some((nomeAluno) =>
-        nomeAluno.toLowerCase().includes(searchText.toLowerCase())
+        nomeAluno.toLowerCase().includes(searchText.toLowerCase()),
       );
 
       const matchSearch =
@@ -356,7 +361,7 @@ export default function GestaoTurmas() {
   // CARREGAR DADOS NA INICIALIZAÇÃO
   useEffect(() => {
     fetchTurmas();
-  }, []);
+  }, [currentTenantId]);
 
   // ✅ FUNÇÃO CREATE CORRIGIDA
   const handleCreateTurma = () => {

@@ -1,25 +1,30 @@
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  Timestamp,
+} from "firebase/firestore";
 import { db } from "../firebase-config";
 
-interface ReservaData {
-  alunoId: string;
-  alunoNome: string;
-  dataInicio: Date;
-  dataFim: Date;
-  tipoLocacao: "mensal";
-  status: "ativa" | "pendente" | "cancelada";
-  createdAt: Date;
-}
+const assertTenantId = (tenantId: string) => {
+  if (!tenantId?.trim()) {
+    throw new Error("Tenant ID é obrigatório");
+  }
+};
 
 export async function criarReservaMensal(
+  tenantId: string,
   alunoId: string,
   alunoNome: string,
   dataInicio: Date,
   dataFim: Date,
 ): Promise<void> {
+  assertTenantId(tenantId);
+
   try {
-    // Verificar se já existe reserva neste período
-    const reservasRef = collection(db, "reservas");
+    const reservasRef = collection(db, `tenants/${tenantId}/reservas`);
     const q = query(
       reservasRef,
       where("alunoId", "==", alunoId),
@@ -28,13 +33,11 @@ export async function criarReservaMensal(
 
     const snapshot = await getDocs(q);
 
-    // Verificar conflitos de data
-    for (const doc of snapshot.docs) {
-      const reserva = doc.data();
+    for (const docSnap of snapshot.docs) {
+      const reserva = docSnap.data();
       const reservaInicio = reserva.dataInicio.toDate();
       const reservaFim = reserva.dataFim.toDate();
 
-      // Verificar sobreposição de datas
       if (
         (dataInicio >= reservaInicio && dataInicio <= reservaFim) ||
         (dataFim >= reservaInicio && dataFim <= reservaFim) ||
@@ -44,8 +47,8 @@ export async function criarReservaMensal(
       }
     }
 
-    // Criar a reserva mensal
-    const reservaData: ReservaData = {
+    const reservaData = {
+      tenantId,
       alunoId,
       alunoNome,
       dataInicio,
@@ -53,11 +56,11 @@ export async function criarReservaMensal(
       tipoLocacao: "mensal",
       status: "ativa",
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    await addDoc(collection(db, "reservas"), reservaData);
+    await addDoc(reservasRef, reservaData);
 
-    // Opcional: Criar entradas individuais para cada dia
     const diasReservados = [];
     const dataAtual = new Date(dataInicio);
 
@@ -66,17 +69,19 @@ export async function criarReservaMensal(
       dataAtual.setDate(dataAtual.getDate() + 1);
     }
 
-    // Salvar dias individuais (útil para controle diário)
     const batch = [];
+    const agendaRef = collection(db, `tenants/${tenantId}/agenda`);
     for (const dia of diasReservados) {
       batch.push(
-        addDoc(collection(db, "agenda"), {
+        addDoc(agendaRef, {
+          tenantId,
           alunoId,
           alunoNome,
-          data: dia,
+          data: Timestamp.fromDate(dia),
           tipo: "locacao_mensal",
           status: "reservado",
           createdAt: new Date(),
+          updatedAt: new Date(),
         }),
       );
     }

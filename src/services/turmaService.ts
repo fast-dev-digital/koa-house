@@ -1,7 +1,6 @@
 import {
   collection,
   getDocs,
-  query,
   doc,
   getDoc,
   addDoc,
@@ -60,62 +59,95 @@ interface EstatisticasTurmas {
   }>;
 }
 
-// ✅ CACHE GLOBAL SIMPLES (IGUAL AO ALUNO SERVICE)
-let turmasCache: Turma[] | null = null;
-let cacheTimestamp: number | null = null;
+type CacheEntry = {
+  turmas: Turma[];
+  cacheTimestamp: number;
+};
+
+const turmasCachePorTenant = new Map<string, CacheEntry>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
-function isCacheValid(): boolean {
-  if (!turmasCache || !cacheTimestamp) return false;
-  return Date.now() - cacheTimestamp < CACHE_TTL;
+const assertTenantId = (tenantId: string) => {
+  if (!tenantId?.trim()) {
+    throw new Error("Tenant ID é obrigatório");
+  }
+};
+
+function isCacheValid(tenantId: string): boolean {
+  const cache = turmasCachePorTenant.get(tenantId);
+  if (!cache) return false;
+  return Date.now() - cache.cacheTimestamp < CACHE_TTL;
 }
 
-function invalidateCache(): void {
-  turmasCache = null;
-  cacheTimestamp = null;
+function invalidateCache(tenantId: string): void {
+  turmasCachePorTenant.delete(tenantId);
   ("🧹 Cache de turmas invalidado");
 }
+
+const getTurmasRef = (tenantId: string) => {
+  assertTenantId(tenantId);
+  return collection(db, `tenants/${tenantId}/turmas`);
+};
+
+const getTurmaDocRef = (tenantId: string, turmaId: string) => {
+  assertTenantId(tenantId);
+  if (!turmaId?.trim()) {
+    throw new Error("ID da turma é obrigatório");
+  }
+
+  return doc(db, `tenants/${tenantId}/turmas`, turmaId);
+};
+
+const mapDocToTurma = (docSnap: any, tenantId: string): Turma => {
+  const data = docSnap.data();
+
+  return {
+    id: docSnap.id,
+    nome: data.nome || "",
+    modalidade: data.modalidade || "Futevôlei",
+    professorId: data.professorId || "",
+    professorNome: data.professorNome || "",
+    dias: data.dias || "",
+    horario: data.horario || "",
+    capacidade: data.capacidade || 0,
+    alunosInscritos: data.alunosInscritos || 0,
+    genero: data.genero || "Masculino",
+    nivel: data.nivel || "Estreante",
+    status: data.status || "Ativa",
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+    tenantId,
+  } as Turma;
+};
 
 // BUSCAR TODAS AS TURMAS
 //Buscar todas as turmas com cache inteligente
 
-export async function buscarTodasTurmas(): Promise<Turma[]> {
+export async function buscarTodasTurmas(tenantId: string): Promise<Turma[]> {
+  assertTenantId(tenantId);
   // ✅ Verificar cache primeiro
-  if (isCacheValid() && turmasCache) {
-    ("🎯 Turmas carregadas do cache");
-    return turmasCache;
+  if (isCacheValid(tenantId)) {
+    const cache = turmasCachePorTenant.get(tenantId);
+    if (cache) {
+      ("🎯 Turmas carregadas do cache");
+      return cache.turmas;
+    }
   }
 
   try {
     ("📡 Buscando turmas no Firebase...");
-    const turmasQuery = query(collection(db, "turmas"));
-
-    const snapshot = await getDocs(turmasQuery);
+    const snapshot = await getDocs(getTurmasRef(tenantId));
     const turmas: Turma[] = [];
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      turmas.push({
-        id: doc.id,
-        nome: data.nome || "",
-        modalidade: data.modalidade || "Futevôlei",
-        professorId: data.professorId || "",
-        professorNome: data.professorNome || "",
-        dias: data.dias || "",
-        horario: data.horario || "",
-        capacidade: data.capacidade || 0,
-        alunosInscritos: data.alunosInscritos || 0,
-        genero: data.genero || "Masculino", // ✅ USAR VALORES CORRETOS DA INTERFACE
-        nivel: data.nivel || "Estreante", // ✅ ADICIONAR NIVEL (ESTAVA FALTANDO)
-        status: data.status || "Ativa",
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      });
+    snapshot.forEach((docSnap) => {
+      turmas.push(mapDocToTurma(docSnap, tenantId));
     });
 
-    // ✅ Atualizar cache global
-    turmasCache = turmas;
-    cacheTimestamp = Date.now();
+    // ✅ Atualizar cache por tenant
+    turmasCachePorTenant.set(tenantId, {
+      turmas,
+      cacheTimestamp: Date.now(),
+    });
 
     `✅ ${turmas.length} turmas carregadas e cacheadas`;
     return turmas;
@@ -129,8 +161,8 @@ export async function buscarTodasTurmas(): Promise<Turma[]> {
 /**
  * Buscar turmas ativas apenas
  */
-export async function buscarTurmasAtivas(): Promise<Turma[]> {
-  const todasTurmas = await buscarTodasTurmas();
+export async function buscarTurmasAtivas(tenantId: string): Promise<Turma[]> {
+  const todasTurmas = await buscarTodasTurmas(tenantId);
   const turmasAtivas = todasTurmas.filter((turma) => turma.status === "Ativa");
   `✅ ${turmasAtivas.length} turmas ativas encontradas`;
   return turmasAtivas;
@@ -140,11 +172,12 @@ export async function buscarTurmasAtivas(): Promise<Turma[]> {
  * Buscar turmas por modalidade
  */
 export async function buscarTurmasPorModalidade(
-  modalidade: "Futevôlei" | "Beach Tennis" | "Vôlei"
+  tenantId: string,
+  modalidade: "Futevôlei" | "Beach Tennis" | "Vôlei",
 ): Promise<Turma[]> {
-  const todasTurmas = await buscarTodasTurmas();
+  const todasTurmas = await buscarTodasTurmas(tenantId);
   const turmasModalidade = todasTurmas.filter(
-    (turma) => turma.modalidade === modalidade
+    (turma) => turma.modalidade === modalidade,
   );
   `✅ ${turmasModalidade.length} turmas de ${modalidade} encontradas`;
   return turmasModalidade;
@@ -153,7 +186,11 @@ export async function buscarTurmasPorModalidade(
 /**
  * Buscar turma por ID
  */
-export async function buscarTurmaPorId(id: string): Promise<Turma | null> {
+export async function buscarTurmaPorId(
+  tenantId: string,
+  id: string,
+): Promise<Turma | null> {
+  assertTenantId(tenantId);
   if (!id || !id.trim()) {
     console.warn("⚠️ ID da turma não fornecido");
     return null;
@@ -161,7 +198,7 @@ export async function buscarTurmaPorId(id: string): Promise<Turma | null> {
 
   try {
     // ✅ Tentar buscar do cache primeiro
-    const todasTurmas = await buscarTodasTurmas();
+    const todasTurmas = await buscarTodasTurmas(tenantId);
     const turmaEncontrada = todasTurmas.find((turma) => turma.id === id);
 
     if (turmaEncontrada) {
@@ -171,30 +208,14 @@ export async function buscarTurmaPorId(id: string): Promise<Turma | null> {
 
     // ✅ Se não encontrou no cache, buscar diretamente
     `📡 Buscando turma ${id} diretamente no Firebase...`;
-    const turmaDoc = await getDoc(doc(db, "turmas", id));
+    const turmaDoc = await getDoc(getTurmaDocRef(tenantId, id));
 
     if (!turmaDoc.exists()) {
       console.warn(`⚠️ Turma ${id} não encontrada`);
       return null;
     }
 
-    const data = turmaDoc.data();
-    const turma: Turma = {
-      id: turmaDoc.id,
-      nome: data.nome || "",
-      modalidade: data.modalidade || "Beach Tennis",
-      professorId: data.professorId || "",
-      professorNome: data.professorNome || "",
-      dias: data.dias || "",
-      horario: data.horario || "",
-      capacidade: data.capacidade || 0,
-      alunosInscritos: data.alunosInscritos || 0,
-      genero: data.genero || "Teens", // ✅ CORRIGIDO
-      nivel: data.nivel || "Iniciante", // ✅ ADICIONADO
-      status: data.status || "Ativa",
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
-    };
+    const turma = mapDocToTurma(turmaDoc, tenantId);
 
     `✅ Turma ${id} carregada diretamente`;
     return turma;
@@ -207,10 +228,12 @@ export async function buscarTurmaPorId(id: string): Promise<Turma | null> {
 /**
  * Buscar turmas disponíveis (com vagas)
  */
-export async function buscarTurmasDisponiveis(): Promise<Turma[]> {
-  const turmasAtivas = await buscarTurmasAtivas();
+export async function buscarTurmasDisponiveis(
+  tenantId: string,
+): Promise<Turma[]> {
+  const turmasAtivas = await buscarTurmasAtivas(tenantId);
   const turmasDisponiveis = turmasAtivas.filter(
-    (turma) => turma.alunosInscritos < turma.capacidade
+    (turma) => turma.alunosInscritos < turma.capacidade,
   );
   `✅ ${turmasDisponiveis.length} turmas disponíveis encontradas`;
   return turmasDisponiveis;
@@ -220,11 +243,12 @@ export async function buscarTurmasDisponiveis(): Promise<Turma[]> {
  * Buscar turmas por professor
  */
 export async function buscarTurmasPorProfessor(
-  professorId: string
+  tenantId: string,
+  professorId: string,
 ): Promise<Turma[]> {
-  const todasTurmas = await buscarTodasTurmas();
+  const todasTurmas = await buscarTodasTurmas(tenantId);
   const turmasProfessor = todasTurmas.filter(
-    (turma) => turma.professorId === professorId
+    (turma) => turma.professorId === professorId,
   );
   `✅ ${turmasProfessor.length} turmas do professor encontradas`;
   return turmasProfessor;
@@ -235,26 +259,30 @@ export async function buscarTurmasPorProfessor(
 /**
  * Criar nova turma
  */
-// ✅ CORRIGIR A FUNÇÃO criarTurma - ADICIONAR LOGS E FORÇAR RELOAD
-export async function criarTurma(turmaData: TurmaCreate): Promise<string> {
+export async function criarTurma(
+  tenantId: string,
+  turmaData: TurmaCreate,
+): Promise<string> {
+  assertTenantId(tenantId);
   try {
     const novaTurma = {
       ...turmaData,
+      tenantId,
       alunosInscritos: 0,
       status: turmaData.status || "Ativa",
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     };
 
-    const docRef = await addDoc(collection(db, "turmas"), novaTurma);
+    const docRef = await addDoc(getTurmasRef(tenantId), novaTurma);
 
     // ✅ INVALIDAR CACHE COM LOG
     ("🧹 Invalidando cache após criar turma...");
-    invalidateCache();
+    invalidateCache(tenantId);
 
     // ✅ FORÇAR RELOAD IMEDIATO DO CACHE
     ("🔄 Forçando reload do cache...");
-    await buscarTodasTurmas(); // Força reload imediato
+    await buscarTodasTurmas(tenantId); // Força reload imediato
 
     `✅ Turma criada com ID: ${docRef.id}`;
     return docRef.id;
@@ -268,23 +296,26 @@ export async function criarTurma(turmaData: TurmaCreate): Promise<string> {
  * Atualizar turma
  */
 export async function atualizarTurma(
+  tenantId: string,
   id: string,
-  dados: TurmaUpdate
+  dados: TurmaUpdate,
 ): Promise<void> {
+  assertTenantId(tenantId);
   try {
     `📝 Atualizando turma ${id}`;
 
     const dadosAtualizacao = {
       ...dados,
+      tenantId,
       updatedAt: Timestamp.now(),
     };
 
-    await updateDoc(doc(db, "turmas", id), dadosAtualizacao);
+    await updateDoc(getTurmaDocRef(tenantId, id), dadosAtualizacao);
 
     // ✅ Invalidar cache
-    invalidateCache();
+    invalidateCache(tenantId);
 
-    await buscarTodasTurmas();
+    await buscarTodasTurmas(tenantId);
     `✅ Turma ${id} atualizada`;
   } catch (error) {
     console.error(`❌ Erro ao atualizar turma ${id}:`, error);
@@ -295,14 +326,18 @@ export async function atualizarTurma(
 /**
  * Remover turma
  */
-export async function removerTurma(id: string): Promise<void> {
+export async function removerTurma(
+  tenantId: string,
+  id: string,
+): Promise<void> {
+  assertTenantId(tenantId);
   try {
     `🗑️ Removendo turma ${id}`;
 
-    await deleteDoc(doc(db, "turmas", id));
+    await deleteDoc(getTurmaDocRef(tenantId, id));
 
     // ✅ Invalidar cache
-    invalidateCache();
+    invalidateCache(tenantId);
 
     `✅ Turma ${id} removida`;
   } catch (error) {
@@ -315,19 +350,21 @@ export async function removerTurma(id: string): Promise<void> {
  * Atualizar contador de alunos
  */
 export async function atualizarContadorAlunos(
+  tenantId: string,
   turmaId: string,
-  novoContador: number
+  novoContador: number,
 ): Promise<void> {
+  assertTenantId(tenantId);
   try {
     `📊 Atualizando contador da turma ${turmaId} para ${novoContador}`;
 
-    await updateDoc(doc(db, "turmas", turmaId), {
+    await updateDoc(getTurmaDocRef(tenantId, turmaId), {
       alunosInscritos: Math.max(0, novoContador),
       updatedAt: Timestamp.now(),
     });
 
     // ✅ Invalidar cache
-    invalidateCache();
+    invalidateCache(tenantId);
 
     `✅ Contador da turma ${turmaId} atualizado para ${novoContador}`;
   } catch (error) {
@@ -340,18 +377,20 @@ export async function atualizarContadorAlunos(
  * Incrementar contador de alunos
  */
 export async function incrementarContadorAlunos(
-  turmaId: string
+  tenantId: string,
+  turmaId: string,
 ): Promise<void> {
+  assertTenantId(tenantId);
   try {
-    const turma = await buscarTurmaPorId(turmaId);
+    const turma = await buscarTurmaPorId(tenantId, turmaId);
     if (turma) {
       const novoContador = turma.alunosInscritos + 1;
-      await atualizarContadorAlunos(turmaId, novoContador);
+      await atualizarContadorAlunos(tenantId, turmaId, novoContador);
     }
   } catch (error) {
     console.error(
       `❌ Erro ao incrementar contador da turma ${turmaId}:`,
-      error
+      error,
     );
     throw error;
   }
@@ -361,18 +400,20 @@ export async function incrementarContadorAlunos(
  * Decrementar contador de alunos
  */
 export async function decrementarContadorAlunos(
-  turmaId: string
+  tenantId: string,
+  turmaId: string,
 ): Promise<void> {
+  assertTenantId(tenantId);
   try {
-    const turma = await buscarTurmaPorId(turmaId);
+    const turma = await buscarTurmaPorId(tenantId, turmaId);
     if (turma) {
       const novoContador = Math.max(0, turma.alunosInscritos - 1);
-      await atualizarContadorAlunos(turmaId, novoContador);
+      await atualizarContadorAlunos(tenantId, turmaId, novoContador);
     }
   } catch (error) {
     console.error(
       `❌ Erro ao decrementar contador da turma ${turmaId}:`,
-      error
+      error,
     );
     throw error;
   }
@@ -383,10 +424,13 @@ export async function decrementarContadorAlunos(
 /**
  * Obter estatísticas das turmas
  */
-export async function obterEstatisticasTurmas(): Promise<EstatisticasTurmas> {
+export async function obterEstatisticasTurmas(
+  tenantId: string,
+): Promise<EstatisticasTurmas> {
+  assertTenantId(tenantId);
   try {
     ("📊 Calculando estatísticas das turmas...");
-    const todasTurmas = await buscarTodasTurmas();
+    const todasTurmas = await buscarTodasTurmas(tenantId);
 
     const turmasAtivas = todasTurmas.filter((t) => t.status === "Ativa");
     const turmasInativas = todasTurmas.filter((t) => t.status !== "Ativa");
@@ -400,17 +444,17 @@ export async function obterEstatisticasTurmas(): Promise<EstatisticasTurmas> {
     // Calcular capacidades e ocupação
     const capacidadeTotal = todasTurmas.reduce(
       (sum, turma) => sum + turma.capacidade,
-      0
+      0,
     );
     const alunosMatriculados = todasTurmas.reduce(
       (sum, turma) => sum + turma.alunosInscritos,
-      0
+      0,
     );
     const taxaOcupacao =
       capacidadeTotal > 0 ? (alunosMatriculados / capacidadeTotal) * 100 : 0;
 
     // Top 5 turmas mais populares
-    const turmasMaisPopulares = todasTurmas
+    const turmasMaisPopulares = [...todasTurmas]
       .sort((a, b) => b.alunosInscritos - a.alunosInscritos)
       .slice(0, 5)
       .map((turma) => ({
@@ -445,9 +489,13 @@ export async function obterEstatisticasTurmas(): Promise<EstatisticasTurmas> {
 /**
  * Contar alunos por turma (útil para validações)
  */
-export async function contarAlunosPorTurma(turmaId: string): Promise<number> {
+export async function contarAlunosPorTurma(
+  tenantId: string,
+  turmaId: string,
+): Promise<number> {
+  assertTenantId(tenantId);
   try {
-    const turma = await buscarTurmaPorId(turmaId);
+    const turma = await buscarTurmaPorId(tenantId, turmaId);
     return turma ? turma.alunosInscritos : 0;
   } catch (error) {
     console.error(`❌ Erro ao contar alunos da turma ${turmaId}:`, error);
@@ -455,9 +503,13 @@ export async function contarAlunosPorTurma(turmaId: string): Promise<number> {
   }
 }
 
-export async function temVagasDisponiveis(turmaId: string): Promise<boolean> {
+export async function temVagasDisponiveis(
+  tenantId: string,
+  turmaId: string,
+): Promise<boolean> {
+  assertTenantId(tenantId);
   try {
-    const turma = await buscarTurmaPorId(turmaId);
+    const turma = await buscarTurmaPorId(tenantId, turmaId);
     return turma ? turma.alunosInscritos < turma.capacidade : false;
   } catch (error) {
     console.error(`❌ Erro ao verificar vagas da turma ${turmaId}:`, error);
@@ -468,8 +520,12 @@ export async function temVagasDisponiveis(turmaId: string): Promise<boolean> {
 /**
  * Limpar cache manualmente (útil para desenvolvimento)
  */
-export function limparCacheTurmas(): void {
-  invalidateCache();
+export function limparCacheTurmas(tenantId?: string): void {
+  if (tenantId?.trim()) {
+    turmasCachePorTenant.delete(tenantId);
+  } else {
+    turmasCachePorTenant.clear();
+  }
   ("🧹 Cache de turmas limpo manualmente");
 }
 

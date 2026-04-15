@@ -12,6 +12,7 @@ import { db } from "../firebase-config";
 import type { Pagamento } from "../types/pagamentos";
 
 interface HistoricoOptions {
+  tenantId: string;
   alunoId: string;
   incluirArquivados?: boolean;
   limitePagamentos?: number;
@@ -48,13 +49,15 @@ export interface HistoricoResponse {
 
 // ✅ FUNÇÃO PRINCIPAL - Buscar histórico completo
 export async function buscarHistoricoAluno(
-  options: HistoricoOptions
+  options: HistoricoOptions,
 ): Promise<HistoricoResponse> {
   try {
     `📋 Buscando histórico para aluno: ${options.alunoId}`;
 
     // 1️⃣ BUSCAR DADOS DO ALUNO
-    const alunoDoc = await getDoc(doc(db, "Alunos", options.alunoId));
+    const alunoDoc = await getDoc(
+      doc(db, `tenants/${options.tenantId}/alunos`, options.alunoId),
+    );
     if (!alunoDoc.exists()) {
       throw new Error("Aluno não encontrado");
     }
@@ -73,8 +76,8 @@ export async function buscarHistoricoAluno(
 
     // 2️⃣ CONSTRUIR QUERY DE PAGAMENTOS
     let pagamentosQuery = query(
-      collection(db, "pagamentos"),
-      where("alunoId", "==", options.alunoId)
+      collection(db, `tenants/${options.tenantId}/pagamentos`),
+      where("alunoId", "==", options.alunoId),
     );
 
     // ✅ FILTRO POR STATUS
@@ -82,23 +85,23 @@ export async function buscarHistoricoAluno(
       if (options.incluirArquivados) {
         pagamentosQuery = query(
           pagamentosQuery,
-          where("status", "in", options.filtroStatus)
+          where("status", "in", options.filtroStatus),
         );
       } else {
         const statusSemArquivados = options.filtroStatus.filter(
-          (status) => status !== "Arquivado"
+          (status) => status !== "Arquivado",
         );
         if (statusSemArquivados.length > 0) {
           pagamentosQuery = query(
             pagamentosQuery,
-            where("status", "in", statusSemArquivados)
+            where("status", "in", statusSemArquivados),
           );
         }
       }
     } else if (!options.incluirArquivados) {
       pagamentosQuery = query(
         pagamentosQuery,
-        where("status", "in", ["Pendente", "Pago"])
+        where("status", "in", ["Pendente", "Pago"]),
       );
     }
 
@@ -175,11 +178,11 @@ export function calcularEstatisticas(pagamentos: Pagamento[]) {
   const totalPago = pagamentosPagos.reduce((sum, p) => sum + p.valor, 0);
   const totalPendente = pagamentosPendentes.reduce(
     (sum, p) => sum + p.valor,
-    0
+    0,
   );
   const totalAtrasado = pagamentosAtrasados.reduce(
     (sum, p) => sum + p.valor,
-    0
+    0,
   );
 
   const ultimoPagamento = pagamentosPagos
@@ -187,13 +190,13 @@ export function calcularEstatisticas(pagamentos: Pagamento[]) {
     .sort(
       (a, b) =>
         new Date(b.dataPagamento!).getTime() -
-        new Date(a.dataPagamento!).getTime()
+        new Date(a.dataPagamento!).getTime(),
     )[0]?.dataPagamento;
 
   const proximoVencimento = pagamentosPendentes.sort(
     (a, b) =>
       new Date(a.dataVencimento).getTime() -
-      new Date(b.dataVencimento).getTime()
+      new Date(b.dataVencimento).getTime(),
   )[0]?.dataVencimento;
 
   const mediaValorPagamento =
@@ -214,14 +217,16 @@ export function calcularEstatisticas(pagamentos: Pagamento[]) {
 
 // ✅ EXPORTAR FUNÇÃO CONVENIENTE - Para admin (todos os dados)
 export async function buscarHistoricoParaAdmin(
+  tenantId: string,
   alunoId: string,
   filtros?: {
     status?: string[];
     periodo?: { inicio: Date; fim: Date };
     limite?: number;
-  }
+  },
 ): Promise<HistoricoResponse> {
   return buscarHistoricoAluno({
+    tenantId,
     alunoId,
     incluirArquivados: true, // ✅ Admin vê tudo
     limitePagamentos: filtros?.limite || 200, // Limite alto
@@ -232,13 +237,15 @@ export async function buscarHistoricoParaAdmin(
 
 // ✅ EXPORTAR FUNÇÃO CONVENIENTE - Para aluno (dados limitados)
 export async function buscarHistoricoParaAluno(
+  tenantId: string,
   alunoId: string,
   filtros?: {
     status?: string[];
     periodo?: { inicio: Date; fim: Date };
-  }
+  },
 ): Promise<HistoricoResponse> {
   return buscarHistoricoAluno({
+    tenantId,
     alunoId,
     incluirArquivados: false, // ✅ Aluno nunca vê arquivados
     limitePagamentos: 50, // Limite para performance
@@ -248,14 +255,17 @@ export async function buscarHistoricoParaAluno(
 }
 
 // ✅ EXPORTAR FUNÇÃO ADICIONAL - Buscar resumo rápido (para dashboards)
-export async function buscarResumoAluno(alunoId: string): Promise<{
+export async function buscarResumoAluno(
+  tenantId: string,
+  alunoId: string,
+): Promise<{
   proximoVencimento?: Date;
   ultimoPagamento?: Date;
   totalDevendo: number;
   statusGeral: "Em dia" | "Atrasado" | "Sem pagamentos";
 }> {
   try {
-    const historico = await buscarHistoricoParaAluno(alunoId);
+    const historico = await buscarHistoricoParaAluno(tenantId, alunoId);
 
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -318,14 +328,15 @@ const converterDataSegura = (data: any): Date => {
 
 // ✅ FUNÇÃO PRINCIPAL - Buscar histórico na nova estrutura
 export async function buscarHistoricoAlunoNovo(
-  alunoId: string
+  tenantId: string,
+  alunoId: string,
 ): Promise<HistoricoResponse | null> {
   try {
     `📚 Buscando histórico na nova estrutura para aluno: ${alunoId}`;
 
     const alunoQuery = query(
-      collection(db, "alunosPagamentos"),
-      where("alunoId", "==", alunoId)
+      collection(db, `tenants/${tenantId}/alunosPagamentos`),
+      where("alunoId", "==", alunoId),
     );
 
     const alunoSnapshot = await getDocs(alunoQuery);
@@ -365,7 +376,7 @@ export async function buscarHistoricoAlunoNovo(
           statusAnterior: p.statusAnterior,
           observacoes: p.observacoes,
         };
-      }
+      },
     );
 
     // ✅ PROCESSAR data de matrícula com conversão segura
@@ -373,7 +384,7 @@ export async function buscarHistoricoAlunoNovo(
 
     // ✅ ORDENAR por data (mais recente primeiro)
     pagamentosProcessados.sort(
-      (a, b) => b.dataVencimento.getTime() - a.dataVencimento.getTime()
+      (a, b) => b.dataVencimento.getTime() - a.dataVencimento.getTime(),
     );
 
     const resultado: HistoricoResponse = {

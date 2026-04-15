@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import {
   FaTimes,
   FaUser,
@@ -31,6 +32,7 @@ export default function HistoricoModal({
   alunoId,
   userType,
 }: HistoricoModalProps) {
+  const { currentTenantId } = useAuth();
   // Estados principais
   const [historico, setHistorico] = useState<HistoricoResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,18 +50,22 @@ export default function HistoricoModal({
       setLoading(true);
       setError(null);
 
+      if (!currentTenantId) {
+        throw new Error("Tenant não encontrado na sessão");
+      }
+
       let response: HistoricoResponse | null;
 
       // ✅ SEMPRE TENTAR A NOVA ESTRUTURA PRIMEIRO
-      response = await buscarHistoricoAlunoNovo(alunoId);
+      response = await buscarHistoricoAlunoNovo(currentTenantId, alunoId);
 
       // ✅ SE NÃO ENCONTRAR NA NOVA ESTRUTURA, TENTAR A ANTIGA
       if (!response) {
         ("🔄 Tentando estrutura antiga...");
         if (userType === "admin") {
-          response = await buscarHistoricoParaAdmin(alunoId);
+          response = await buscarHistoricoParaAdmin(currentTenantId, alunoId);
         } else {
-          response = await buscarHistoricoParaAluno(alunoId);
+          response = await buscarHistoricoParaAluno(currentTenantId, alunoId);
         }
       }
 
@@ -198,7 +204,7 @@ export default function HistoricoModal({
                         "pt-BR",
                         {
                           minimumFractionDigits: 2,
-                        }
+                        },
                       )}
                     </p>
                   </div>
@@ -264,7 +270,7 @@ export default function HistoricoModal({
                             <p className="text-sm text-gray-600">
                               Vencimento:{" "}
                               {new Date(
-                                pagamento.dataVencimento
+                                pagamento.dataVencimento,
                               ).toLocaleDateString("pt-BR")}
                               {isAtrasado(pagamento) && (
                                 <span className="text-red-600 font-semibold ml-2">
@@ -276,7 +282,7 @@ export default function HistoricoModal({
                               <p className="text-sm text-green-600">
                                 Pago em:{" "}
                                 {new Date(
-                                  pagamento.dataPagamento
+                                  pagamento.dataPagamento,
                                 ).toLocaleDateString("pt-BR")}
                               </p>
                             )}
@@ -299,7 +305,7 @@ export default function HistoricoModal({
                           </p>
                           <span
                             className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(
-                              pagamento.status
+                              pagamento.status,
                             )}`}
                           >
                             {pagamento.status}

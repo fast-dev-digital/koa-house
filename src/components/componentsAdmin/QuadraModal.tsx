@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import { FaTimes, FaSave, FaSquareFull } from "react-icons/fa";
 import type { Quadra } from "../../types/quadra";
 import {
   criarQuadra,
-  excluirQuadra,
   atualizarQuadra,
-} from "../../services/quadrasServices";
-
+} from "../../services/quadrasServices.ts";
 interface QuadraModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -61,6 +60,7 @@ export default function QuadraModal({
   mode,
   quadraData,
 }: QuadraModalProps) {
+  const { currentTenantId } = useAuth();
   const [formData, setFormData] = useState<FormDataType>(INICIAL_STATE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -86,13 +86,12 @@ export default function QuadraModal({
   }, [mode, quadraData, isOpen]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-      [name]:
+        [name]:
         name === "numero"
           ? parseInt(value) || 1
           : type === "checkbox"
@@ -101,9 +100,7 @@ export default function QuadraModal({
     }));
   };
 
-  const handleSelectChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -117,6 +114,10 @@ export default function QuadraModal({
     setLoading(true);
 
     try {
+      if (!currentTenantId) {
+        throw new Error("Tenant não encontrado na sessão");
+      }
+
       // Validações
       if (!formData.nome.trim()) {
         throw new Error("Nome da quadra é obrigatório");
@@ -129,10 +130,9 @@ export default function QuadraModal({
       }
 
       if (mode === "create") {
-        const { id: _, ...dataWithoutId } = formData;
-        await criarQuadra(dataWithoutId as Omit<Quadra, "id">);
+        await criarQuadra(currentTenantId, formData as Omit<Quadra, "id">);
       } else if (mode === "edit" && quadraData?.id) {
-        await atualizarQuadra(quadraData.id, {
+        await atualizarQuadra(currentTenantId, quadraData.id, {
           ...formData,
           updatedAt: new Date().toISOString(),
         } as Partial<Quadra>);
@@ -378,6 +378,3 @@ export default function QuadraModal({
     </div>
   );
 }
-
-
-

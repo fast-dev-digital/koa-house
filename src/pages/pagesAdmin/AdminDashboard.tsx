@@ -65,9 +65,9 @@ export default function AdminDashboard() {
         const [alunosData, professoresData, turmasData, estatisticas] =
           await Promise.all([
             buscarTodosAlunos(currentTenantId), // Cache automático
-            buscarTodosProfessores(), // Cache automático
-            buscarTodasTurmas(), // Cache automático
-            obterEstatisticasTurmas(), // Estatísticas calculadas
+            buscarTodosProfessores(currentTenantId), // Cache automático
+            buscarTodasTurmas(currentTenantId), // Cache automático
+            obterEstatisticasTurmas(currentTenantId), // Estatísticas calculadas
           ]);
 
         // USAR DADOS DOS SERVICES

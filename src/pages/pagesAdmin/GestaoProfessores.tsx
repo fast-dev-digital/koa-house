@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { FaPlus, FaDownload, FaChalkboardTeacher } from "react-icons/fa";
+import { useAuth } from "../../contexts/AuthContext";
 import DataTable from "../../components/componentsAdmin/DataTable";
 import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters";
 import Toast from "../../components/componentsAdmin/Toast";
@@ -10,15 +11,16 @@ import {
   buscarTodosProfessores,
   obterEstatisticasProfessores,
   type EstatisticasProfessores,
-} from "../../services/professorService";
+} from "../../services/professorService.ts";
 
 export default function GestaoProfessores() {
+  const { currentTenantId } = useAuth();
   const [listProf, setListProf] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedProfessor, setSelectedProfessor] = useState<Professor | null>(
-    null
+    null,
   );
 
   // Modal para mensagens Toast
@@ -125,10 +127,12 @@ export default function GestaoProfessores() {
   // Buscar Professores
   const fetchProfessores = async () => {
     try {
+      if (!currentTenantId) return;
       setLoading(true);
-      const professoresData = await buscarTodosProfessores();
+      const professoresData = await buscarTodosProfessores(currentTenantId);
       setListProf(professoresData);
-      const estatisticasData = await obterEstatisticasProfessores();
+      const estatisticasData =
+        await obterEstatisticasProfessores(currentTenantId);
       setEstatisticas(estatisticasData);
     } catch (error) {
       console.error("Erro ao buscar professores:", error);
@@ -140,7 +144,7 @@ export default function GestaoProfessores() {
 
   useEffect(() => {
     fetchProfessores();
-  }, []);
+  }, [currentTenantId]);
 
   const handleEditProf = (professor: Professor) => {
     setIsModalOpen(true);
@@ -307,7 +311,7 @@ export default function GestaoProfessores() {
             setToastMessage(
               modalMode === "create"
                 ? "Professor cadastrado com sucesso!"
-                : "Professor atualizado com sucesso!"
+                : "Professor atualizado com sucesso!",
             );
             setToastType("success");
             setShowToast(true);

@@ -85,7 +85,7 @@ export default function ManageAlunosModal({
 
       const [alunosData, turmasData] = await Promise.all([
         buscarTodosAlunos(currentTenantId), // ✅ SERVICE COM CACHE
-        buscarTodasTurmas(), // ✅ SERVICE COM CACHE
+        buscarTodasTurmas(currentTenantId), // ✅ SERVICE COM CACHE
         recarregarCache(currentTenantId), // ✅ FORÇA ATUALIZAÇÃO DO CACHE (opcional, dependendo da validade do cache)
       ]);
 
@@ -177,12 +177,16 @@ export default function ManageAlunosModal({
       // ✅ USAR SERVICES (SEM BATCH MANUAL)
       await Promise.all([
         // Atualizar aluno via service
-        atualizarAluno(aluno.id, {
-          turmasIds: novasTurmas,
-          ...(novasTurmas.length === 0 && { turmaId: "" }),
-        }, currentTenantId),
+        atualizarAluno(
+          aluno.id,
+          {
+            turmasIds: novasTurmas,
+            ...(novasTurmas.length === 0 && { turmaId: "" }),
+          },
+          currentTenantId,
+        ),
         // Atualizar contador da turma via service
-        atualizarTurma(turma.id, {
+        atualizarTurma(currentTenantId, turma.id, {
           alunosInscritos: Math.max(0, alunos.length - 1),
         } as TurmaUpdate),
       ]);
@@ -235,9 +239,13 @@ export default function ManageAlunosModal({
         const aluno = todosAlunos.find((a) => a.id === alunoId);
         if (aluno) {
           const novasTurmas = [...(aluno.turmasIds || []), turma.id!];
-          return atualizarAluno(alunoId, {
-            turmasIds: novasTurmas,
-          }, currentTenantId);
+          return atualizarAluno(
+            alunoId,
+            {
+              turmasIds: novasTurmas,
+            },
+            currentTenantId,
+          );
         }
       });
 
@@ -245,7 +253,7 @@ export default function ManageAlunosModal({
       await Promise.all([
         ...alunosParaAtualizar,
         // Atualizar contador da turma via service
-        atualizarTurma(turma.id, {
+        atualizarTurma(currentTenantId, turma.id, {
           alunosInscritos: alunos.length + selectedAlunosIds.length,
         } as TurmaUpdate),
       ]);

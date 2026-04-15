@@ -1,5 +1,6 @@
 export interface Quadra {
   id?: string;
+  tenantId?: string;
   nome: string;
   numero: number;
   localizacao: string; // Ex: "Bloco A", "Área Externa"

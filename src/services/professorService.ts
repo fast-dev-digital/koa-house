@@ -9,7 +9,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase-config";
 import type { Professor } from "../types/professor";
-// ✅ INTERFACE SIMPLES
 
 export interface ProfessorCreate {
   nome: string;
@@ -25,6 +24,7 @@ export interface ProfessorUpdate {
   especialidade?: "Futevôlei" | "Beach Tennis" | "Vôlei";
   status?: "Ativo" | "Inativo";
 }
+
 export interface EstatisticasProfessores {
   total: number;
   ativos: number;
@@ -32,59 +32,87 @@ export interface EstatisticasProfessores {
   especialidades: number;
   porEspecialidade: Record<string, number>;
 }
-// ✅ CACHE GLOBAL (IGUAL AO TURMA SERVICE)
-let professoresCache: Professor[] | null = null;
-let cacheTimestamp: number | null = null;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
-function isCacheValid(): boolean {
-  if (!professoresCache || !cacheTimestamp) return false;
-  return Date.now() - cacheTimestamp < CACHE_TTL;
-}
+type CacheEntry = {
+  professores: Professor[];
+  cacheTimestamp: number;
+};
 
-function invalidateCache(): void {
-  professoresCache = null;
-  cacheTimestamp = null;
-  ("🧹 Cache de professores invalidado");
-}
+const professoresCachePorTenant = new Map<string, CacheEntry>();
+const CACHE_TTL = 5 * 60 * 1000;
 
-// ✅ FUNÇÃO PRINCIPAL
-export async function buscarTodosProfessores(): Promise<Professor[]> {
-  // Cache primeiro
-  if (isCacheValid() && professoresCache) {
-    ("🎯 Professores carregados do cache");
-    return professoresCache;
+const assertTenantId = (tenantId: string) => {
+  if (!tenantId?.trim()) {
+    throw new Error("Tenant ID é obrigatório");
+  }
+};
+
+const getProfessoresRef = (tenantId: string) => {
+  assertTenantId(tenantId);
+  return collection(db, `tenants/${tenantId}/professores`);
+};
+
+const getProfessorDocRef = (tenantId: string, professorId: string) => {
+  assertTenantId(tenantId);
+  if (!professorId?.trim()) {
+    throw new Error("ID do professor é obrigatório");
+  }
+
+  return doc(db, `tenants/${tenantId}/professores`, professorId);
+};
+
+const isCacheValid = (tenantId: string) => {
+  const cache = professoresCachePorTenant.get(tenantId);
+  if (!cache) return false;
+  return Date.now() - cache.cacheTimestamp < CACHE_TTL;
+};
+
+const invalidateCache = (tenantId: string) => {
+  professoresCachePorTenant.delete(tenantId);
+};
+
+const mapDocToProfessor = (docSnap: any, tenantId: string): Professor => {
+  const data = docSnap.data();
+
+  return {
+    id: docSnap.id,
+    tenantId,
+    nome: data.nome || "",
+    email: data.email || "",
+    telefone: data.telefone || "",
+    especialidade: data.especialidade || "Futevôlei",
+    status: data.status || "Ativo",
+    turmaIds: data.turmaIds || [],
+    createdAt: data.createdAt?.toDate?.() || new Date(),
+    updatedAt: data.updatedAt?.toDate?.() || new Date(),
+  };
+};
+
+export async function buscarTodosProfessores(
+  tenantId: string,
+): Promise<Professor[]> {
+  assertTenantId(tenantId);
+
+  if (isCacheValid(tenantId)) {
+    return professoresCachePorTenant.get(tenantId)?.professores || [];
   }
 
   try {
-    ("📡 Buscando professores no Firebase...");
     const professoresQuery = query(
-      collection(db, "professores"),
-      orderBy("nome")
+      getProfessoresRef(tenantId),
+      orderBy("nome"),
     );
 
     const snapshot = await getDocs(professoresQuery);
-    const professores: Professor[] = [];
+    const professores = snapshot.docs.map((docSnap) =>
+      mapDocToProfessor(docSnap, tenantId),
+    );
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      professores.push({
-        id: doc.id,
-        nome: data.nome || "",
-        email: data.email || "",
-        telefone: data.telefone || "",
-        especialidade: data.especialidade || "Futevôlei",
-        status: data.status || "Ativo",
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as Professor);
+    professoresCachePorTenant.set(tenantId, {
+      professores,
+      cacheTimestamp: Date.now(),
     });
 
-    // Atualizar cache
-    professoresCache = professores;
-    cacheTimestamp = Date.now();
-
-    (`✅ ${professores.length} professores carregados e cacheados`);
     return professores;
   } catch (error) {
     console.error("❌ Erro ao buscar professores:", error);
@@ -92,29 +120,29 @@ export async function buscarTodosProfessores(): Promise<Professor[]> {
   }
 }
 
-// ✅ PROFESSORES ATIVOS APENAS
-export async function buscarProfessoresAtivos(): Promise<Professor[]> {
-  const todosProfessores = await buscarTodosProfessores();
+export async function buscarProfessoresAtivos(
+  tenantId: string,
+): Promise<Professor[]> {
+  const todosProfessores = await buscarTodosProfessores(tenantId);
   return todosProfessores.filter((prof) => prof.status === "Ativo");
 }
 
 export async function criarProfessor(
-  professorData: ProfessorCreate
+  tenantId: string,
+  professorData: ProfessorCreate,
 ): Promise<string> {
-  try {
-    
+  assertTenantId(tenantId);
 
-    const docRef = await addDoc(collection(db, "professores"), {
+  try {
+    const docRef = await addDoc(getProfessoresRef(tenantId), {
       ...professorData,
-      turmaIds: [], // Array vazio para turmas
+      tenantId,
+      turmaIds: [],
       createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
-    
-
-    // ✅ INVALIDAR CACHE AUTOMATICAMENTE
-    invalidateCache();
-
+    invalidateCache(tenantId);
     return docRef.id;
   } catch (error) {
     console.error("❌ Erro ao criar professor:", error);
@@ -122,34 +150,34 @@ export async function criarProfessor(
   }
 }
 
-// ✅ FUNÇÃO ATUALIZAR PROFESSOR
 export async function atualizarProfessor(
+  tenantId: string,
   id: string,
-  updateData: ProfessorUpdate
+  updateData: ProfessorUpdate,
 ): Promise<void> {
-  try {
-    
+  assertTenantId(tenantId);
 
-    await updateDoc(doc(db, "professores", id), {
+  try {
+    await updateDoc(getProfessorDocRef(tenantId, id), {
       ...updateData,
+      tenantId,
       updatedAt: new Date(),
     });
 
-    
-
-    // ✅ INVALIDAR CACHE AUTOMATICAMENTE
-    invalidateCache();
+    invalidateCache(tenantId);
   } catch (error) {
     console.error("❌ Erro ao atualizar professor:", error);
     throw new Error("Erro ao atualizar professor");
   }
 }
 
-export async function obterEstatisticasProfessores(): Promise<EstatisticasProfessores> {
-  try {
-    
+export async function obterEstatisticasProfessores(
+  tenantId: string,
+): Promise<EstatisticasProfessores> {
+  assertTenantId(tenantId);
 
-    const professores = await buscarTodosProfessores();
+  try {
+    const professores = await buscarTodosProfessores(tenantId);
 
     const estatisticas: EstatisticasProfessores = {
       total: professores.length,
@@ -159,14 +187,12 @@ export async function obterEstatisticasProfessores(): Promise<EstatisticasProfes
       porEspecialidade: {},
     };
 
-    // Calcular por especialidade
     professores.forEach((professor) => {
       const esp = professor.especialidade;
       estatisticas.porEspecialidade[esp] =
         (estatisticas.porEspecialidade[esp] || 0) + 1;
     });
 
-    
     return estatisticas;
   } catch (error) {
     console.error("❌ Erro ao calcular estatísticas:", error);
@@ -174,5 +200,12 @@ export async function obterEstatisticasProfessores(): Promise<EstatisticasProfes
   }
 }
 
-// ✅ EXPORT DA INTERFACE
+export function limparCacheProfessores(tenantId?: string): void {
+  if (tenantId?.trim()) {
+    professoresCachePorTenant.delete(tenantId);
+  } else {
+    professoresCachePorTenant.clear();
+  }
+}
+
 export type { Professor };

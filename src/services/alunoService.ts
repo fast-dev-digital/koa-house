@@ -161,7 +161,7 @@ export async function atualizarAluno(
       try {
         const { verificarEGerarPagamentoAlunoAtivo } =
           await import("./integracaoService");
-        await verificarEGerarPagamentoAlunoAtivo(id);
+        await verificarEGerarPagamentoAlunoAtivo(id, tenantId);
       } catch (erro) {
         console.warn(
           "⚠️ Erro ao tentar gerar pagamento para aluno ativo:",

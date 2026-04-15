@@ -34,8 +34,10 @@ import {
   obterDiasRestantes,
   planoTemDataFinal,
 } from "../../utils/dateUtils";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function GestaoPagamentos() {
+  const { currentTenantId } = useAuth();
   // ✅ ESTADOS CONSOLIDADOS
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [pagamentosFiltrados, setPagamentosFiltrados] = useState<Pagamento[]>(
@@ -73,7 +75,12 @@ export default function GestaoPagamentos() {
   // ✅ FUNÇÃO - Abrir modal de edição
   const handleAbrirEditarModal = async (alunoId: string) => {
     try {
-      const aluno = await buscarAlunoComPagamentos(alunoId);
+      if (!currentTenantId) {
+        mostrarToast("Tenant não encontrado na sessão", "error");
+        return;
+      }
+
+      const aluno = await buscarAlunoComPagamentos(alunoId, currentTenantId);
       if (aluno) {
         setSelectedAluno(aluno);
         setEditandoAlunoId(alunoId);
@@ -90,9 +97,15 @@ export default function GestaoPagamentos() {
   // ✅ FUNÇÃO - Salvar dados editados
   const handleSalvarDadosAluno = async (dados: DadosEditaveisAluno) => {
     try {
+      if (!currentTenantId) {
+        mostrarToast("Tenant não encontrado na sessão", "error");
+        return;
+      }
+
       const resultado = await atualizarDadosAlunoPagamento(
         editandoAlunoId,
         dados,
+        currentTenantId,
       );
 
       if (resultado.sucesso) {
@@ -116,8 +129,14 @@ export default function GestaoPagamentos() {
   // ✅ FUNÇÃO PRINCIPAL - Buscar pagamentos
   const fetchPagamentos = async () => {
     try {
+      if (!currentTenantId) {
+        setPagamentos([]);
+        return;
+      }
+
       setLoading(true);
-      const alunosComPagamentos = await listarAlunosComPagamentos();
+      const alunosComPagamentos =
+        await listarAlunosComPagamentos(currentTenantId);
 
       // 🔍 DEBUG - Verificar se dataFinalMatricula está vindo
 
@@ -204,6 +223,11 @@ export default function GestaoPagamentos() {
       return;
     }
     try {
+      if (!currentTenantId) {
+        mostrarToast("Tenant não encontrado na sessão", "error");
+        return;
+      }
+
       setLoading(true);
       const pagamentoLimpo = limparObjetoUndefined({
         alunoId: pagamento.alunoId,
@@ -223,8 +247,12 @@ export default function GestaoPagamentos() {
         pagamentoLimpo.alunoId,
         pagamentoLimpo.mesReferencia,
         new Date(),
+        currentTenantId,
       );
-      await adicionarProximoPagamentoArray(pagamentoLimpo.alunoId);
+      await adicionarProximoPagamentoArray(
+        pagamentoLimpo.alunoId,
+        currentTenantId,
+      );
 
       mostrarToast(`Pagamento de ${pagamentoLimpo.alunoNome} confirmado!`);
       fetchPagamentos();
@@ -245,8 +273,13 @@ export default function GestaoPagamentos() {
       return;
 
     try {
+      if (!currentTenantId) {
+        mostrarToast("Tenant não encontrado na sessão", "error");
+        return;
+      }
+
       setLoading(true);
-      const resultado = await fecharMesComArray();
+      const resultado = await fecharMesComArray(currentTenantId);
 
       if (resultado.erro) {
         mostrarToast(resultado.erro, "error");
@@ -495,7 +528,7 @@ export default function GestaoPagamentos() {
   // ✅ EFFECTS CONSOLIDADOS
   useEffect(() => {
     fetchPagamentos();
-  }, []);
+  }, [currentTenantId]);
 
   useEffect(() => {
     const hoje = new Date();

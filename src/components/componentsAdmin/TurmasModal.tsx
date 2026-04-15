@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import { buscarProfessoresAtivos } from "../../services/professorService";
 import {
   criarTurma,
@@ -30,6 +31,7 @@ export default function TurmaModal({
   mode,
   turmaData,
 }: TurmaModalProps) {
+  const { currentTenantId } = useAuth();
   // ESTADOS DO FORMULÁRIO - SEM DATAS NO ESTADO INICIAL
   const [formData, setFormData] = useState<Turma>({
     nome: "",
@@ -56,8 +58,9 @@ export default function TurmaModal({
   useEffect(() => {
     const fetchProfessores = async () => {
       try {
+        if (!currentTenantId) return;
         ("📚 Carregando professores com cache...");
-        const professoresData = await buscarProfessoresAtivos();
+        const professoresData = await buscarProfessoresAtivos(currentTenantId);
         setProfessores(professoresData);
       } catch (error) {
         console.error(" Erro ao carregar professores:", error);
@@ -67,7 +70,7 @@ export default function TurmaModal({
     if (isOpen) {
       fetchProfessores();
     }
-  }, [isOpen]);
+  }, [isOpen, currentTenantId]);
 
   // POPULAR FORMULÁRIO QUANDO EDITAR - SEM DATAS NO RESET
   useEffect(() => {
@@ -153,6 +156,11 @@ export default function TurmaModal({
 
     setLoading(true);
     try {
+      if (!currentTenantId) {
+        setErrors({ submit: "Tenant não encontrado na sessão." });
+        return;
+      }
+
       if (mode === "create") {
         // ✅ DADOS COM TIPO CORRETO
         const turmaDataToSave: TurmaCreate = {
@@ -171,7 +179,7 @@ export default function TurmaModal({
           status: (formData.status as "Ativa" | "Inativa") || "Ativa",
         };
 
-        const turmaId = await criarTurma(turmaDataToSave);
+        const turmaId = await criarTurma(currentTenantId, turmaDataToSave);
         turmaId;
       } else {
         // ✅ DADOS PARA ATUALIZAÇÃO
@@ -195,7 +203,7 @@ export default function TurmaModal({
             status: (formData.status as "Ativa" | "Inativa") || "Ativa",
           };
 
-          await atualizarTurma(turmaData.id, updateData);
+          await atualizarTurma(currentTenantId, turmaData.id, updateData);
           turmaData.id;
         }
       }

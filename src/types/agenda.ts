@@ -1,16 +1,9 @@
 // src/types/agenda.ts
 import { Timestamp } from "firebase/firestore";
 
-export interface Quadra {
-  id: string;
-  nome: string;
-  numero: number;
-  cor: string; // Ex: "blue.100", "green.100", "yellow.100", "orange.100"
-  ativa: boolean;
-}
-
 export interface Reserva {
   id?: string;
+  tenantId?: string;
   quadraId: string;
   quadraNome: string;
   data: Date | Timestamp;
