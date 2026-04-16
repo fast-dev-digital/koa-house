@@ -403,10 +403,15 @@ export default function GestaoTurmas() {
   // ✅ FUNÇÃO EXPORTAR CSV
   const handleExportCSV = async () => {
     try {
+      if (!currentTenantId) {
+        showToastMessage("Tenant não encontrado na sessão", "error");
+        return;
+      }
+
       setCsvLoading(true);
       showToastMessage("Preparando exportação...", "success");
 
-      await exportarTurmasCSV();
+      await exportarTurmasCSV(currentTenantId);
 
       showToastMessage(`Turma(s) exportada(s) com sucesso!`, "success");
     } catch (error: any) {

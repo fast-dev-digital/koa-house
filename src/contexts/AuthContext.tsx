@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { auth, db } from "../firebase-config";
-import { normalizeEmail, resolveTenantId } from "../utils/tenant";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../firebase-config";
+import { normalizeEmail } from "../utils/tenant";
+import {
+  buscarAdminPorEmail,
+  buscarAlunoPorEmail,
+} from "../services/identityLookupService";
 
 interface UserData {
   id: string;
@@ -42,26 +45,37 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const currentTenantId = userData?.tenantId ?? null;
 
   useEffect(() => {
+    const finalizarSessaoInvalida = async () => {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error("Erro ao encerrar sessão inválida:", error);
+      }
+      setUser(null);
+      setUserData(null);
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       try {
         if (currentUser) {
           const normalizedEmail = normalizeEmail(currentUser.email);
 
           // Verificar se é admin
-          const adminQuery = query(
-            collection(db, "admins"),
-            where("email", "==", normalizedEmail),
-          );
-          const adminSnapshot = await getDocs(adminQuery);
+          const adminIdentity = await buscarAdminPorEmail(normalizedEmail);
 
-          if (!adminSnapshot.empty) {
-            const adminDoc = adminSnapshot.docs[0];
-            const adminData = adminDoc.data();
-            const tenantId = resolveTenantId(adminData);
+          if (adminIdentity) {
+            const adminData = adminIdentity.data as Record<string, any>;
+            const tenantId = adminIdentity.tenantId;
+
+            if (!tenantId) {
+              console.error("Admin autenticado sem tenantId válido.");
+              await finalizarSessaoInvalida();
+              return;
+            }
 
             setUser(currentUser);
             setUserData({
-              id: adminDoc.id,
+              id: adminIdentity.id,
               email: adminData.email || currentUser.email,
               nome: adminData.nome || "Admin",
               role: "admin",
@@ -72,19 +86,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           } else {
             // Verificar se é aluno
 
-            const alunoQuery = query(
-              collection(db, "Alunos"),
-              where("email", "==", normalizedEmail),
-            );
-            const alunoSnapshot = await getDocs(alunoQuery);
-            if (!alunoSnapshot.empty) {
-              const alunoDoc = alunoSnapshot.docs[0];
-              const alunoData = alunoDoc.data();
-              const tenantId = resolveTenantId(alunoData);
+            const alunoIdentity = await buscarAlunoPorEmail(normalizedEmail, {
+              expectedAuthUid: currentUser.uid,
+            });
+            if (alunoIdentity) {
+              const alunoData = alunoIdentity.data as Record<string, any>;
+              const tenantId = alunoIdentity.tenantId;
+
+              if (!tenantId) {
+                console.error("Aluno autenticado sem tenantId válido.");
+                await finalizarSessaoInvalida();
+                return;
+              }
 
               setUser(currentUser);
               setUserData({
-                id: alunoDoc.id,
+                id: alunoIdentity.id,
                 email: alunoData.email || currentUser.email,
                 nome: alunoData.nome || "Usuário",
                 role: "user",
@@ -94,8 +111,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               });
             } else {
               ("❌ Usuário não encontrado nas coleções");
-              setUser(null);
-              setUserData(null);
+              await finalizarSessaoInvalida();
             }
           }
         } else {

@@ -34,6 +34,7 @@ export default function TurmaModal({
   const { currentTenantId } = useAuth();
   // ESTADOS DO FORMULÁRIO - SEM DATAS NO ESTADO INICIAL
   const [formData, setFormData] = useState<Turma>({
+    id: "",
     nome: "",
     modalidade: "Futevôlei",
     genero: "Masculino",
@@ -83,6 +84,7 @@ export default function TurmaModal({
     } else {
       // Reset para modo create - SEM DATAS
       setFormData({
+        id: "",
         nome: "",
         modalidade: "Futevôlei",
         genero: "Masculino",

@@ -175,48 +175,6 @@ export default function GestaoPagamentos() {
     }
   };
 
-  // ✅ FUNÇÃO - Gerar pagamentos para alunos existentes
-  {
-    /*const gerarPagamentosParaAlunosExistentes = async () => {
-    try {
-      setLoading(true);
-      const alunosSnapshot = await getDocs(
-        query(collection(db, "Alunos"), where("status", "==", "Ativo"))
-      );
-
-      let alunosCriados = 0;
-      let alunosJaExistentes = 0;
-
-      for (const alunoDoc of alunosSnapshot.docs) {
-        try {
-          const aluno = alunoDoc.data();
-          await criarAlunoComPagamentosArray({
-            id: alunoDoc.id,
-            nome: aluno.nome,
-            plano: aluno.plano || "Mensal",
-            valorMensalidade: aluno.valorMensalidade || 150,
-            status: aluno.status,
-            dataMatricula: aluno.dataMatricula,
-          });
-          alunosCriados++;
-        } catch (error: any) {
-          if (error.message?.includes("já existe")) {
-            alunosJaExistentes++;
-          }
-        }
-      }
-
-      const mensagem = `${alunosCriados} criados, ${alunosJaExistentes} já existiam`;
-      mostrarToast(mensagem);
-      fetchPagamentos();
-    } catch (error) {
-      mostrarToast("Erro ao gerar pagamentos", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
- */
-  }
   // ✅ FUNÇÃO - Marcar como pago
   const handleMarcarComoPago = async (pagamento: Pagamento) => {
     if (!confirm(`Confirmar o pagamento de ${pagamento.alunoNome}?`)) {

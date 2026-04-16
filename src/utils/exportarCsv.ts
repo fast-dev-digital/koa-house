@@ -2,6 +2,19 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase-config";
 import type { Pagamento } from "../types/pagamentos";
 
+const normalizeTenantId = (tenantId: string): string => {
+  const normalized = tenantId?.trim();
+  if (!normalized) {
+    throw new Error("tenantId é obrigatório para exportação");
+  }
+  return normalized;
+};
+
+const getTenantCollectionRef = (tenantId: string, collectionName: string) => {
+  const normalizedTenantId = normalizeTenantId(tenantId);
+  return collection(db, `tenants/${normalizedTenantId}/${collectionName}`);
+};
+
 // ✅ INTERFACES EXPANDIDAS
 interface Aluno {
   id: string;
@@ -40,12 +53,10 @@ interface Professor {
 }
 
 // ✅ FUNÇÃO PARA EXPORTAR ALUNOS (MANTIDA COMPATÍVEL)
-export const exportarAlunosCSV = async () => {
+export const exportarAlunosCSV = async (tenantId: string) => {
   try {
-
-    const alunosRef = collection(db, "Alunos");
+    const alunosRef = getTenantCollectionRef(tenantId, "alunos");
     const snapshot = await getDocs(alunosRef);
-
 
     if (snapshot.empty) {
       alert("⚠️ Nenhum aluno encontrado para exportar!");
@@ -73,12 +84,10 @@ export const exportarAlunosCSV = async () => {
 };
 
 // ✅ NOVA FUNÇÃO PARA EXPORTAR TURMAS
-export const exportarTurmasCSV = async () => {
+export const exportarTurmasCSV = async (tenantId: string) => {
   try {
-
-    const turmasRef = collection(db, "turmas");
+    const turmasRef = getTenantCollectionRef(tenantId, "turmas");
     const snapshot = await getDocs(turmasRef);
-
 
     if (snapshot.empty) {
       alert("⚠️ Nenhuma turma encontrada para exportar!");
@@ -113,10 +122,9 @@ export const exportarTurmasComFiltros = (
     modalidadeFilter?: string;
     generoFilter?: string;
     professorFilter?: string;
-  }
+  },
 ) => {
   try {
-
     let turmasFiltradas = [...turmas];
 
     // ✅ APLICAR FILTROS SE FORNECIDOS
@@ -148,7 +156,6 @@ export const exportarTurmasComFiltros = (
         return matchSearch && matchModalidade && matchGenero && matchProfessor;
       });
     }
-
 
     if (turmasFiltradas.length === 0) {
       alert("⚠️ Nenhuma turma encontrada com os filtros aplicados!");
@@ -256,11 +263,11 @@ const converterTurmasParaCSV = (turmas: Turma[]): string => {
   // ✅ ADICIONAR RESUMO NO FINAL
   const totalAlunos = turmas.reduce(
     (sum, turma) => sum + (turma.alunosInscritos || 0),
-    0
+    0,
   );
   const totalCapacidade = turmas.reduce(
     (sum, turma) => sum + (turma.capacidade || 0),
-    0
+    0,
   );
   const ocupacaoGeral =
     totalCapacidade > 0 ? Math.round((totalAlunos / totalCapacidade) * 100) : 0;
@@ -280,12 +287,10 @@ const converterTurmasParaCSV = (turmas: Turma[]): string => {
 // ...existing code...
 
 // ✅ NOVA FUNÇÃO PARA EXPORTAR PROFESSORES (SEGUINDO O PADRÃO DOS ALUNOS)
-export const exportarProfessoresCSV = async () => {
+export const exportarProfessoresCSV = async (tenantId: string) => {
   try {
-
-    const professoresRef = collection(db, "professores");
+    const professoresRef = getTenantCollectionRef(tenantId, "professores");
     const snapshot = await getDocs(professoresRef);
-
 
     if (snapshot.empty) {
       alert("⚠️ Nenhum professor encontrado para exportar!");
@@ -319,10 +324,9 @@ export const exportarProfessoresComFiltros = (
     searchText?: string;
     statusFilter?: string;
     especialidadeFilter?: string;
-  }
+  },
 ) => {
   try {
-
     let professoresFiltrados = [...professores];
 
     // ✅ APLICAR FILTROS SE FORNECIDOS
@@ -347,7 +351,6 @@ export const exportarProfessoresComFiltros = (
         return matchSearch && matchStatus && matchEspecialidade;
       });
     }
-
 
     if (professoresFiltrados.length === 0) {
       alert("⚠️ Nenhum professor encontrado com os filtros aplicados!");
@@ -405,20 +408,20 @@ const converterProfessoresParaCSV = (professores: Professor[]): string => {
   // ✅ ADICIONAR RESUMO NO FINAL
   const totalProfessores = professores.length;
   const professoresAtivos = professores.filter(
-    (p) => p.status === "Ativo"
+    (p) => p.status === "Ativo",
   ).length;
   const professoresInativos = professores.filter(
-    (p) => p.status === "Inativo"
+    (p) => p.status === "Inativo",
   ).length;
   const totalTurmas = professores.reduce(
     (sum, prof) => sum + (prof.turmaIds?.length || 0),
-    0
+    0,
   );
   const futevolei = professores.filter(
-    (p) => p.especialidade === "Futevôlei"
+    (p) => p.especialidade === "Futevôlei",
   ).length;
   const beachTennis = professores.filter(
-    (p) => p.especialidade === "Beach Tennis"
+    (p) => p.especialidade === "Beach Tennis",
   ).length;
 
   const resumo = [
@@ -472,12 +475,10 @@ export const gerarNomeArquivoComData = (prefixo: string = "dados"): string => {
   return `${prefixo}_${data}_${hora}.csv`;
 };
 
-export const exportarPagamentosCSV = async () => {
+export const exportarPagamentosCSV = async (tenantId: string) => {
   try {
-
-    const pagamentosRef = collection(db, "pagamentos");
+    const pagamentosRef = getTenantCollectionRef(tenantId, "pagamentos");
     const snapshot = await getDocs(pagamentosRef);
-
 
     if (snapshot.empty) {
       alert("⚠️ Nenhum pagamento encontrado para exportar!");
@@ -511,10 +512,9 @@ export const exportarPagamentosComFiltros = (
     searchText?: string;
     statusFilter?: string;
     planoFilter?: string;
-  }
+  },
 ) => {
   try {
-
     let pagamentosFiltrados = [...pagamentos];
 
     // ✅ APLICAR FILTROS SE FORNECIDOS
@@ -539,7 +539,7 @@ export const exportarPagamentosComFiltros = (
       });
     }
 
-    (`📊 ${pagamentosFiltrados.length} pagamentos após filtros`);
+    `📊 ${pagamentosFiltrados.length} pagamentos após filtros`;
 
     if (pagamentosFiltrados.length === 0) {
       alert("⚠️ Nenhum pagamento encontrado com os filtros aplicados!");
@@ -639,7 +639,7 @@ const converterPagamentosParaCSV = (pagamentos: Pagamento[]): string => {
   const valorPago = pagamentosPagos.reduce((sum, p) => sum + (p.valor || 0), 0);
   const valorPendente = pagamentosPendentes.reduce(
     (sum, p) => sum + (p.valor || 0),
-    0
+    0,
   );
 
   // Calcular pagamentos em atraso
@@ -651,7 +651,7 @@ const converterPagamentosParaCSV = (pagamentos: Pagamento[]): string => {
 
   const valorAtrasado = pagamentosAtrasados.reduce(
     (sum, p) => sum + (p.valor || 0),
-    0
+    0,
   );
 
   const resumo = [

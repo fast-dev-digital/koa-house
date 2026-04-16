@@ -1,5 +1,5 @@
 export interface Turma {
-  id?: string;
+  id: string;
   nome: string;
   modalidade: "Futevôlei" | "Beach Tennis" | "Vôlei";
   genero: "Masculino" | "Feminino" | "Teens";

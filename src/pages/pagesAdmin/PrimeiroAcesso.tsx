@@ -1,21 +1,17 @@
 import { useState, useEffect } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../firebase-config"; // ✅ CORRIGIR CAMINHO
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
-} from "firebase/firestore";
+import { updateDoc, doc } from "firebase/firestore";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { fetchSignInMethodsForEmail } from "firebase/auth";
+import { normalizeEmail } from "../../utils/tenant";
+import { buscarAlunoPorEmail } from "../../services/identityLookupService";
 
 //  INTERFACE PARA TIPAGEM
 interface AlunoData {
   id: string;
+  tenantId: string;
   nome: string;
   email: string;
   telefone: string;
@@ -56,35 +52,38 @@ export default function PrimeiroAcesso() {
     setErro("");
 
     try {
-      const alunoQuery = query(
-        collection(db, "Alunos"),
-        where("email", "==", emailToCheck.toLowerCase())
+      const alunoIdentity = await buscarAlunoPorEmail(
+        normalizeEmail(emailToCheck),
       );
 
-      const alunoSnapshot = await getDocs(alunoQuery);
-
-      if (alunoSnapshot.empty) {
+      if (!alunoIdentity) {
         setErro(
-          "Email não encontrado no sistema. Verifique se está correto ou contate o administrador."
+          "Email não encontrado no sistema. Verifique se está correto ou contate o administrador.",
         );
         setAlunoData(null);
         return;
       }
 
-      const aluno = alunoSnapshot.docs[0];
-      const dadosAluno = aluno.data();
+      const dadosAluno = alunoIdentity.data as Record<string, any>;
 
       if (dadosAluno.authCreated === true) {
         setErro(
-          'Esta conta já está ativada. Use "Redefinir Senha" na tela de login se esqueceu sua senha.'
+          'Esta conta já está ativada. Use "Redefinir Senha" na tela de login se esqueceu sua senha.',
         );
         setAlunoData(null);
         return;
       }
 
       // ✅ SETAR DADOS DO ALUNO COM TIPAGEM CORRETA
+      if (!alunoIdentity.tenantId) {
+        setErro("Não foi possível identificar o tenant deste aluno.");
+        setAlunoData(null);
+        return;
+      }
+
       setAlunoData({
-        id: aluno.id,
+        id: alunoIdentity.id,
+        tenantId: alunoIdentity.tenantId,
         nome: dadosAluno.nome || "",
         email: dadosAluno.email || "",
         telefone: dadosAluno.telefone || "",
@@ -135,7 +134,7 @@ export default function PrimeiroAcesso() {
       const signInMethods = await fetchSignInMethodsForEmail(auth, email);
       if (signInMethods.length > 0) {
         setErro(
-          'Este email já possui uma conta ativa. Use "Redefinir Senha" na tela de login.'
+          'Este email já possui uma conta ativa. Use "Redefinir Senha" na tela de login.',
         );
         setLoading(false);
         return;
@@ -145,16 +144,19 @@ export default function PrimeiroAcesso() {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
-        senha
+        senha,
       );
 
       // ✅ ATUALIZAR FIRESTORE
-      await updateDoc(doc(db, "Alunos", alunoData.id), {
-        authCreated: true,
-        authUid: userCredential.user.uid,
-        dataAtivacao: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      await updateDoc(
+        doc(db, `tenants/${alunoData.tenantId}/alunos`, alunoData.id),
+        {
+          authCreated: true,
+          authUid: userCredential.user.uid,
+          dataAtivacao: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      );
 
       ("✅ Firestore atualizado");
 
@@ -174,11 +176,11 @@ export default function PrimeiroAcesso() {
 
       if (error.code === "auth/email-already-in-use") {
         setErro(
-          'Este email já possui uma conta ativa. Use "Redefinir Senha" na tela de login.'
+          'Este email já possui uma conta ativa. Use "Redefinir Senha" na tela de login.',
         );
       } else if (error.code === "auth/weak-password") {
         setErro(
-          "Senha muito fraca. Use pelo menos 6 caracteres com letras e números."
+          "Senha muito fraca. Use pelo menos 6 caracteres com letras e números.",
         );
       } else if (error.code === "auth/invalid-email") {
         setErro("Email inválido. Verifique o formato.");

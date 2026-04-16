@@ -2,17 +2,13 @@ import { Link } from "react-router-dom";
 import { FaTrophy, FaWhatsapp, FaBookOpen, FaSignOutAlt } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
-import { auth, db } from "../../firebase-config";
+import { auth } from "../../firebase-config";
 import { useNavigate } from "react-router-dom";
 import type { AlunoLogado, TurmaDashboard } from "../../types/dashboard";
+import { useAuth } from "../../contexts/AuthContext";
+import { normalizeEmail } from "../../utils/tenant";
+import { buscarTodosAlunos } from "../../services/alunoService";
+import { buscarTurmaPorId } from "../../services/turmaService";
 
 // Componentes
 import ResumoCard from "../../components/componentsAluno/ResumoCard";
@@ -20,6 +16,7 @@ import TurmaCard from "../../components/componentsAluno/TurmaCard";
 import HistoricoModal from "../../components/HistoricoModal";
 
 export default function DashboardAluno() {
+  const { currentTenantId } = useAuth();
   const [nome, setNome] = useState<string>("");
   const [alunoData, setAlunoData] = useState<AlunoLogado | null>(null);
   const [turmas, setTurmas] = useState<TurmaDashboard[]>([]);
@@ -89,26 +86,29 @@ export default function DashboardAluno() {
       }
 
       try {
+        if (!currentTenantId) {
+          throw new Error("Tenant não encontrado na sessão");
+        }
+
         if (isMounted) {
           setLoading(true);
           setError(null);
         }
 
-        // Buscar dados do aluno por email
-        const alunosQuery = query(
-          collection(db, "Alunos"),
-          where("email", "==", user.email),
+        // Buscar dados do aluno no tenant atual
+        const alunosTenant = await buscarTodosAlunos(currentTenantId);
+        const alunoEncontrado = alunosTenant.find(
+          (aluno) => normalizeEmail(aluno.email) === normalizeEmail(user.email),
         );
 
-        const querySnapshot = await getDocs(alunosQuery);
-
-        if (querySnapshot.empty) {
+        if (!alunoEncontrado) {
           throw new Error("Dados do aluno não encontrados no Firebase");
         }
 
-        const alunoDoc = querySnapshot.docs[0];
-        const alunoInfo = alunoDoc.data() as AlunoLogado;
-        alunoInfo.id = alunoDoc.id;
+        const alunoInfo = {
+          ...(alunoEncontrado as unknown as AlunoLogado),
+          id: alunoEncontrado.id,
+        };
 
         // ✅ BUSCAR TURMAS BASEADO NO ARRAY turmasIds
         let turmasAluno: TurmaDashboard[] = [];
@@ -123,13 +123,14 @@ export default function DashboardAluno() {
           for (const turmaId of alunoInfo.turmasIds) {
             if (turmaId && turmaId.trim()) {
               try {
-                const turmaDoc = await getDoc(doc(db, "turmas", turmaId));
+                const turmaData = await buscarTurmaPorId(
+                  currentTenantId,
+                  turmaId,
+                );
 
-                if (turmaDoc.exists()) {
-                  const turmaData = turmaDoc.data();
-
+                if (turmaData) {
                   const turmaDashboard: TurmaDashboard = {
-                    id: turmaDoc.id,
+                    id: turmaData.id as string,
                     nome:
                       turmaData.nome ||
                       `${turmaData.modalidade} - ${turmaData.professorNome}`,
@@ -149,13 +150,14 @@ export default function DashboardAluno() {
         // ✅ FALLBACK: Se não tem turmasIds, usar a lógica antiga com turmaId único
         else if (alunoInfo.turmaId) {
           try {
-            const turmaDoc = await getDoc(doc(db, "turmas", alunoInfo.turmaId));
+            const turmaData = await buscarTurmaPorId(
+              currentTenantId,
+              alunoInfo.turmaId,
+            );
 
-            if (turmaDoc.exists()) {
-              const turmaData = turmaDoc.data();
-
+            if (turmaData) {
               const turmaDashboard: TurmaDashboard = {
-                id: turmaDoc.id,
+                id: turmaData.id as string,
                 nome:
                   turmaData.nome ||
                   `${turmaData.modalidade} - ${turmaData.professorNome}`,
@@ -193,7 +195,7 @@ export default function DashboardAluno() {
       isMounted = false;
       unsubscribe();
     };
-  }, []);
+  }, [currentTenantId]);
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { db, auth } from "../firebase-config";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { auth } from "../firebase-config";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import BackgroundImage from "../assets/bg-hawaii-desk.png";
 import BackgroundImageMobile from "../assets/bg-hawaii-mobile.png";
+import { normalizeEmail } from "../utils/tenant";
+import {
+  buscarAdminPorEmail,
+  buscarAlunoPorEmail,
+} from "../services/identityLookupService";
 
 function PaginaLogin() {
   const [email, setEmail] = useState("");
@@ -20,27 +24,26 @@ function PaginaLogin() {
     setError("");
 
     try {
-      await signInWithEmailAndPassword(auth, email, senha);
+      const normalizedEmail = normalizeEmail(email);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        senha,
+      );
 
       // Verificar se é admin
-      const adminQuery = query(
-        collection(db, "admins"),
-        where("email", "==", email)
-      );
-      const adminSnapshot = await getDocs(adminQuery);
+      const adminIdentity = await buscarAdminPorEmail(normalizedEmail);
 
-      if (!adminSnapshot.empty) {
+      if (adminIdentity) {
         ("👑 Admin detectado, redirecionando para admin-dashboard...");
         navigate("/admin-dashboard");
       } else {
         // Verificar se é aluno
-        const alunoQuery = query(
-          collection(db, "Alunos"),
-          where("email", "==", email)
-        );
-        const alunoSnapshot = await getDocs(alunoQuery);
+        const alunoIdentity = await buscarAlunoPorEmail(normalizedEmail, {
+          expectedAuthUid: userCredential.user.uid,
+        });
 
-        if (!alunoSnapshot.empty) {
+        if (alunoIdentity) {
           ("👤 Aluno detectado, redirecionando para /aluno...");
           navigate("/aluno/*");
         } else {
@@ -58,18 +61,13 @@ function PaginaLogin() {
         ("🔍 Verificando se é primeiro login do aluno...");
 
         try {
-          // Buscar aluno na coleção Alunos
-          const alunoQuery = query(
-            collection(db, "Alunos"),
-            where("email", "==", email)
-          );
-          const querySnapshot = await getDocs(alunoQuery);
+          const normalizedEmail = normalizeEmail(email);
+          const alunoIdentity = await buscarAlunoPorEmail(normalizedEmail);
 
-          querySnapshot.empty ? "Não encontrado" : "Encontrado";
+          alunoIdentity ? "Encontrado" : "Não encontrado";
 
-          if (!querySnapshot.empty) {
-            const alunoDoc = querySnapshot.docs[0];
-            const alunoData = alunoDoc.data();
+          if (alunoIdentity) {
+            const alunoData = alunoIdentity.data as Record<string, any>;
 
             alunoData;
             alunoData.authCreated;
@@ -80,25 +78,25 @@ function PaginaLogin() {
               alunoData.authCreated === undefined
             ) {
               setError(
-                "Conta não ativada. Use o esqueci senha e depois clique em Primeiro Acesso!!"
+                "Conta não ativada. Use o esqueci senha e depois clique em Primeiro Acesso!!",
               );
               setLoading(false);
               return;
             } else {
               setError(
-                'Senha incorreta. Use "Esqueci minha senha" se necessário.'
+                'Senha incorreta. Use "Esqueci minha senha" se necessário.',
               );
             }
           } else {
             ("❌ Email não encontrado no sistema");
             setError(
-              "Conta não encontrada. Se você é um novo aluno, entre em contato com o administrador."
+              "Conta não encontrada. Se você é um novo aluno, entre em contato com o administrador.",
             );
           }
         } catch (createError: any) {
           console.error("❌ Erro ao criar conta:", createError);
           setError(
-            'Erro ao processar login. Tente usar "Esqueci minha senha".'
+            'Erro ao processar login. Tente usar "Esqueci minha senha".',
           );
         }
       } else if (err.code === "auth/wrong-password") {

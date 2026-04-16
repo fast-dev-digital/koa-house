@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth, db } from "../firebase-config";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { auth } from "../firebase-config";
 import { Link, useNavigate } from "react-router-dom";
+import { normalizeEmail } from "../utils/tenant";
+import {
+  buscarAdminPorEmail,
+  buscarAlunoPorEmail,
+} from "../services/identityLookupService";
 
 const EsqueciSenha = () => {
   const [email, setEmail] = useState("");
@@ -23,35 +27,29 @@ const EsqueciSenha = () => {
     }
 
     try {
+      const normalizedEmail = normalizeEmail(email);
+
       // Verificar se o email existe como admin
-      const adminQuery = query(
-        collection(db, "admins"),
-        where("email", "==", email)
-      );
-      const adminSnapshot = await getDocs(adminQuery);
+      const adminIdentity = await buscarAdminPorEmail(normalizedEmail);
 
       // Verificar se o email existe como aluno
-      const alunoQuery = query(
-        collection(db, "Alunos"),
-        where("email", "==", email)
-      );
-      const alunoSnapshot = await getDocs(alunoQuery);
+      const alunoIdentity = await buscarAlunoPorEmail(normalizedEmail);
 
       // Se não existe nem como admin nem como aluno
-      if (adminSnapshot.empty && alunoSnapshot.empty) {
+      if (!adminIdentity && !alunoIdentity) {
         ("❌ Email não encontrado no sistema");
         setErro(
-          "Email não encontrado no sistema. Verifique se está correto ou contate o administrador."
+          "Email não encontrado no sistema. Verifique se está correto ou contate o administrador.",
         );
         setLoading(false);
         return;
       }
 
-      const isAluno = !alunoSnapshot.empty;
+      const isAluno = Boolean(alunoIdentity);
 
       // ✅ SE É ALUNO, VERIFICAR SE JÁ TEM CONTA NO AUTH
       if (isAluno) {
-        const alunoData = alunoSnapshot.docs[0].data();
+        const alunoData = (alunoIdentity?.data || {}) as Record<string, any>;
 
         // ✅ SE É PRIMEIRO ACESSO (não tem authCreated ou authCreated = false)
         if (!alunoData.authCreated) {
@@ -81,7 +79,7 @@ const EsqueciSenha = () => {
       await sendPasswordResetEmail(auth, email, actionCodeSettings);
 
       setMensagem(
-        "Link de redefinição enviado! Verifique sua caixa de entrada e pasta de spam. Você será redirecionado em alguns segundos..."
+        "Link de redefinição enviado! Verifique sua caixa de entrada e pasta de spam. Você será redirecionado em alguns segundos...",
       );
 
       setTimeout(() => {
@@ -102,11 +100,11 @@ POSSÍVEIS SOLUÇÕES:
         setErro("Email inválido. Verifique o formato do endereço de email.");
       } else if (error.code === "auth/too-many-requests") {
         setErro(
-          "Muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente."
+          "Muitas tentativas em pouco tempo. Aguarde alguns minutos antes de tentar novamente.",
         );
       } else {
         setErro(
-          "Erro ao enviar email de redefinição. Tente novamente em alguns instantes ou contate o administrador."
+          "Erro ao enviar email de redefinição. Tente novamente em alguns instantes ou contate o administrador.",
         );
       }
     } finally {

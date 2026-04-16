@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../firebase-config";
 import { FaPlus, FaDownload, FaUser } from "react-icons/fa";
 import DataTable from "../../components/componentsAdmin/DataTable";
 import SearchAndFilters from "../../components/componentsAdmin/SearchAndFilters";
 import AlunoModal from "../../components/componentsAdmin/AlunoModal";
 import Toast from "../../components/componentsAdmin/Toast";
 import { exportarAlunosCSV } from "../../utils/exportarCsv";
+import { useAuth } from "../../contexts/AuthContext";
+import { buscarTodosAlunos } from "../../services/alunoService";
 import {
   formatarDataBR,
   verificarStatusVencimento,
@@ -163,6 +163,7 @@ const StatCard = ({ icon, title, value, iconColor }: StatCardProps) => (
 
 // 🎯 COMPONENTE PRINCIPAL
 export default function GestaoAlunos() {
+  const { currentTenantId } = useAuth();
   // 📊 ESTADOS PRINCIPAIS
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,15 +212,20 @@ export default function GestaoAlunos() {
 
   const fetchAlunos = useCallback(async () => {
     try {
+      if (!currentTenantId) {
+        setAlunos([]);
+        return;
+      }
+
       setLoading(true);
-      const querySnapshot = await getDocs(collection(db, "Alunos"));
+      const alunosTenant = await buscarTodosAlunos(currentTenantId);
       const alunosData: Aluno[] = [];
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
+      alunosTenant.forEach((aluno) => {
+        const data = aluno as any;
         if (data && typeof data === "object") {
           const normalizado = {
-            id: doc.id,
+            id: aluno.id,
             ...DEFAULT_ALUNO_VALUES,
             ...data,
           } as any;
@@ -227,7 +233,7 @@ export default function GestaoAlunos() {
           // Normalizar campos de data que podem vir como Timestamp
           normalizado.dataMatricula = normalizeDate(normalizado.dataMatricula);
           normalizado.dataFinalMatricula = normalizeDate(
-            normalizado.dataFinalMatricula
+            normalizado.dataFinalMatricula,
           );
           // Garantir tipos básicos
           normalizado.telefone = normalizado.telefone || "";
@@ -245,7 +251,7 @@ export default function GestaoAlunos() {
     } finally {
       setLoading(false);
     }
-  }, []); // ✅ SEM DEPENDÊNCIAS PARA EVITAR LOOPS
+  }, [currentTenantId]);
 
   useEffect(() => {
     fetchAlunos();
@@ -274,7 +280,7 @@ export default function GestaoAlunos() {
       inativos: alunosFiltrados.filter((a) => a.status === "Inativo").length,
       suspensos: alunosFiltrados.filter((a) => a.status === "Suspenso").length,
     }),
-    [alunosFiltrados]
+    [alunosFiltrados],
   );
 
   // 📋 COLUNAS DA TABELA
@@ -314,16 +320,21 @@ export default function GestaoAlunos() {
   // 📤 EXPORTAR CSV
   const handleExportarCSV = useCallback(async () => {
     try {
+      if (!currentTenantId) {
+        showToastMessage("Tenant não encontrado na sessão", "error");
+        return;
+      }
+
       setCsvLoading(true);
       showToastMessage("Iniciando exportação CSV...", "success");
-      await exportarAlunosCSV();
+      await exportarAlunosCSV(currentTenantId);
     } catch (erro) {
       console.error("Erro ao exportar CSV:", erro);
       showToastMessage("Erro ao exportar arquivo", "error");
     } finally {
       setCsvLoading(false);
     }
-  }, [showToastMessage]);
+  }, [currentTenantId, showToastMessage]);
 
   //  CONFIGURAÇÃO DOS FILTROS
   const filterConfigs: FilterConfig[] = useMemo(
@@ -336,7 +347,7 @@ export default function GestaoAlunos() {
         options: FILTER_OPTIONS.STATUS,
       },
     ],
-    [statusFilter, turmasFilter, horariosFilter]
+    [statusFilter, turmasFilter, horariosFilter],
   );
 
   return (

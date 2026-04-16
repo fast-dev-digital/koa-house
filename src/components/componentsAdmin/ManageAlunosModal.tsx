@@ -117,10 +117,7 @@ export default function ManageAlunosModal({
   const calcularAlunosMatriculados = () => {
     if (!turma?.id) return [];
 
-    return todosAlunos.filter(
-      (aluno) =>
-        aluno.turmasIds?.includes(turma.id!) || aluno.turmasIds === turma.id,
-    );
+    return todosAlunos.filter((aluno) => aluno.turmasIds?.includes(turma.id!));
   };
 
   // ✅ FUNÇÃO - Filtrar alunos disponíveis (do cache)
@@ -129,8 +126,7 @@ export default function ManageAlunosModal({
 
     return todosAlunos.filter((aluno) => {
       // Já está nesta turma?
-      const jaNestaTurma =
-        aluno.turmasIds?.includes(turma.id!) || aluno.turmasIds === turma.id;
+      const jaNestaTurma = aluno.turmasIds?.includes(turma.id!);
       if (jaNestaTurma) return false;
 
       // Filtro por gênero (exceto Beach Tennis, Teens e Vôlei)

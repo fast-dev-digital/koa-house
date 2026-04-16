@@ -154,12 +154,19 @@ export default function GestaoProfessores() {
 
   const handleExportarCSV = async () => {
     try {
+      if (!currentTenantId) {
+        setToastMessage("Tenant não encontrado na sessão");
+        setToastType("error");
+        setShowToast(true);
+        return;
+      }
+
       setCsvLoading(true);
       setToastMessage("Iniciando exportação CSV...");
       setToastType("success");
       setShowToast(true);
 
-      await exportarProfessoresCSV();
+      await exportarProfessoresCSV(currentTenantId);
 
       setToastMessage("CSV exportado com sucesso!");
       setToastType("success");
