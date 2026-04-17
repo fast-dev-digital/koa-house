@@ -67,7 +67,7 @@ export function buscarAlunoPorEmail(email: string): Aluno | null {
 
   // BUSCA NO ARRAY EM MEMÓRIA (SUPER RÁPIDO)
   const alunoEncontrado = cacheAlunos.find(
-    (aluno) => aluno.email.toLowerCase() === email.toLowerCase()
+    (aluno) => aluno.email.toLowerCase() === email.toLowerCase(),
   );
 
   if (alunoEncontrado) {
@@ -81,7 +81,7 @@ export function buscarAlunoPorEmail(email: string): Aluno | null {
 
 // ➕ FUNÇÃO 3: CRIAR NOVO ALUNO
 export async function criarAluno(
-  dadosAluno: Omit<Aluno, "id">
+  dadosAluno: Omit<Aluno, "id">,
 ): Promise<string> {
   try {
     // 📝 ADICIONA TIMESTAMPS AUTOMÁTICOS
@@ -109,7 +109,7 @@ export async function criarAluno(
 // ✏️ FUNÇÃO 4: ATUALIZAR ALUNO EXISTENTE
 export async function atualizarAluno(
   id: string,
-  dadosAtualizacao: Partial<Aluno>
+  dadosAtualizacao: Partial<Aluno>,
 ): Promise<void> {
   // 🎓 EXPLICAÇÃO DO Partial<Aluno>:
   // "Todos os campos de Aluno são OPCIONAIS"
@@ -131,14 +131,13 @@ export async function atualizarAluno(
     // ✅ Se mudou o status para Ativo, verificar e gerar pagamento
     if (dadosAtualizacao.status === "Ativo") {
       try {
-        const { verificarEGerarPagamentoAlunoAtivo } = await import(
-          "./integracaoService"
-        );
+        const { verificarEGerarPagamentoAlunoAtivo } =
+          await import("./integracaoService");
         await verificarEGerarPagamentoAlunoAtivo(id);
       } catch (erro) {
         console.warn(
           "⚠️ Erro ao tentar gerar pagamento para aluno ativo:",
-          erro
+          erro,
         );
         // Não throw - deixa a atualização do aluno continuar mesmo se falhar a geração do pagamento
       }
