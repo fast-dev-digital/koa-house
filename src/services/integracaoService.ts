@@ -1656,6 +1656,14 @@ export async function atualizarDadosAlunoPagamento(
       updatedAt: Timestamp.now(),
     };
 
+    if (dadosEditaveis.nome && dadosEditaveis.nome.trim()) {
+      dadosParaAtualizar.nome = dadosEditaveis.nome.trim();
+    }
+
+    if (dadosEditaveis.status && dadosEditaveis.status.trim()) {
+      dadosParaAtualizar.status = dadosEditaveis.status.trim();
+    }
+
     // Adicionar dataFinalMatricula só se for válida
     if (dataFinalTimestamp) {
       dadosParaAtualizar.dataFinalMatricula = dataFinalTimestamp;
@@ -1731,6 +1739,14 @@ export async function atualizarDadosAlunoPagamento(
           valorMensalidade: dadosEditaveis.valorMensalidade,
           updatedAt: Timestamp.now(),
         };
+
+        if (dadosEditaveis.nome && dadosEditaveis.nome.trim()) {
+          dadosParaSincronizar.nome = dadosEditaveis.nome.trim();
+        }
+
+        if (dadosEditaveis.status && dadosEditaveis.status.trim()) {
+          dadosParaSincronizar.status = dadosEditaveis.status.trim();
+        }
 
         if (dadosEditaveis.telefone) {
           dadosParaSincronizar.telefone = dadosEditaveis.telefone;
