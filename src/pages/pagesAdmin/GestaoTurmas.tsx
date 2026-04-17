@@ -7,6 +7,7 @@ import {
   buscarTodasTurmas,
   obterEstatisticasTurmas,
 } from "../../services/turmaService";
+import { buscarTodosProfessores } from "../../services/professorService";
 import Toast from "../../components/componentsAdmin/Toast";
 import TurmasModal from "../../components/componentsAdmin/TurmasModal";
 import type { Turma } from "../../types/turmas";
@@ -209,6 +210,9 @@ export default function GestaoTurmas() {
   const { currentTenantId } = useAuth();
   // ESTADOS PRINCIPAIS
   const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [professores, setProfessores] = useState<
+    Array<{ id: string; nome: string }>
+  >([]);
   const [loading, setLoading] = useState(false);
   const [estatisticas, setEstatisticas] = useState<any>(null);
 
@@ -252,10 +256,18 @@ export default function GestaoTurmas() {
 
       setLoading(true);
 
-      const turmasData = await buscarTodasTurmas(currentTenantId);
+      const [turmasData, professoresData] = await Promise.all([
+        buscarTodasTurmas(currentTenantId),
+        buscarTodosProfessores(currentTenantId),
+      ]);
 
       // ✅ FORÇAR NOVA REFERÊNCIA COM SPREAD
       setTurmas([...turmasData]); // Força React a detectar mudança
+      setProfessores(
+        professoresData
+          .filter((prof) => prof.id)
+          .map((prof) => ({ id: prof.id!, nome: prof.nome })),
+      );
 
       const estatisticasData = await obterEstatisticasTurmas(currentTenantId);
       setEstatisticas({ ...estatisticasData }); // Spread nas estatísticas também
@@ -337,7 +349,7 @@ export default function GestaoTurmas() {
         !modalidadeFilter || turma.modalidade === modalidadeFilter;
       const matchGenero = !generoFilter || turma.genero === generoFilter;
       const matchProfessor =
-        !professorFilter || turma.professorNome === professorFilter;
+        !professorFilter || turma.professorId === professorFilter;
       const matchStatus = !statusFilter || turma.status === statusFilter;
 
       return (
@@ -544,11 +556,9 @@ export default function GestaoTurmas() {
             value: professorFilter,
             onChange: setProfessorFilter,
             placeholder: "Todos os Professores",
-            options: [
-              ...new Set(turmas.map((t) => t.professorNome).filter(Boolean)),
-            ].map((prof) => ({
-              value: prof,
-              label: prof,
+            options: professores.map((prof) => ({
+              value: prof.id,
+              label: prof.nome,
             })),
           },
           {

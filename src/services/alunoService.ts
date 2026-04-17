@@ -1,6 +1,7 @@
 import {
   collection,
   getDocs,
+  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -155,6 +156,78 @@ export async function atualizarAluno(
 
     // 🔥 ATUALIZA NO FIREBASE
     await updateDoc(docRef, dadosCompletos);
+
+    const alterouDadosSincronizados =
+      dadosAtualizacao.nome !== undefined ||
+      dadosAtualizacao.plano !== undefined ||
+      dadosAtualizacao.valorMensalidade !== undefined ||
+      dadosAtualizacao.telefone !== undefined ||
+      dadosAtualizacao.dataFinalMatricula !== undefined ||
+      dadosAtualizacao.status !== undefined;
+
+    if (alterouDadosSincronizados) {
+      try {
+        const alunoAtualizadoSnap = await getDoc(docRef);
+
+        if (alunoAtualizadoSnap.exists()) {
+          const alunoAtualizado = alunoAtualizadoSnap.data() as Aluno;
+          const nome = (alunoAtualizado.nome || "").trim();
+          const plano = (alunoAtualizado.plano || "").trim();
+          const status = (alunoAtualizado.status || "").trim() as
+            | "Ativo"
+            | "Inativo"
+            | "Suspenso";
+          const valorMensalidade = Number(alunoAtualizado.valorMensalidade);
+          const telefone = (alunoAtualizado.telefone || "").trim();
+
+          const { atualizarDadosAlunoPagamento, criarAlunoComPagamentosArray } =
+            await import("./integracaoService");
+
+          const resultadoSync = await atualizarDadosAlunoPagamento(
+            id,
+            {
+              nome,
+              plano,
+              status,
+              valorMensalidade,
+              telefone,
+              dataFinalMatricula: alunoAtualizado.dataFinalMatricula
+                ? new Date(alunoAtualizado.dataFinalMatricula)
+                : undefined,
+            },
+            tenantId,
+          );
+
+          if (
+            !resultadoSync.sucesso &&
+            resultadoSync.erro?.includes("não encontrado") &&
+            status === "Ativo" &&
+            nome &&
+            plano &&
+            !Number.isNaN(valorMensalidade) &&
+            valorMensalidade > 0
+          ) {
+            await criarAlunoComPagamentosArray(
+              {
+                id,
+                nome,
+                plano,
+                status,
+                valorMensalidade,
+                dataMatricula: alunoAtualizado.dataMatricula,
+                telefone,
+              },
+              tenantId,
+            );
+          }
+        }
+      } catch (erroSync) {
+        console.warn(
+          "⚠️ Erro ao sincronizar dados do aluno para alunosPagamentos:",
+          erroSync,
+        );
+      }
+    }
 
     // ✅ Se mudou o status para Ativo, verificar e gerar pagamento
     if (dadosAtualizacao.status === "Ativo") {

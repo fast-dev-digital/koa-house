@@ -25,6 +25,8 @@ export interface DadosEditaveisAluno {
   plano: string;
   valorMensalidade: number;
   telefone: string;
+  nome?: string;
+  status?: "Ativo" | "Inativo" | "Suspenso";
   dataFinalMatricula?: Date;
 }
 
