@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { useRef } from "react";
 import Navbar from "../components/Navbar";
 import EventsSection from "../components/EventsSection";
+import CadastroSection from "../components/CadastroSection";
 import PricingCard from "../components/PricingCard";
 import { planos } from "../data/planosData";
 import Modal from "../components/Modal";
@@ -377,6 +378,8 @@ function HomePage() {
           </motion.div>
         </div>
       </motion.section>
+
+      <CadastroSection embedded />
 
       {/* CTA Section */}
       <motion.section

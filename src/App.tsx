@@ -6,6 +6,7 @@ import Layout from "./components/Layout";
 import AdminLayout from "./components/componentsAdmin/AdminLayout";
 import HomePage from "./pages/HomePage";
 import PaginaLogin from "./pages/PaginaLogin";
+import CadastroSection from "./components/CadastroSection";
 import SobreNos from "./pages/SobreNos";
 import Eventos from "./pages/Eventos";
 import Professores from "./pages/Professores";
@@ -49,6 +50,7 @@ function App() {
                 </LoginProtectedRoute>
               }
             />
+            <Route path="cadastro" element={<CadastroSection />} />
             <Route path="eventos" element={<Eventos />} />
             <Route path="professores" element={<Professores />} />
             <Route path="planos" element={<Planos />} />
