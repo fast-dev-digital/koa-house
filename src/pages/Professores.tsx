@@ -5,7 +5,7 @@ import { useInView } from 'framer-motion';
 import { useRef } from 'react';
 
 // importação de imagens dos professores
-import imgChris from "../assets/ft-chris.jpeg";
+import imgAndrey from "../assets/ft-andrey.png";
 import imgVitinho from "../assets/ft-vitinho-1.jpeg";
 import imgKlebao from "../assets/ft-klebao.png";
 import imgClebinho from "../assets/ft-clebinho.png";
@@ -82,14 +82,14 @@ function Professores() {
 
             {/* Container dos professores */}
             <div className="bg-gradient-to-b from-gray-50 to-white">
-                {/*Chris*/}
+                {/*Andrey*/}
                 <InfoSection
-                title="Professor Chris"
+                title="Professor Andrey"
                 description="Escolha seu horário e aproveite nossas quadras premium para jogar com os amigos. Estrutura moderna, bar e estacionamento seguro!"
-                buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° CHRIS AGORA!"
-                imageUrl={imgChris}
-                imageAlt="Foto do professor Chris"
-                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Chris"
+                buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° ANDREY AGORA!"
+                imageUrl={imgAndrey}
+                imageAlt="Foto do professor Andrey"
+                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Andrey"
                 />
     
                 {/*Vitinho*/}
@@ -124,16 +124,6 @@ function Professores() {
                 reverse={true}
                 />
 
-                {/*Melinho*/}
-                <InfoSection
-                title="Professor Mellinho"
-                description="Escolha seu horário e aproveite nossas quadras premium para jogar com os amigos. Estrutura moderna, bar e estacionamento seguro!"
-                buttonText="FAÇA SUA AULA EXPERIMENTAL COM O PROF° MELLINHO AGORA!"
-                imageUrl={imgMello}
-                imageAlt="Foto do professor Mello"
-                linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Mellinho"
-                />
-
                 {/*Leo*/}
                 <InfoSection
                 title="Professor Leo"
@@ -142,7 +132,7 @@ function Professores() {
                 imageUrl={imgLeo}
                 imageAlt="Foto do professor LEO"
                 linkTo="https://wa.me/5519981924006?text=Olá%20quero%20fazer%20aula%20experimental%20com%20o%20Leo"
-                reverse = {true}
+                reverse = {false}
                 />
             </div>
             

@@ -52,12 +52,12 @@ export const planos: Plano[] = [
   },
   {
     tipo: "Beach Tennis",
-    titulo: "Beach Tennis - Trimestral",
-    preco: "R$ 380,00",
+    titulo: "Beach Tennis - 1x",
+    preco: "R$ 200,00",
     unidade: "/por mês",
-    destacado: true,
+    destacado: false,
     features: [
-      "2x Aulas de Beach Tennis Semanais",
+      "1x Aula de Beach Tennis por Semana",
       "Sem Taxa de Matrícula",
       "Descontos em Serviços",
       "Pagamento Recorrente",
@@ -65,12 +65,12 @@ export const planos: Plano[] = [
   },
   {
     tipo: "Beach Tennis",
-    titulo: "Beach Tennis - Mensal",
+    titulo: "Beach Tennis - 2x",
     preco: "R$ 400,00",
     unidade: "/por mês",
-    destacado: false,
+    destacado: true,
     features: [
-      "2x Aula de Beach Tennis Semanal",
+      "2x Aulas de Beach Tennis por Semana",
       "Sem Taxa de Matrícula",
       "Descontos em Serviços",
       "Pagamento Recorrente",
