@@ -9,7 +9,6 @@ import imgAndrey from "../assets/ft-andrey.png";
 import imgVitinho from "../assets/ft-vitinho-1.jpeg";
 import imgKlebao from "../assets/ft-klebao.png";
 import imgClebinho from "../assets/ft-clebinho.png";
-import imgMello from "../assets/ft-mellinho.png";
 import imgLeo from "../assets/ft-leo.jpg";
 
 function Professores() {
