@@ -6,11 +6,13 @@ import {
   buscarTodasTurmas,
   obterEstatisticasTurmas,
 } from "../../services/turmaService";
+import { buscarTodosProfessores } from "../../services/professorService";
 import Toast from "../../components/componentsAdmin/Toast";
 import TurmasModal from "../../components/componentsAdmin/TurmasModal";
 import type { Turma } from "../../types/turmas";
 import ManageAlunosModal from "../../components/componentsAdmin/ManageAlunosModal";
 import { exportarTurmasCSV } from "../../utils/exportarCsv";
+import { recarregarCache } from "../../services/alunoService";
 
 // 🗓️ FUNÇÃO HELPER PARA ORDENAR DIAS DA SEMANA
 const obterOrdemDia = (diaTexto: string): number => {
@@ -78,8 +80,8 @@ const getColunasTurmas = (alunosPorTurmaMap: Map<string, string[]>) => [
           value === "Futevôlei"
             ? "bg-blue-100 text-blue-800"
             : value === "Beach Tennis"
-            ? "bg-pink-100 text-pink-800"
-            : "bg-green-100 text-green-800"
+              ? "bg-pink-100 text-pink-800"
+              : "bg-green-100 text-green-800"
         }`}
       >
         {value}
@@ -119,8 +121,8 @@ const getColunasTurmas = (alunosPorTurmaMap: Map<string, string[]>) => [
           value === "Masculino"
             ? "bg-blue-100 text-blue-800"
             : value === "Feminino"
-            ? "bg-pink-100 text-pink-800"
-            : "bg-purple-100 text-purple-800"
+              ? "bg-pink-100 text-pink-800"
+              : "bg-purple-100 text-purple-800"
         }`}
       >
         {value}
@@ -206,6 +208,9 @@ const getColunasTurmas = (alunosPorTurmaMap: Map<string, string[]>) => [
 export default function GestaoTurmas() {
   // ESTADOS PRINCIPAIS
   const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [professores, setProfessores] = useState<
+    Array<{ id: string; nome: string }>
+  >([]);
   const [loading, setLoading] = useState(false);
   const [estatisticas, setEstatisticas] = useState<any>(null);
 
@@ -244,10 +249,18 @@ export default function GestaoTurmas() {
     try {
       setLoading(true);
 
-      const turmasData = await buscarTodasTurmas();
+      const [turmasData, professoresData] = await Promise.all([
+        buscarTodasTurmas(),
+        buscarTodosProfessores(),
+      ]);
 
       // ✅ FORÇAR NOVA REFERÊNCIA COM SPREAD
       setTurmas([...turmasData]); // Força React a detectar mudança
+      setProfessores(
+        professoresData
+          .filter((prof) => prof.id)
+          .map((prof) => ({ id: prof.id!, nome: prof.nome })),
+      );
 
       const estatisticasData = await obterEstatisticasTurmas();
       setEstatisticas({ ...estatisticasData }); // Spread nas estatísticas também
@@ -266,8 +279,7 @@ export default function GestaoTurmas() {
   // ✅ NOVA FUNÇÃO - Carregar alunos de todas as turmas
   const carregarAlunosDasTurmas = async (turmasData: Turma[]) => {
     try {
-      const { buscarTodosAlunos } = await import("../../services/alunoService");
-      const todosAlunos = await buscarTodosAlunos();
+      const todosAlunos = await recarregarCache();
 
       const mapaAlunosPorTurma = new Map<string, string[]>();
 
@@ -299,7 +311,7 @@ export default function GestaoTurmas() {
 
   // ✅ NOVO ESTADO - Alunos por turma
   const [alunosPorTurma, setAlunosPorTurma] = useState<Map<string, string[]>>(
-    new Map()
+    new Map(),
   );
 
   // FILTRAR TURMAS COM BUSCA POR ALUNO
@@ -308,7 +320,7 @@ export default function GestaoTurmas() {
       // Busca por aluno - verifica se o searchText corresponde a algum aluno da turma
       const alunosDaTurma = alunosPorTurma.get(turma.id || "") || [];
       const matchAluno = alunosDaTurma.some((nomeAluno) =>
-        nomeAluno.toLowerCase().includes(searchText.toLowerCase())
+        nomeAluno.toLowerCase().includes(searchText.toLowerCase()),
       );
 
       const matchSearch =
@@ -326,7 +338,7 @@ export default function GestaoTurmas() {
         !modalidadeFilter || turma.modalidade === modalidadeFilter;
       const matchGenero = !generoFilter || turma.genero === generoFilter;
       const matchProfessor =
-        !professorFilter || turma.professorNome === professorFilter;
+        !professorFilter || turma.professorId === professorFilter;
       const matchStatus = !statusFilter || turma.status === statusFilter;
 
       return (
@@ -528,11 +540,9 @@ export default function GestaoTurmas() {
             value: professorFilter,
             onChange: setProfessorFilter,
             placeholder: "Todos os Professores",
-            options: [
-              ...new Set(turmas.map((t) => t.professorNome).filter(Boolean)),
-            ].map((prof) => ({
-              value: prof,
-              label: prof,
+            options: professores.map((prof) => ({
+              value: prof.id,
+              label: prof.nome,
             })),
           },
           {

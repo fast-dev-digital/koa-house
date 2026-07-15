@@ -1,6 +1,7 @@
 import {
   collection,
   getDocs,
+  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -67,7 +68,7 @@ export function buscarAlunoPorEmail(email: string): Aluno | null {
 
   // BUSCA NO ARRAY EM MEMÓRIA (SUPER RÁPIDO)
   const alunoEncontrado = cacheAlunos.find(
-    (aluno) => aluno.email.toLowerCase() === email.toLowerCase()
+    (aluno) => aluno.email.toLowerCase() === email.toLowerCase(),
   );
 
   if (alunoEncontrado) {
@@ -81,7 +82,7 @@ export function buscarAlunoPorEmail(email: string): Aluno | null {
 
 // ➕ FUNÇÃO 3: CRIAR NOVO ALUNO
 export async function criarAluno(
-  dadosAluno: Omit<Aluno, "id">
+  dadosAluno: Omit<Aluno, "id">,
 ): Promise<string> {
   try {
     // 📝 ADICIONA TIMESTAMPS AUTOMÁTICOS
@@ -109,7 +110,7 @@ export async function criarAluno(
 // ✏️ FUNÇÃO 4: ATUALIZAR ALUNO EXISTENTE
 export async function atualizarAluno(
   id: string,
-  dadosAtualizacao: Partial<Aluno>
+  dadosAtualizacao: Partial<Aluno>,
 ): Promise<void> {
   // 🎓 EXPLICAÇÃO DO Partial<Aluno>:
   // "Todos os campos de Aluno são OPCIONAIS"
@@ -128,17 +129,81 @@ export async function atualizarAluno(
     // 🔥 ATUALIZA NO FIREBASE
     await updateDoc(docRef, dadosCompletos);
 
+    const alterouDadosSincronizados =
+      dadosAtualizacao.nome !== undefined ||
+      dadosAtualizacao.plano !== undefined ||
+      dadosAtualizacao.valorMensalidade !== undefined ||
+      dadosAtualizacao.telefone !== undefined ||
+      dadosAtualizacao.dataFinalMatricula !== undefined ||
+      dadosAtualizacao.status !== undefined;
+
+    if (alterouDadosSincronizados) {
+      try {
+        const alunoAtualizadoSnap = await getDoc(docRef);
+
+        if (alunoAtualizadoSnap.exists()) {
+          const alunoAtualizado = alunoAtualizadoSnap.data() as Aluno;
+          const nome = (alunoAtualizado.nome || "").trim();
+          const plano = (alunoAtualizado.plano || "").trim();
+          const status = (alunoAtualizado.status || "").trim() as
+            | "Ativo"
+            | "Inativo"
+            | "Suspenso";
+          const valorMensalidade = Number(alunoAtualizado.valorMensalidade);
+          const telefone = (alunoAtualizado.telefone || "").trim();
+
+          const { atualizarDadosAlunoPagamento, criarAlunoComPagamentosArray } =
+            await import("./integracaoService");
+
+          const resultadoSync = await atualizarDadosAlunoPagamento(id, {
+            nome,
+            plano,
+            status,
+            valorMensalidade,
+            telefone,
+            dataFinalMatricula: alunoAtualizado.dataFinalMatricula
+              ? new Date(alunoAtualizado.dataFinalMatricula)
+              : undefined,
+          });
+
+          if (
+            !resultadoSync.sucesso &&
+            resultadoSync.erro?.includes("não encontrado") &&
+            status === "Ativo" &&
+            nome &&
+            plano &&
+            !Number.isNaN(valorMensalidade) &&
+            valorMensalidade > 0
+          ) {
+            await criarAlunoComPagamentosArray({
+              id,
+              nome,
+              plano,
+              status,
+              valorMensalidade,
+              dataMatricula: alunoAtualizado.dataMatricula,
+              telefone,
+            });
+          }
+        }
+      } catch (erroSync) {
+        console.warn(
+          "⚠️ Erro ao sincronizar dados do aluno para alunosPagamentos:",
+          erroSync,
+        );
+      }
+    }
+
     // ✅ Se mudou o status para Ativo, verificar e gerar pagamento
     if (dadosAtualizacao.status === "Ativo") {
       try {
-        const { verificarEGerarPagamentoAlunoAtivo } = await import(
-          "./integracaoService"
-        );
+        const { verificarEGerarPagamentoAlunoAtivo } =
+          await import("./integracaoService");
         await verificarEGerarPagamentoAlunoAtivo(id);
       } catch (erro) {
         console.warn(
           "⚠️ Erro ao tentar gerar pagamento para aluno ativo:",
-          erro
+          erro,
         );
         // Não throw - deixa a atualização do aluno continuar mesmo se falhar a geração do pagamento
       }

@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { buscarTodosAlunos, atualizarAluno } from "../../services/alunoService";
+import {
+  buscarTodosAlunos,
+  atualizarAluno,
+  recarregarCache,
+} from "../../services/alunoService";
 import {
   buscarTodasTurmas,
   atualizarTurma,
@@ -33,7 +37,7 @@ export default function ManageAlunosModal({
 }: ManageAlunosModalProps) {
   // ✅ ESTADOS CONSOLIDADOS
   const [activeTab, setActiveTab] = useState<"matriculados" | "disponiveis">(
-    "matriculados"
+    "matriculados",
   );
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [, setAlunosDisponiveis] = useState<Aluno[]>([]);
@@ -75,14 +79,15 @@ export default function ManageAlunosModal({
       const [alunosData, turmasData] = await Promise.all([
         buscarTodosAlunos(), // ✅ SERVICE COM CACHE
         buscarTodasTurmas(), // ✅ SERVICE COM CACHE
+        recarregarCache(), // ✅ FORÇA ATUALIZAÇÃO DO CACHE (opcional, dependendo da validade do cache)
       ]);
 
       const alunosAtivos = alunosData.filter(
-        (aluno) => aluno.status === "Ativo"
+        (aluno) => aluno.status === "Ativo",
       );
 
       const alunosProcessados = alunosAtivos.map((aluno) =>
-        migrarTurmaId(aluno)
+        migrarTurmaId(aluno),
       );
 
       const turmasMap = new Map();
@@ -107,7 +112,7 @@ export default function ManageAlunosModal({
 
     return todosAlunos.filter(
       (aluno) =>
-        aluno.turmasIds?.includes(turma.id!) || aluno.turmasIds === turma.id
+        aluno.turmasIds?.includes(turma.id!) || aluno.turmasIds === turma.id,
     );
   };
 
@@ -154,7 +159,7 @@ export default function ManageAlunosModal({
     try {
       // ✅ MANTER LÓGICA DE FILTRO
       const novasTurmas = (aluno.turmasIds || []).filter(
-        (id) => id !== turma.id
+        (id) => id !== turma.id,
       );
 
       // ✅ USAR SERVICES (SEM BATCH MANUAL)
@@ -179,8 +184,8 @@ export default function ManageAlunosModal({
                 turmasIds: novasTurmas,
                 ...(novasTurmas.length === 0 && { turmaId: "" }),
               }
-            : a
-        )
+            : a,
+        ),
       );
 
       showToast(`${aluno.nome} foi removido da turma com sucesso!`, "success");
@@ -201,7 +206,7 @@ export default function ManageAlunosModal({
     if (selectedAlunosIds.length > vagasDisponiveis) {
       showToast(
         `Turma tem apenas ${vagasDisponiveis} vaga(s) disponível(eis)`,
-        "error"
+        "error",
       );
       return;
     }
@@ -240,12 +245,12 @@ export default function ManageAlunosModal({
             };
           }
           return aluno;
-        })
+        }),
       );
 
       showToast(
         `🎉 ${selectedAlunosIds.length} aluno(s) adicionado(s) com sucesso!`,
-        "success"
+        "success",
       );
       setSelectedAlunosIds([]);
       setActiveTab("matriculados");
@@ -263,7 +268,7 @@ export default function ManageAlunosModal({
     setSelectedAlunosIds((prev) =>
       prev.includes(alunoId)
         ? prev.filter((id) => id !== alunoId)
-        : [...prev, alunoId]
+        : [...prev, alunoId],
     );
   };
 
@@ -273,7 +278,7 @@ export default function ManageAlunosModal({
   const alunosDisponiveisFiltrados = alunosDisponiveisCompletos.filter(
     (aluno) =>
       aluno.nome.toLowerCase().includes(searchText.toLowerCase()) ||
-      aluno.email.toLowerCase().includes(searchText.toLowerCase())
+      aluno.email.toLowerCase().includes(searchText.toLowerCase()),
   );
 
   // ✅ EFFECTS OTIMIZADOS
