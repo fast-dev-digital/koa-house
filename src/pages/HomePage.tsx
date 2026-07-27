@@ -1,18 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { useRef } from "react";
+import { 
+  FaVolleyballBall, 
+  FaGlassCheers, 
+  FaShieldAlt, 
+  FaWhatsapp, 
+  FaGraduationCap, 
+  FaArrowRight
+} from "react-icons/fa";
 import Navbar from "../components/Navbar";
 import EventsSection from "../components/EventsSection";
 import PricingCard from "../components/PricingCard";
 import { planos } from "../data/planosData";
 import Modal from "../components/Modal";
 import WhatsappFloat from "../components/WhatsappFloat";
-import modalPrincipal from "../assets/interno-koa-maio-full.png";
-import bgHawaiiMobile from "../assets/bg-hawaii-mobile.png";
 
-// Teste novo bg
+import modalPrincipal from "../assets/interno-koa-maio-full.png";
 import bgKoaSand from "../assets/koa-sand-pscreen.png";
 import bgKoaSandMobile from "../assets/koa-sand-mobile-text-true1.png";
+import { Link } from "react-router-dom";
 
 function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,9 +29,6 @@ function HomePage() {
   const eventsRef = useRef(null);
 
   const heroInView = useInView(heroRef, { once: true });
-  const featuresInView = useInView(featuresRef, { once: true });
-  const plansInView = useInView(plansRef, { once: true });
-  const eventsInView = useInView(eventsRef, { once: true });
 
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
@@ -56,57 +59,38 @@ function HomePage() {
     },
   };
 
-  // Variants otimizados para features
-  const featuresContainerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2,
-      },
+  const features = [
+    {
+      title: "Quadras Premium de Areia",
+      description: "Areia de quartzo tratada com absorção de impacto, drenagem rápida e iluminação LED de alta performance.",
+      icon: FaVolleyballBall,
+      color: "from-emerald-500 to-teal-700",
     },
-  };
-
-  const featureItemVariants = {
-    hidden: { y: 40, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-      },
+    {
+      title: "Corpo Docente de Elite",
+      description: "Professores experientes para aulas de Futevôlei e Beach Tennis do iniciante ao nível avançado.",
+      icon: FaGraduationCap,
+      color: "from-amber-500 to-orange-600",
     },
-  };
-
-  // Variants otimizados para planos
-  const plansContainerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.3,
-      },
+    {
+      title: "Bar & Lounge Gourmet",
+      description: "Espaço exclusivo para o pós-jogo com bebidas geladas, porções, churrasqueira e eventos musicais.",
+      icon: FaGlassCheers,
+      color: "from-orange-500 to-red-500",
     },
-  };
-
-  const planItemVariants = {
-    hidden: { scale: 0.8, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: {
-        duration: 0.4,
-      },
+    {
+      title: "Estrutura & Segurança",
+      description: "Vestiários equipados com chuveiros quentes, loja esportiva e estacionamento monitorado.",
+      icon: FaShieldAlt,
+      color: "from-blue-500 to-indigo-600",
     },
-  };
+  ];
 
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden bg-white text-gray-800">
       <Navbar />
 
-      {/* Hero Section Moderna */}
+      {/* Hero Section Restaurada */}
       <motion.section
         ref={heroRef}
         className="relative min-h-screen flex items-end justify-center pb-24"
@@ -130,7 +114,7 @@ function HomePage() {
           }}
         />
 
-        {/* Overlay for better text readability */}
+        {/* Overlay para legibilidade */}
         <div className="absolute inset-0 bg-koa-dark/40" />
 
         <motion.div
@@ -139,16 +123,6 @@ function HomePage() {
           initial="hidden"
           animate={heroInView ? "visible" : "hidden"}
         >
-          {/*<motion.h1 
-                        className="text-6xl md:text-8xl font-black text-white mb-6 leading-tight"
-                        variants={itemVariants}
-                    >
-                        KOA
-                        <span className="block bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                            HOUSE
-                        </span>
-                    </motion.h1>*/}
-
           <motion.p
             className="text-xl md:text-2xl text-emerald-100 mb-8 max-w-3xl mx-auto leading-relaxed"
             variants={itemVariants}
@@ -199,241 +173,133 @@ function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* Features Section */}
-      <motion.section
-        ref={featuresRef}
-        className="py-20 relative"
-        initial={{ opacity: 0 }}
-        animate={featuresInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        {/* Mobile Background */}
-        <div className="absolute inset-0 md:hidden" />
-        {/* Overlay for better readability */}
-        <div className="absolute inset-0 bg-white bg-opacity-85" />
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.h2
-            className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-koa-beige to-amber-700 bg-clip-text text-transparent"
-            initial={{ y: 30, opacity: 0 }}
-            animate={
-              featuresInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }
-            }
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Por que escolher a Koa House?
-            <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-amber-500 mx-auto mt-2 rounded-full"></div>
-          </motion.h2>
+      {/* Por Que Escolher a Koa House */}
+      <section ref={featuresRef} className="py-20 bg-gradient-to-b from-gray-50 via-amber-50/20 to-white relative">
+        <div className="max-w-6xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-14">
+            <span className="text-amber-700 font-bold uppercase tracking-wider text-xs md:text-sm">Excelência & Experiência</span>
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 mt-1">
+              Por Que Escolher a Koa House?
+            </h2>
+            <div className="w-20 h-1.5 bg-gradient-to-r from-amber-500 to-emerald-600 mx-auto rounded-full mt-3"></div>
+          </div>
 
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-            variants={featuresContainerVariants}
-            initial="hidden"
-            animate={featuresInView ? "visible" : "hidden"}
-          >
-            {[
-              {
-                title: "Quadras Premium",
-                description:
-                  "Areia de qualidade profissional, iluminação LED e estrutura moderna para sua melhor experiência",
-                icon: "🏐",
-                color: "from-emerald-500 to-emerald-700",
-              },
-              {
-                title: "Professores Expert",
-                description:
-                  "Equipe de profissionais experientes para te levar ao próximo nível no futevôlei e beach tennis",
-                icon: "🏆",
-                color: "from-amber-500 to-orange-600",
-              },
-              {
-                title: "Estrutura Completa",
-                description:
-                  "Bar, vestiários, estacionamento seguro e loja de equipamentos. Tudo que você precisa!",
-                icon: "🌟",
-                color: "from-orange-500 to-red-500",
-              },
-            ].map((feature, index) => (
-              <motion.div
-                key={index}
-                className="relative group"
-                variants={featureItemVariants}
-                whileHover={{ y: -10, transition: { duration: 0.2 } }}
-              >
-                <div className="bg-white rounded-3xl p-8 shadow-xl border border-emerald-100 h-full transform transition-all duration-300 group-hover:shadow-2xl">
-                  <div
-                    className={`w-16 h-16 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto`}
-                  >
-                    {feature.icon}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => {
+              const IconComp = feature.icon;
+              return (
+                <motion.div
+                  key={index}
+                  whileHover={{ y: -6 }}
+                  className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100/70 hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className={`w-14 h-14 bg-gradient-to-r ${feature.color} text-white rounded-2xl flex items-center justify-center text-2xl mb-5 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                      <IconComp />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 leading-snug">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold text-emerald-900 mb-4 text-center">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 text-center leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* Planos Section */}
-      <motion.section
+      {/* Planos em Destaque */}
+      <section
         ref={plansRef}
-        className="py-20 relative"
-        style={{
-          backgroundImage: `url(${bgHawaiiMobile})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-        initial={{ opacity: 0 }}
-        animate={plansInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.6 }}
+        className="py-20 relative bg-gradient-to-br from-amber-900 via-amber-800 to-emerald-950 text-white"
       >
-        {/* Mobile Background */}
-        <div
-          className="absolute inset-0 md:hidden"
-          style={{
-            backgroundImage: `url(${bgHawaiiMobile})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-        {/* Overlay for better readability */}
-        <div className="absolute inset-0 bg-koa-sand opacity-80" />
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.h2
-            className="text-5xl font-black text-center mb-16 bg-white bg-clip-text text-transparent"
-            initial={{ y: 30, opacity: 0 }}
-            animate={plansInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Planos em Destaque
-            <div className="w-24 h-1 bg-white mx-auto mt-2 rounded-full"></div>
-          </motion.h2>
+        <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+        <div className="max-w-6xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-14">
+            <span className="text-yellow-300 font-bold uppercase tracking-wider text-xs md:text-sm">Nossas Modalidades</span>
+            <h2 className="text-3xl md:text-5xl font-black text-white mt-1 bg-gradient-to-r from-white via-yellow-100 to-amber-200 bg-clip-text text-transparent">
+              Planos em Destaque
+            </h2>
+            <div className="w-20 h-1.5 bg-gradient-to-r from-yellow-400 to-amber-500 mx-auto rounded-full mt-3"></div>
+          </div>
 
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch"
-            variants={plansContainerVariants}
-            initial="hidden"
-            animate={plansInView ? "visible" : "hidden"}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
             {planos
               .filter((plano) => plano.destacado)
               .map((plano) => (
-                <motion.div
-                  key={plano.titulo}
-                  variants={planItemVariants}
-                  whileHover={{
-                    scale: 1.03,
-                    rotateY: 3,
-                    transition: { duration: 0.2 },
-                  }}
-                  className="transform-gpu"
-                >
+                <div key={plano.titulo} className="h-full flex">
                   <PricingCard plano={plano} mode="home" />
-                </motion.div>
+                </div>
               ))}
-          </motion.div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link
+              to="/planos"
+              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold py-3.5 px-8 rounded-full backdrop-blur-md border border-white/30 transition-all duration-300 text-sm"
+            >
+              <span>VER TODOS OS PLANOS E VALORES</span>
+              <FaArrowRight className="text-xs text-yellow-300" />
+            </Link>
+          </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* Events Section */}
-      <motion.section
-        ref={eventsRef}
-        className="py-20 relative"
-        initial={{ opacity: 0 }}
-        animate={eventsInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        {/* Mobile Background */}
-        <div className="absolute inset-0 md:hidden" />
-        {/* Overlay for better readability */}
-        {/*<div className="absolute inset-0 bg-emerald-50/90" />*/}
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.h2
-            className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-koa-beige to-amber-700 bg-clip-text text-transparent"
-            initial={{ y: 30, opacity: 0 }}
-            animate={
-              eventsInView ? { y: 0, opacity: 1 } : { y: 30, opacity: 0 }
-            }
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Próximos Eventos
-            <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-amber-500 mx-auto mt-2 rounded-full"></div>
-          </motion.h2>
+      {/* Seção Próximos Eventos */}
+      <section ref={eventsRef} className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <span className="text-amber-700 font-bold uppercase tracking-wider text-xs md:text-sm">Diversão & Torneios</span>
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 mt-1">
+              Próximos Eventos na Koa
+            </h2>
+            <div className="w-20 h-1.5 bg-gradient-to-r from-amber-500 to-emerald-600 mx-auto rounded-full mt-3"></div>
+          </div>
 
-          <motion.div
-            initial={{ y: 40, opacity: 0 }}
-            animate={
-              eventsInView ? { y: 0, opacity: 1 } : { y: 40, opacity: 0 }
-            }
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <EventsSection mode="home" />
-          </motion.div>
+          <EventsSection mode="home" />
         </div>
-      </motion.section>
+      </section>
 
-      {/* CTA Section */}
-      <motion.section
-        className="py-20 bg-koa-dark relative overflow-hidden"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      >
-        {/*<div className="absolute inset-0 bg-black/20" />*/}
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <motion.h2
-            className="text-5xl font-black text-white mb-6"
-            initial={{ y: 50, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8 }}
-          >
-            Pronto para começar?
-          </motion.h2>
+      {/* CTA Final */}
+      <section className="py-16 max-w-5xl mx-auto px-4">
+        <div className="bg-gradient-to-r from-amber-900 via-amber-800 to-emerald-950 rounded-3xl p-8 md:p-14 text-white text-center shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-          <motion.p
-            className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto"
-            initial={{ y: 50, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            Entre em contato conosco e descubra como a Arena Koa House pode
-            transformar sua experiência no esporte!
-          </motion.p>
+          <div className="relative z-10 max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-5xl font-black mb-4 bg-gradient-to-r from-white via-yellow-100 to-amber-200 bg-clip-text text-transparent">
+              Pronto Para Jogar na Koa House?
+            </h2>
+            <p className="text-amber-100 text-base md:text-lg mb-8 leading-relaxed font-light">
+              Escolha seu horário, agende uma aula experimental com nossos professores ou reserve a quadra com seus amigos agora mesmo!
+            </p>
 
-          <motion.a
-            href="https://wa.me/5519981924006?text=Olá,%20quero%20saber%20mais%20sobre%20a%20Koa%20House"
-            className="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-4 px-12 rounded-full text-xl shadow-2xl"
-            initial={{ y: 50, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            FALE CONOSCO AGORA
-          </motion.a>
+            <a
+              href="https://wa.me/5519981924006?text=Olá,%20quero%20saber%20mais%20sobre%20a%20Koa%20House"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-gray-950 font-extrabold py-4 px-10 rounded-full text-base shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <FaWhatsapp className="text-xl" />
+              <span>FALAR COM A EQUIPE VIA WHATSAPP</span>
+            </a>
+          </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* Modal */}
+      {/* Modal Promocional */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
           <img
             src={modalPrincipal}
-            alt="Anúncio de torneio interno"
-            className="w-full rounded-md mb-4"
+            alt="Anúncio de torneio interno Koa Cup"
+            className="w-full rounded-xl mb-2 shadow-md"
             loading="lazy"
           />
         </motion.div>

@@ -1,103 +1,105 @@
-// src/components/PricingCard.tsx
 import { Link } from "react-router-dom";
+import { FaCheck, FaStar, FaWhatsapp, FaArrowRight } from "react-icons/fa";
 import type { Plano } from "../data/planosData";
 
 type PricingCardProps = {
   plano: Plano;
-  mode?: "home" | "planos"; // Adiciona prop opcional para diferenciar comportamentos
+  mode?: "home" | "planos";
 };
 
-// O SVG do ícone de check
-const CheckIcon = () => (
-  <svg
-    className="w-5 h-5 text-orange-500"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M5 13l4 4L19 7"
-    />
-  </svg>
-);
-
 function PricingCard({ plano, mode = "planos" }: PricingCardProps) {
-  // Classes condicionais baseadas na prop 'destacado'
-  const cardClasses = plano.destacado
-    ? "border-koa-beige border-2"
-    : "border-gray-200 border";
-  const headerClasses = plano.destacado
-    ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white"
-    : "hidden";
-  const buttonClasses = plano.destacado
-    ? "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white"
-    : "bg-white hover:bg-koa-beige text-koa-green hover:text-white border border-koa-green";
+  const isHighlighted = plano.destacado;
 
-  const renderButton = () => {
-    if (mode === "home") {
-      // Na HomePage: botão leva para página de planos
-      return (
-        <Link
-          to="/planos"
-          className={`block w-full font-bold py-3 px-6 rounded transition-colors duration-300 text-center ${buttonClasses}`}
-        >
-          VER PLANOS
-        </Link>
-      );
-    } else {
-      // Na página Planos: botão leva para whatsapp
-      const whatsappMessage = `Olá, gostaria de saber mais sobre o plano ${plano.titulo}.`;
-      const whatsappUrl = `https://wa.me/5519981924006?text=${encodeURIComponent(whatsappMessage)}`;
-
-      return (
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`block w-full font-bold py-3 px-6 rounded transition-colors duration-300 text-center ${buttonClasses}`}
-        >
-          EU QUERO
-        </a>
-      );
-    }
-  };
+  const whatsappMessage = `Olá! Gostaria de saber mais sobre o plano: ${plano.titulo}.`;
+  const whatsappUrl = `https://wa.me/5519981924006?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
     <div
-      className={`rounded-lg shadow-lg p-6 flex flex-col bg-white ${cardClasses} h-full min-h-[480px]`}
+      className={`relative rounded-3xl p-6 md:p-8 flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-1.5 h-full ${
+        isHighlighted
+          ? "bg-white shadow-2xl border-2 border-amber-400/80 ring-4 ring-amber-400/10"
+          : "bg-white/95 shadow-lg border border-gray-200 hover:border-amber-300 hover:shadow-xl"
+      }`}
     >
-      <div
-        className={`text-xs font-bold uppercase tracking-wider text-center py-1 px-3 rounded-full mb-4 self-center ${headerClasses}`}
-      >
-        Mais Vantajoso
-      </div>
-      <h3 className="text-xl font-bold text-zinc-800">{plano.titulo}</h3>
-      <p className="text-5xl font-bold text-zinc-900 my-4">
-        {plano.preco}
-        {/* Esta span só será renderizada se plano.unidade tiver um valor */}
-        {plano.unidade && (
-          <span className="text-lg font-medium text-zinc-500">
-            {plano.unidade}
+      {/* Badge em destaque */}
+      {isHighlighted && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-amber-700 text-white text-xs font-extrabold uppercase tracking-wider py-1.5 px-4 rounded-full shadow-md flex items-center gap-1.5 whitespace-nowrap">
+          <FaStar className="text-yellow-300 text-xs" />
+          Mais Vantajoso
+        </div>
+      )}
+
+      <div>
+        {/* Tipo do Plano Badge */}
+        <div className="flex justify-between items-center mb-3">
+          <span className="bg-amber-50 text-amber-800 text-xs font-semibold px-3 py-1 rounded-md border border-amber-200/60">
+            {plano.tipo}
           </span>
+        </div>
+
+        {/* Título do Plano */}
+        <h3 className="text-xl font-bold text-gray-900 mb-2 leading-snug">
+          {plano.titulo}
+        </h3>
+
+        {/* Preço */}
+        <div className="my-4 flex items-baseline gap-1">
+          <span className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-zinc-900 to-amber-900 bg-clip-text text-transparent">
+            {plano.preco}
+          </span>
+          {plano.unidade && (
+            <span className="text-xs md:text-sm font-medium text-gray-500">
+              {plano.unidade}
+            </span>
+          )}
+        </div>
+
+        {/* Divisor */}
+        <div className="w-full h-px bg-gray-100 my-4"></div>
+
+        {/* Lista de Recursos/Features */}
+        <ul className="space-y-3 mb-6 text-sm text-gray-600">
+          {plano.features.map((feature, index) => (
+            <li key={index} className="flex items-start gap-2.5">
+              <div className="mt-0.5 rounded-full p-1 bg-emerald-100 text-emerald-700 flex-shrink-0">
+                <FaCheck className="text-xs" />
+              </div>
+              <span className="leading-snug text-gray-700">{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Botão de Ação */}
+      <div className="mt-auto pt-4">
+        {mode === "home" ? (
+          <Link
+            to="/planos"
+            className={`w-full inline-flex items-center justify-center gap-2 font-bold py-3 px-5 rounded-xl transition-all duration-300 text-sm shadow-md hover:shadow-lg ${
+              isHighlighted
+                ? "bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white"
+                : "bg-gray-900 hover:bg-amber-800 text-white"
+            }`}
+          >
+            <span>VER PLANOS</span>
+            <FaArrowRight className="text-xs" />
+          </Link>
+        ) : (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`w-full inline-flex items-center justify-center gap-2 font-bold py-3.5 px-5 rounded-xl transition-all duration-300 text-sm shadow-md hover:shadow-lg ${
+              isHighlighted
+                ? "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white"
+                : "bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white"
+            }`}
+          >
+            <FaWhatsapp className="text-lg text-white" />
+            <span>SOLICITAR PLANO</span>
+          </a>
         )}
-      </p>
-
-      {/* Renderiza o botão baseado no mode */}
-      {renderButton()}
-
-      {/* Lista de features dos planos */}
-      <ul className="mt-6 space-y-3 text-zinc-600">
-        {plano.features.map((feature, index) => (
-          <li key={index} className="flex items-center">
-            <CheckIcon />
-            <span className="ml-3">{feature}</span>
-          </li>
-        ))}
-      </ul>
+      </div>
     </div>
   );
 }

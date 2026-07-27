@@ -32,13 +32,13 @@ function Navbar() {
         {/* --- LÓGICA DESKTOP --- */}
         <div className="hidden md:flex w-full items-center">
           {/* Coluna Esquerda: Logo */}
-          <div className="w-1/4"> {/* Definimos um espaço para o logo */}
+          <div className="w-1/4">
             <Link to="/" className="flex items-center space-x-2 md:space-x-3">
               <img src="/logo-brazuka.png" alt="Logo Arena Brazuka" className="h-8 md:h-[50px] w-auto" />
             </Link>
           </div>
 
-          {/* Coluna Central: Navegação (cresce para ocupar o espaço) */}
+          {/* Coluna Central: Navegação */}
           <div className="flex-grow">
             <nav className="flex justify-center items-center space-x-8">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -68,73 +68,62 @@ function Navbar() {
             </nav>
           </div>
           
-          {/* Coluna Direita: Botões */}
-          <div className="w-1/4 flex justify-end items-center space-x-3">
+          {/* Coluna Direita: Botão Entrar */}
+          <div className="w-1/4 flex justify-end items-center">
             <Link to="/login">
               <motion.button 
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-koa-brown hover:from-koa-brown hover:to-koa-brown text-white font-bold py-2.5 px-5 rounded-lg text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm"
+                className="bg-koa-brown hover:bg-amber-800 text-white font-extrabold py-2.5 px-6 rounded-lg text-sm whitespace-nowrap shadow-md hover:shadow-xl transition-all duration-300"
               >
-                ÁREA DO ALUNO
-              </motion.button>
-            </Link>
-            <Link to="/login">
-              <motion.button 
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                className={`border-2 border-koa-brown backdrop-blur-sm text-koa-brown py-2.5 px-4 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-bold text-sm whitespace-nowrap shadow-lg hover:shadow-xl transition-all duration-300 ${
-                  scrolled ? 'bg-transparent' : 'bg-transparent'
-                }`}
-              >
-                ACESSO RESTRITO
+                ENTRAR
               </motion.button>
             </Link>
           </div>
         </div>
 
 
-        {/* --- LÓGICA MOBILE (permanece a mesma) --- */}
+        {/* --- LÓGICA MOBILE --- */}
         <div className="md:hidden flex w-full justify-between items-center">
             {/* Logo Mobile */}
             <Link to="/" className="flex items-center space-x-2">
                 <img src="/logo-brazuka.png" alt="Logo Arena Brazuka" className="h-10 w-auto" />
             </Link>
 
-            {/* Botão centralizado no mobile */}
-            <div className="flex">
+            {/* Botões Mobile */}
+            <div className="flex items-center space-x-2">
                 <Link to="/login">
                     <motion.button 
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="bg-koa-brown text-white font-bold py-2 px-4 rounded-lg text-xs shadow-lg transition-all duration-300"
+                        className="bg-koa-brown text-white font-extrabold py-2 px-4 rounded-lg text-xs shadow-md transition-all duration-300"
                     >
-                        ÁREA DO ALUNO
+                        ENTRAR
                     </motion.button>
                 </Link>
-            </div>
 
-            {/* Botão de menu (3 pontinhos) */}
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 rounded-lg hover:bg-yellow-100 transition-colors duration-200"
-                onClick={() => setMenuOpen(!menuOpen)}
-                aria-label="Abrir menu"
-            >
-                <motion.svg 
-                    className="w-6 h-6" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                    animate={{ rotate: menuOpen ? 90 : 0 }}
-                    transition={{ duration: 0.3 }}
+                {/* Botão de menu (3 pontinhos) */}
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 rounded-lg hover:bg-yellow-100 transition-colors duration-200"
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    aria-label="Abrir menu"
                 >
-                    <circle cx="12" cy="5" r="1.5"/>
-                    <circle cx="12" cy="12" r="1.5"/>
-                    <circle cx="12" cy="19" r="1.5"/>
-                </motion.svg>
-            </motion.button>
+                    <motion.svg 
+                        className="w-6 h-6" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        animate={{ rotate: menuOpen ? 90 : 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <circle cx="12" cy="5" r="1.5"/>
+                        <circle cx="12" cy="12" r="1.5"/>
+                        <circle cx="12" cy="19" r="1.5"/>
+                    </motion.svg>
+                </motion.button>
+            </div>
         </div>
         
         {/* Menu Dropdown Mobile */}
@@ -161,15 +150,14 @@ function Navbar() {
                 <Link to="/planos" className="block hover:bg-yellow-50 px-6 py-4 font-medium transition-colors duration-200 border-b border-gray-100 focus:outline-none focus:bg-yellow-50 active:bg-yellow-100 text-center" onClick={() => setMenuOpen(false)}>Planos</Link>
             </motion.div>
           
-            {/* Adicionamos o botão de admin aqui também para consistência */}
             <div className='p-6 text-center'>
                 <Link to="/login" onClick={() => setMenuOpen(false)}>
                     <motion.button 
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="border-2 border-koa-brown bg-white/80 backdrop-blur-sm text-koa-brown py-3 px-6 rounded-lg hover:bg-yellow-50 hover:border-yellow-600 font-medium shadow-md hover:shadow-lg transition-all duration-300 w-full focus:outline-none focus:bg-yellow-50 focus:border-yellow-600 active:bg-yellow-100"
+                        className="bg-koa-brown text-white py-3 px-6 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-300 w-full"
                     >
-                        ACESSO RESTRITO
+                        ENTRAR
                     </motion.button>
                 </Link>
             </div>
