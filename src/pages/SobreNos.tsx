@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { 
   FaVolleyballBall, 
   FaUsers, 
@@ -14,7 +14,7 @@ import WhatsappFloat from "../components/WhatsappFloat";
 import GaleriaSwiper from "../components/GaleriaSwiper";
 
 function SobreNos() {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -22,7 +22,7 @@ function SobreNos() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { y: 25, opacity: 0 },
     visible: {
       y: 0,

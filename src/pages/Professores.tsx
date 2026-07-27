@@ -9,7 +9,6 @@ import WhatsappFloat from "../components/WhatsappFloat";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import "swiper/css/effect-coverflow";
 
 // Importação de imagens dos professores
 import imgAndrey from "../assets/ft-andrey.png";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { 
   FaCalendarAlt, 
   FaMapMarkerAlt, 
@@ -80,7 +80,7 @@ function EventsSection({ mode = "page", categoriaFiltro = "Todos" }: EventsSecti
     ? eventos 
     : eventos.filter(e => e.categoria === categoriaFiltro);
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -88,7 +88,7 @@ function EventsSection({ mode = "page", categoriaFiltro = "Todos" }: EventsSecti
     },
   };
 
-  const cardVariants = {
+  const cardVariants: Variants = {
     hidden: { y: 40, opacity: 0 },
     visible: {
       y: 0,

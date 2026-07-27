@@ -6,7 +6,6 @@ import {
   FaWhatsapp, 
   FaCalendarCheck, 
   FaMusic, 
-  FaShieldAlt, 
   FaCheckCircle 
 } from "react-icons/fa";
 import EventsSection from "../components/EventsSection";
